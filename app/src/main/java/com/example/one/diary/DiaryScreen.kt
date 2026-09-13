@@ -24,14 +24,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.one.ui.theme.OneTheme
 
 @Composable
 fun DiaryScreen(viewModel: DiaryViewModel = viewModel()) {
     val entries by viewModel.entries.collectAsState()
     var text by remember { mutableStateOf("") }
 
+    DiaryScreenContent(
+        entries = entries,
+        text = text,
+        onTextChange = { text = it },
+        onAddClick = {
+            viewModel.addEntry(text)
+            text = ""
+        },
+        onDeleteClick = { viewModel.deleteEntry(it) }
+    )
+}
+
+@Composable
+private fun DiaryScreenContent(
+    entries: List<DiaryEntry>,
+    text: String,
+    onTextChange: (String) -> Unit,
+    onAddClick: () -> Unit,
+    onDeleteClick: (String) -> Unit
+) {
     Scaffold { padding ->
         Column(
             modifier = Modifier
@@ -45,14 +67,11 @@ fun DiaryScreen(viewModel: DiaryViewModel = viewModel()) {
             ) {
                 OutlinedTextField(
                     value = text,
-                    onValueChange = { text = it },
+                    onValueChange = onTextChange,
                     modifier = Modifier.weight(1f),
                     label = { Text("New entry") }
                 )
-                Button(onClick = {
-                    viewModel.addEntry(text)
-                    text = ""
-                }) {
+                Button(onClick = onAddClick) {
                     Text("Add")
                 }
             }
@@ -68,12 +87,43 @@ fun DiaryScreen(viewModel: DiaryViewModel = viewModel()) {
                             Text(entry.date)
                             Text(entry.text)
                         }
-                        IconButton(onClick = { viewModel.deleteEntry(entry.id) }) {
+                        IconButton(onClick = { onDeleteClick(entry.id) }) {
                             Icon(Icons.Filled.Delete, contentDescription = "Delete entry")
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DiaryScreenPreview() {
+    OneTheme {
+        DiaryScreenContent(
+            entries = listOf(
+                DiaryEntry(id = "1", date = "2026-09-12", text = "Leg day, felt strong."),
+                DiaryEntry(id = "2", date = "2026-09-11", text = "Rest day, meal prepped for the week.")
+            ),
+            text = "",
+            onTextChange = {},
+            onAddClick = {},
+            onDeleteClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Empty")
+@Composable
+private fun DiaryScreenEmptyPreview() {
+    OneTheme {
+        DiaryScreenContent(
+            entries = emptyList(),
+            text = "",
+            onTextChange = {},
+            onAddClick = {},
+            onDeleteClick = {}
+        )
     }
 }

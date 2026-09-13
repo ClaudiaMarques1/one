@@ -15,7 +15,7 @@ class GoogleAuthClient(private val context: Context) {
 
     private val credentialManager = CredentialManager.create(context)
 
-    suspend fun signIn(): Result<Unit> = runCatching {
+    suspend fun signIn(activityContext: Context): Result<Unit> = runCatching {
         val googleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
             .setServerClientId(context.getString(R.string.default_web_client_id))
@@ -25,7 +25,7 @@ class GoogleAuthClient(private val context: Context) {
             .addCredentialOption(googleIdOption)
             .build()
 
-        val credential = credentialManager.getCredential(context, request).credential
+        val credential = credentialManager.getCredential(activityContext, request).credential
         check(
             credential is CustomCredential &&
                 credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL

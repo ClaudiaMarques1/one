@@ -1,6 +1,7 @@
 package com.example.one.auth
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.one.data.FirebaseModule
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -28,17 +30,37 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         initialValue = FirebaseModule.auth.currentUser
     )
 
-    private val _signInError = MutableStateFlow<String?>(null)
-    val signInError: StateFlow<String?> = _signInError
+    private val _authError = MutableStateFlow<String?>(null)
+    val authError: StateFlow<String?> = _authError
 
-    fun signIn() {
+    fun signInWithGoogle(activityContext: Context) {
         viewModelScope.launch {
-            val result = googleAuthClient.signIn()
-            _signInError.value = result.exceptionOrNull()?.message
+            _authError.value = null
+            val result = googleAuthClient.signIn(activityContext)
+            _authError.value = result.exceptionOrNull()?.message
+        }
+    }
+
+    fun signInWithEmail(email: String, password: String) {
+        viewModelScope.launch {
+            _authError.value = null
+            runCatching {
+                FirebaseModule.auth.signInWithEmailAndPassword(email, password).await()
+            }.onFailure { _authError.value = it.message }
+        }
+    }
+
+    fun signUpWithEmail(email: String, password: String) {
+        viewModelScope.launch {
+            _authError.value = null
+            runCatching {
+                FirebaseModule.auth.createUserWithEmailAndPassword(email, password).await()
+            }.onFailure { _authError.value = it.message }
         }
     }
 
     fun signOut() {
         googleAuthClient.signOut()
+        FirebaseModule.auth.signOut()
     }
 }
