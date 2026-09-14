@@ -1,5 +1,6 @@
 package com.example.one.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -25,12 +27,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
-import com.example.one.ui.theme.OneTheme
+import com.example.one.R
+import com.example.one.ui.theme.MonochromeTheme
 
 @Composable
 fun SignInScreen(viewModel: AuthViewModel) {
@@ -40,20 +44,22 @@ fun SignInScreen(viewModel: AuthViewModel) {
     var password by remember { mutableStateOf("") }
     var isSignUpMode by remember { mutableStateOf(false) }
 
-    SignInScreenContent(
-        email = email,
-        password = password,
-        isSignUpMode = isSignUpMode,
-        error = error,
-        onEmailChange = { email = it },
-        onPasswordChange = { password = it },
-        onToggleMode = { isSignUpMode = !isSignUpMode },
-        onSubmit = {
-            if (isSignUpMode) viewModel.signUpWithEmail(email, password)
-            else viewModel.signInWithEmail(email, password)
-        },
-        onGoogleClick = { viewModel.signInWithGoogle(context) }
-    )
+    MonochromeTheme {
+        SignInScreenContent(
+            email = email,
+            password = password,
+            isSignUpMode = isSignUpMode,
+            error = error,
+            onEmailChange = { email = it },
+            onPasswordChange = { password = it },
+            onToggleMode = { isSignUpMode = !isSignUpMode },
+            onSubmit = {
+                if (isSignUpMode) viewModel.signUpWithEmail(email, password)
+                else viewModel.signInWithEmail(email, password)
+            },
+            onGoogleClick = { viewModel.signInWithGoogle(context) }
+        )
+    }
 }
 
 @Composable
@@ -77,6 +83,12 @@ private fun SignInScreenContent(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                painter = painterResource(R.drawable.logo),
+                contentDescription = "One logo",
+                modifier = Modifier.size(120.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             Text("One", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -136,7 +148,7 @@ private fun SignInScreenContent(
 @Preview(showBackground = true)
 @Composable
 private fun SignInScreenPreview() {
-    OneTheme {
+    MonochromeTheme {
         SignInScreenContent(
             email = "",
             password = "",
@@ -154,7 +166,7 @@ private fun SignInScreenPreview() {
 @Preview(showBackground = true, name = "Sign up mode")
 @Composable
 private fun SignInScreenSignUpPreview() {
-    OneTheme {
+    MonochromeTheme {
         SignInScreenContent(
             email = "user@example.com",
             password = "",
@@ -172,7 +184,7 @@ private fun SignInScreenSignUpPreview() {
 @Preview(showBackground = true, name = "With error")
 @Composable
 private fun SignInScreenErrorPreview() {
-    OneTheme {
+    MonochromeTheme {
         SignInScreenContent(
             email = "user@example.com",
             password = "",
