@@ -28,9 +28,13 @@ class StrengthViewModel(
     private val _activeTemplateName = MutableStateFlow("")
     val activeTemplateName: StateFlow<String> = _activeTemplateName
 
+    private val _sessionStartTimeMillis = MutableStateFlow<Long?>(null)
+    val sessionStartTimeMillis: StateFlow<Long?> = _sessionStartTimeMillis
+
     fun startSessionFromTemplate(template: WorkoutTemplate) {
         _activeTemplateId.value = template.id
         _activeTemplateName.value = template.name
+        _sessionStartTimeMillis.value = System.currentTimeMillis()
         _currentExercises.value = template.exercises.map { exercise ->
             StrengthExercise(
                 name = exercise.name,
@@ -42,12 +46,13 @@ class StrengthViewModel(
     fun discardSession() {
         _activeTemplateId.value = ""
         _activeTemplateName.value = ""
+        _sessionStartTimeMillis.value = null
         _currentExercises.value = emptyList()
     }
 
-    fun addExercises(names: List<String>) {
-        if (names.isEmpty()) return
-        _currentExercises.value = _currentExercises.value + names.map { StrengthExercise(name = it) }
+    fun setExercises(names: List<String>) {
+        val existingByName = _currentExercises.value.associateBy { it.name }
+        _currentExercises.value = names.map { name -> existingByName[name] ?: StrengthExercise(name = name) }
     }
 
     fun addSet(exerciseIndex: Int, set: StrengthSet) {
@@ -106,6 +111,7 @@ class StrengthViewModel(
             _currentExercises.value = emptyList()
             _activeTemplateId.value = ""
             _activeTemplateName.value = ""
+            _sessionStartTimeMillis.value = null
         }
     }
 }

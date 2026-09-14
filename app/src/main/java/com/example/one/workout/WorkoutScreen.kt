@@ -1,5 +1,6 @@
 package com.example.one.workout
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,32 +16,41 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,6 +58,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.one.exercise.Exercise
 import com.example.one.exercise.ExercisePickerDialog
 import com.example.one.ui.theme.OneTheme
+import kotlinx.coroutines.delay
 
 @Composable
 fun WorkoutScreen(
@@ -61,22 +72,26 @@ fun WorkoutScreen(
     val draftExercises by templateViewModel.draftExercises.collectAsState()
     val editingTemplate by templateViewModel.editingTemplate.collectAsState()
     val activeTemplateName by strengthViewModel.activeTemplateName.collectAsState()
+    val sessionStartTimeMillis by strengthViewModel.sessionStartTimeMillis.collectAsState()
     val currentExercises by strengthViewModel.currentExercises.collectAsState()
 
     var isBuildingTemplate by remember { mutableStateOf(false) }
     var showPicker by remember { mutableStateOf(false) }
+    var showActiveWorkoutPicker by remember { mutableStateOf(false) }
     var pendingStartTemplate by remember { mutableStateOf<WorkoutTemplate?>(null) }
 
     when {
         activeTemplateName.isNotEmpty() -> {
             ActiveWorkoutContent(
                 templateName = activeTemplateName,
+                startTimeMillis = sessionStartTimeMillis,
                 exercises = currentExercises,
                 onAddSet = { index, set -> strengthViewModel.addSet(index, set) },
                 onUpdateSet = { exerciseIndex, setIndex, set -> strengthViewModel.updateSet(exerciseIndex, setIndex, set) },
                 onRemoveSet = { exerciseIndex, setIndex -> strengthViewModel.removeSet(exerciseIndex, setIndex) },
                 onRemoveExercise = { strengthViewModel.removeExercise(it) },
                 onDuplicateExercise = { strengthViewModel.duplicateExercise(it) },
+                onAddExerciseClick = { showActiveWorkoutPicker = true },
                 onFinish = { strengthViewModel.saveSession() },
                 onCancel = { strengthViewModel.discardSession() }
             )
@@ -123,6 +138,17 @@ fun WorkoutScreen(
             onConfirm = { selected: List<Exercise> ->
                 templateViewModel.setDraftExercises(selected.map { it.name })
                 showPicker = false
+            }
+        )
+    }
+
+    if (showActiveWorkoutPicker) {
+        ExercisePickerDialog(
+            alreadySelectedNames = currentExercises.map { it.name }.toSet(),
+            onDismiss = { showActiveWorkoutPicker = false },
+            onConfirm = { selected: List<Exercise> ->
+                strengthViewModel.setExercises(selected.map { it.name })
+                showActiveWorkoutPicker = false
             }
         )
     }
@@ -362,37 +388,52 @@ private fun TemplateBuilderContent(
 @Composable
 private fun ActiveWorkoutContent(
     templateName: String,
+    startTimeMillis: Long?,
     exercises: List<StrengthExercise>,
     onAddSet: (Int, StrengthSet) -> Unit,
     onUpdateSet: (Int, Int, StrengthSet) -> Unit,
     onRemoveSet: (Int, Int) -> Unit,
     onRemoveExercise: (Int) -> Unit,
     onDuplicateExercise: (Int) -> Unit,
+    onAddExerciseClick: () -> Unit,
     onFinish: () -> Unit,
     onCancel: () -> Unit
 ) {
-    Scaffold { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item { Text(templateName, style = MaterialTheme.typography.headlineSmall) }
+    val restDurations = remember { mutableStateMapOf<Int, Int>() }
+    var restPickerForIndex by remember { mutableStateOf<Int?>(null) }
 
-            itemsIndexed(exercises) { index, exercise ->
-                ExerciseLogCard(
-                    exercise = exercise,
-                    onAddSet = { onAddSet(index, StrengthSet()) },
-                    onUpdateSet = { setIndex, set -> onUpdateSet(index, setIndex, set) },
-                    onRemoveSet = { setIndex -> onRemoveSet(index, setIndex) },
-                    onDelete = { onRemoveExercise(index) },
-                    onCopy = { onDuplicateExercise(index) }
-                )
+    var activeRestExercise by remember { mutableStateOf<String?>(null) }
+    var activeRestRemaining by remember { mutableStateOf(0) }
+    var isRestRunning by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isRestRunning) {
+        while (isRestRunning) {
+            delay(1000)
+            val next = activeRestRemaining - 1
+            if (next <= 0) {
+                activeRestRemaining = 0
+                isRestRunning = false
+            } else {
+                activeRestRemaining = next
             }
+        }
+    }
 
-            item {
+    Scaffold(
+        bottomBar = {
+            Column(modifier = Modifier.padding(16.dp)) {
+                if (isRestRunning || activeRestRemaining > 0) {
+                    ActiveRestBar(
+                        exerciseName = activeRestExercise ?: "",
+                        remainingSeconds = activeRestRemaining,
+                        onAdjust = { delta -> activeRestRemaining = (activeRestRemaining + delta).coerceAtLeast(0) },
+                        onCancel = {
+                            isRestRunning = false
+                            activeRestRemaining = 0
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -410,54 +451,263 @@ private fun ActiveWorkoutContent(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ExerciseLogCard(
-    exercise: StrengthExercise,
-    onAddSet: () -> Unit,
-    onUpdateSet: (Int, StrengthSet) -> Unit,
-    onRemoveSet: (Int) -> Unit,
-    onDelete: () -> Unit,
-    onCopy: () -> Unit
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(exercise.name, style = MaterialTheme.typography.titleSmall)
-                Row {
-                    IconButton(onClick = onCopy) {
-                        Icon(Icons.Filled.ContentCopy, contentDescription = "Copy exercise")
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Remove exercise")
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(templateName, style = MaterialTheme.typography.headlineSmall)
+                    if (startTimeMillis != null) {
+                        ElapsedTimeText(startTimeMillis = startTimeMillis)
                     }
                 }
             }
 
-            exercise.sets.forEachIndexed { setIndex, set ->
-                SetRow(
-                    index = setIndex,
-                    set = set,
-                    onUpdate = { updated -> onUpdateSet(setIndex, updated) },
-                    onRemove = { onRemoveSet(setIndex) }
+            itemsIndexed(exercises) { index, exercise ->
+                ExerciseLogCard(
+                    exercise = exercise,
+                    restSeconds = restDurations[index] ?: 60,
+                    onAddSet = { onAddSet(index, StrengthSet()) },
+                    onUpdateSet = { setIndex, set -> onUpdateSet(index, setIndex, set) },
+                    onRemoveSet = { setIndex -> onRemoveSet(index, setIndex) },
+                    onDelete = { onRemoveExercise(index) },
+                    onCopy = { onDuplicateExercise(index) },
+                    onRestIconClick = { restPickerForIndex = index },
+                    onSetDone = {
+                        activeRestExercise = exercise.name
+                        activeRestRemaining = restDurations[index] ?: 60
+                        isRestRunning = true
+                    }
                 )
             }
 
-            OutlinedButton(onClick = onAddSet, modifier = Modifier.fillMaxWidth()) {
-                Text("+ Add set")
+            item {
+                OutlinedButton(onClick = onAddExerciseClick, modifier = Modifier.fillMaxWidth()) {
+                    Text("+ Add exercise")
+                }
+            }
+        }
+    }
+
+    restPickerForIndex?.let { index ->
+        RestDurationPickerDialog(
+            currentSeconds = restDurations[index] ?: 60,
+            onDismiss = { restPickerForIndex = null },
+            onSelect = { seconds ->
+                restDurations[index] = seconds
+                restPickerForIndex = null
+            }
+        )
+    }
+}
+
+@Composable
+private fun ElapsedTimeText(startTimeMillis: Long) {
+    var elapsedSeconds by remember(startTimeMillis) {
+        mutableStateOf((System.currentTimeMillis() - startTimeMillis) / 1000)
+    }
+    LaunchedEffect(startTimeMillis) {
+        while (true) {
+            elapsedSeconds = (System.currentTimeMillis() - startTimeMillis) / 1000
+            delay(1000)
+        }
+    }
+    Text(formatElapsedTime(elapsedSeconds), style = MaterialTheme.typography.titleMedium)
+}
+
+private fun formatElapsedTime(totalSeconds: Long): String {
+    val seconds = totalSeconds.coerceAtLeast(0)
+    val hours = seconds / 3600
+    val minutes = (seconds % 3600) / 60
+    val secs = seconds % 60
+    return if (hours > 0) {
+        "%d:%02d:%02d".format(hours, minutes, secs)
+    } else {
+        "%02d:%02d".format(minutes, secs)
+    }
+}
+
+private val restDurationOptions = listOf(60, 90, 120)
+
+private fun restDurationLabel(seconds: Int): String =
+    if (seconds % 60 == 0) "${seconds / 60}:00" else "${seconds}s"
+
+@Composable
+private fun ActiveRestBar(
+    exerciseName: String,
+    remainingSeconds: Int,
+    onAdjust: (Int) -> Unit,
+    onCancel: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text("Resting — $exerciseName", style = MaterialTheme.typography.titleSmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(formatElapsedTime(remainingSeconds.toLong()), style = MaterialTheme.typography.headlineMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(onClick = { onAdjust(-30) }, modifier = Modifier.weight(1f)) {
+                    Text("-30s")
+                }
+                OutlinedButton(onClick = { onAdjust(30) }, modifier = Modifier.weight(1f)) {
+                    Text("+30s")
+                }
+                TextButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
+                    Text("Skip")
+                }
             }
         }
     }
 }
 
 @Composable
-private fun SetRow(index: Int, set: StrengthSet, onUpdate: (StrengthSet) -> Unit, onRemove: () -> Unit) {
+private fun RestDurationPickerDialog(currentSeconds: Int, onDismiss: () -> Unit, onSelect: (Int) -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rest timer for this exercise") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                restDurationOptions.forEach { seconds ->
+                    if (currentSeconds == seconds) {
+                        Button(onClick = { onSelect(seconds) }, modifier = Modifier.fillMaxWidth()) {
+                            Text(restDurationLabel(seconds))
+                        }
+                    } else {
+                        OutlinedButton(onClick = { onSelect(seconds) }, modifier = Modifier.fillMaxWidth()) {
+                            Text(restDurationLabel(seconds))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
+}
+
+@Composable
+private fun ExerciseLogCard(
+    exercise: StrengthExercise,
+    restSeconds: Int,
+    onAddSet: () -> Unit,
+    onUpdateSet: (Int, StrengthSet) -> Unit,
+    onRemoveSet: (Int) -> Unit,
+    onDelete: () -> Unit,
+    onCopy: () -> Unit,
+    onRestIconClick: () -> Unit,
+    onSetDone: () -> Unit
+) {
+    SwipeableExerciseCard(onDelete = onDelete, onCopy = onCopy) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(exercise.name, style = MaterialTheme.typography.titleSmall)
+                    IconButton(onClick = onRestIconClick, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Filled.Timer,
+                            contentDescription = "Set rest timer (currently ${restDurationLabel(restSeconds)})",
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                exercise.sets.forEachIndexed { setIndex, set ->
+                    SetRow(
+                        index = setIndex,
+                        set = set,
+                        onUpdate = { updated -> onUpdateSet(setIndex, updated) },
+                        onRemove = { onRemoveSet(setIndex) },
+                        onDone = onSetDone
+                    )
+                }
+
+                OutlinedButton(onClick = onAddSet, modifier = Modifier.fillMaxWidth()) {
+                    Text("+ Add set")
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeableExerciseCard(onDelete: () -> Unit, onCopy: () -> Unit, content: @Composable () -> Unit) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete()
+                    true
+                }
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    onCopy()
+                    false
+                }
+                SwipeToDismissBoxValue.Settled -> true
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            when (dismissState.dismissDirection) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFFD32F2F), shape = RoundedCornerShape(12.dp))
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Delete", color = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(Icons.Filled.Delete, contentDescription = null, tint = Color.White)
+                    }
+                }
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFF1E88E5), shape = RoundedCornerShape(12.dp))
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.ContentCopy, contentDescription = null, tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Copy", color = Color.White)
+                    }
+                }
+                SwipeToDismissBoxValue.Settled -> {}
+            }
+        },
+        content = { content() }
+    )
+}
+
+@Composable
+private fun SetRow(
+    index: Int,
+    set: StrengthSet,
+    onUpdate: (StrengthSet) -> Unit,
+    onRemove: () -> Unit,
+    onDone: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -486,6 +736,9 @@ private fun SetRow(index: Int, set: StrengthSet, onUpdate: (StrengthSet) -> Unit
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.weight(1f)
         )
+        TextButton(onClick = onDone) {
+            Text("Done")
+        }
         IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
             Icon(
                 Icons.Filled.Delete,
@@ -585,6 +838,7 @@ private fun ActiveWorkoutContentPreview() {
     OneTheme {
         ActiveWorkoutContent(
             templateName = "Push Day",
+            startTimeMillis = System.currentTimeMillis() - 125_000,
             exercises = listOf(
                 StrengthExercise("Bench Press", listOf(StrengthSet(8, 60.0))),
                 StrengthExercise("Lateral Raise")
@@ -594,6 +848,7 @@ private fun ActiveWorkoutContentPreview() {
             onRemoveSet = { _, _ -> },
             onRemoveExercise = {},
             onDuplicateExercise = {},
+            onAddExerciseClick = {},
             onFinish = {},
             onCancel = {}
         )
