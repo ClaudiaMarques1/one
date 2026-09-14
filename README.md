@@ -6,12 +6,18 @@ Built with Jetpack Compose and Firebase.
 
 ## Features
 
-- **Sign in** with email/password or Google (Firebase Authentication)
+- **Sign in** with email/password or Google (Firebase Authentication), on a fixed black-and-white screen independent of the rest of the app's theme
 - **Home** — dashboard overview with a live Diary summary and placeholder cards for the other sections
-- **Workout — Strength Training** — pick exercises from a categorized catalog (browse by body part: Back, Chest, Shoulders, Legs, etc., with search, thumbnails, and animated GIF demos), log sets (reps × weight) per exercise, save the session, and view session history — synced per-user via Cloud Firestore
-- **Calendar** — placeholder, coming soon
+- **Workout — Strength Training**:
+  - Build reusable **templates** (name, optional description, exercise list) via a categorized exercise picker (browse by body part, search, thumbnails, animated GIF demos)
+  - Tap a template to start a session (confirms with a numbered exercise list first); log sets per exercise with freely add/edit/removable rows, a live session-duration timer, a per-exercise rest timer (pick 60s/90s/2:00 via a clock icon, auto-starts on "Done", adjustable ±30s), swipe an exercise card left to delete / right to copy, and add extra exercises mid-session
+  - Finishing a session saves it to history (last 3 shown) **and** writes the performed reps/weight back onto the template, so next time it opens pre-filled
+- **Calendar** — full monthly grid with month navigation; days with a logged workout show a blue dot, days with a diary entry show a purple dot
 - **Meals** — placeholder, coming soon
-- **Diary** — add and delete dated entries, synced per-user via Cloud Firestore
+- **Diary**:
+  - **Journal** — "+ Add Entry" opens a composer: emoji mood, 1–10 energy and sleep sliders, a tappable body silhouette (plus chips for back/glutes/hamstrings) to mark sore areas, and a one-line reflection prompt
+  - **Goals** — define goals made of habits, each tagged to one or more times of day (Morning/Afternoon/Evening/Night); a clock icon per habit schedules a repeating local notification within that habit's time window (via WorkManager)
+- Each main section (Workout/Meals/Diary/Calendar) carries its own accent color across the bottom nav and its screens
 
 Workout is planned to eventually split into four independent session types — Warmup/Stretch, Strength Training, Cardio, and Warmdown — each logged separately since not every day covers all four. Strength Training is built first; the others follow the same Firestore-backed pattern.
 
@@ -22,6 +28,7 @@ Workout is planned to eventually split into four independent session types — W
 - Cloud Firestore
 - Navigation Compose
 - Coil (image + GIF loading for the exercise catalog)
+- WorkManager (habit reminder notifications)
 
 ### Exercise catalog
 
@@ -38,15 +45,16 @@ development-time stand-in until custom exercise content is prepared for a publis
 
 ```
 app/src/main/java/com/example/one/
-├── auth/        Sign-in screen, AuthViewModel, GoogleAuthClient
-├── calendar/    Calendar screen
-├── dashboard/   Home/overview screen
-├── exercise/    Exercise catalog model, asset loader, category picker dialog
-├── workout/     Strength Training screen, ViewModel, repository, Firestore model
-├── meals/       Meals screen
-├── diary/       Diary screen, ViewModel, repository, Firestore model
-├── navigation/  Bottom nav destinations and NavHost
-└── ui/theme/    Compose theme (colors, typography)
+├── auth/            Sign-in screen, AuthViewModel, GoogleAuthClient
+├── calendar/        Calendar screen + ViewModel (aggregates workout/diary activity by date)
+├── dashboard/       Home/overview screen
+├── exercise/        Exercise catalog model, asset loader, category picker dialog
+├── workout/         Templates, active session, StrengthSession history — screens, ViewModels, repositories, Firestore models
+├── meals/           Meals screen
+├── diary/           Journal + Goals/Habits tabs, ViewModels, repositories, Firestore models
+├── notifications/   Habit reminder notification channel, WorkManager worker + scheduler
+├── navigation/      Bottom nav destinations (with per-section accent colors) and NavHost
+└── ui/theme/        Compose theme (colors, typography, per-section and monochrome theme overrides)
 ```
 
 ## Setup
@@ -66,4 +74,6 @@ app/src/main/java/com/example/one/
 
 ## Status
 
-Early-stage foundation: auth, navigation shell, and Home dashboard are working. Workout's Strength Training flow is functional end-to-end with Firestore, as is Diary. Calendar and Meals are still placeholder screens, and Workout's Cardio/Warmup/Warmdown session types are not built yet.
+Auth, navigation shell, Home dashboard, Calendar, and Workout's Strength Training (templates → session → history) are functional end-to-end with Firestore. Diary's Journal and Goals/Habits (with reminder notifications) are also functional. Meals is still a placeholder, and Workout's Cardio/Warmup/Warmdown session types are not built yet.
+
+Known gaps: pre-existing diary entries created before the journal redesign show blank mood/energy/sleep fields (schema changed, no migration). Habit reminders use WorkManager rather than exact alarms, so timing can drift — especially on OEMs (e.g. Huawei) that aggressively kill background work.
