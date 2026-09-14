@@ -7,10 +7,13 @@ Built with Jetpack Compose and Firebase.
 ## Features
 
 - **Sign in** with email/password or Google (Firebase Authentication)
+- **Home** — dashboard overview with a live Diary summary and placeholder cards for the other sections
+- **Workout — Strength Training** — pick exercises from a categorized catalog (browse by body part: Back, Chest, Shoulders, Legs, etc., with search, thumbnails, and animated GIF demos), log sets (reps × weight) per exercise, save the session, and view session history — synced per-user via Cloud Firestore
 - **Calendar** — placeholder, coming soon
-- **Workout** — placeholder, coming soon
 - **Meals** — placeholder, coming soon
 - **Diary** — add and delete dated entries, synced per-user via Cloud Firestore
+
+Workout is planned to eventually split into four independent session types — Warmup/Stretch, Strength Training, Cardio, and Warmdown — each logged separately since not every day covers all four. Strength Training is built first; the others follow the same Firestore-backed pattern.
 
 ## Tech stack
 
@@ -18,6 +21,18 @@ Built with Jetpack Compose and Firebase.
 - Firebase Authentication (Google Sign-In via Credential Manager, and email/password)
 - Cloud Firestore
 - Navigation Compose
+- Coil (image + GIF loading for the exercise catalog)
+
+### Exercise catalog
+
+The Strength Training exercise picker is backed by a trimmed, English-only copy of the
+[hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (~1,300 exercises),
+bundled as `app/src/main/assets/exercises.json` (name, body part, equipment, target muscle, instructions).
+Thumbnails and animated GIFs are **not** bundled — they're loaded on demand from that dataset's GitHub repo via
+a jsdelivr CDN URL and cached to disk by Coil, so they work offline after first viewing without copying
+~1,300 copyrighted media files into this repo. The media is © Gym Visual, used with attribution (shown in the
+picker); it requires separate permission from Gym Visual before commercial reuse, so this is a
+development-time stand-in until custom exercise content is prepared for a published release.
 
 ## Project structure
 
@@ -25,7 +40,9 @@ Built with Jetpack Compose and Firebase.
 app/src/main/java/com/example/one/
 ├── auth/        Sign-in screen, AuthViewModel, GoogleAuthClient
 ├── calendar/    Calendar screen
-├── workout/     Workout screen
+├── dashboard/   Home/overview screen
+├── exercise/    Exercise catalog model, asset loader, category picker dialog
+├── workout/     Strength Training screen, ViewModel, repository, Firestore model
 ├── meals/       Meals screen
 ├── diary/       Diary screen, ViewModel, repository, Firestore model
 ├── navigation/  Bottom nav destinations and NavHost
@@ -49,4 +66,4 @@ app/src/main/java/com/example/one/
 
 ## Status
 
-Early-stage foundation: auth and navigation shell are working; Calendar, Workout, and Meals are placeholder screens pending their real implementations. Diary is functional end-to-end with Firestore.
+Early-stage foundation: auth, navigation shell, and Home dashboard are working. Workout's Strength Training flow is functional end-to-end with Firestore, as is Diary. Calendar and Meals are still placeholder screens, and Workout's Cardio/Warmup/Warmdown session types are not built yet.
