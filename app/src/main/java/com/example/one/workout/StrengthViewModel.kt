@@ -11,7 +11,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class StrengthViewModel(private val repository: StrengthRepository = StrengthRepository()) : ViewModel() {
+class StrengthViewModel(
+    private val repository: StrengthRepository = StrengthRepository(),
+    private val templateRepository: WorkoutTemplateRepository = WorkoutTemplateRepository()
+) : ViewModel() {
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
@@ -20,6 +23,27 @@ class StrengthViewModel(private val repository: StrengthRepository = StrengthRep
 
     private val _currentExercises = MutableStateFlow<List<StrengthExercise>>(emptyList())
     val currentExercises: StateFlow<List<StrengthExercise>> = _currentExercises
+
+    private val _activeTemplateId = MutableStateFlow("")
+    private val _activeTemplateName = MutableStateFlow("")
+    val activeTemplateName: StateFlow<String> = _activeTemplateName
+
+    fun startSessionFromTemplate(template: WorkoutTemplate) {
+        _activeTemplateId.value = template.id
+        _activeTemplateName.value = template.name
+        _currentExercises.value = template.exercises.map { exercise ->
+            StrengthExercise(
+                name = exercise.name,
+                sets = exercise.sets.map { StrengthSet(it.reps, it.weightKg) }
+            )
+        }
+    }
+
+    fun discardSession() {
+        _activeTemplateId.value = ""
+        _activeTemplateName.value = ""
+        _currentExercises.value = emptyList()
+    }
 
     fun addExercises(names: List<String>) {
         if (names.isEmpty()) return
@@ -33,20 +57,55 @@ class StrengthViewModel(private val repository: StrengthRepository = StrengthRep
         }
     }
 
+    fun updateSet(exerciseIndex: Int, setIndex: Int, set: StrengthSet) {
+        _currentExercises.value = _currentExercises.value.toMutableList().also { list ->
+            val exercise = list[exerciseIndex]
+            list[exerciseIndex] = exercise.copy(
+                sets = exercise.sets.toMutableList().apply { this[setIndex] = set }
+            )
+        }
+    }
+
+    fun removeSet(exerciseIndex: Int, setIndex: Int) {
+        _currentExercises.value = _currentExercises.value.toMutableList().also { list ->
+            val exercise = list[exerciseIndex]
+            list[exerciseIndex] = exercise.copy(sets = exercise.sets.toMutableList().apply { removeAt(setIndex) })
+        }
+    }
+
     fun removeExercise(index: Int) {
         _currentExercises.value = _currentExercises.value.toMutableList().apply { removeAt(index) }
+    }
+
+    fun duplicateExercise(index: Int) {
+        _currentExercises.value = _currentExercises.value.toMutableList().apply {
+            add(index + 1, StrengthExercise(name = this[index].name))
+        }
     }
 
     fun saveSession() {
         val exercises = _currentExercises.value
         if (exercises.isEmpty()) return
+        val templateId = _activeTemplateId.value
+        val templateName = _activeTemplateName.value
         viewModelScope.launch {
-            repository.addSession(StrengthSession(date = dateFormat.format(Date()), exercises = exercises))
+            repository.addSession(
+                StrengthSession(date = dateFormat.format(Date()), templateName = templateName, exercises = exercises)
+            )
+            if (templateId.isNotEmpty()) {
+                templateRepository.updateTemplateExercises(
+                    templateId,
+                    exercises.map { exercise ->
+                        TemplateExercise(
+                            name = exercise.name,
+                            sets = exercise.sets.map { TemplateSet(it.reps, it.weightKg) }
+                        )
+                    }
+                )
+            }
             _currentExercises.value = emptyList()
+            _activeTemplateId.value = ""
+            _activeTemplateName.value = ""
         }
-    }
-
-    fun deleteSession(id: String) {
-        viewModelScope.launch { repository.deleteSession(id) }
     }
 }

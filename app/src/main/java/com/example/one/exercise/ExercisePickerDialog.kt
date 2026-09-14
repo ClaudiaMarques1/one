@@ -45,7 +45,11 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExercisePickerDialog(onDismiss: () -> Unit, onConfirm: (List<Exercise>) -> Unit) {
+fun ExercisePickerDialog(
+    alreadySelectedNames: Set<String> = emptySet(),
+    onDismiss: () -> Unit,
+    onConfirm: (List<Exercise>) -> Unit
+) {
     val context = LocalContext.current
     var allExercises by remember { mutableStateOf<List<Exercise>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -57,6 +61,7 @@ fun ExercisePickerDialog(onDismiss: () -> Unit, onConfirm: (List<Exercise>) -> U
         val loaded = withContext(Dispatchers.IO) { ExerciseCatalogLoader.load(context) }
         allExercises = loaded
         selectedCategory = loaded.map { it.bodyPart }.distinct().sorted().firstOrNull()
+        selectedIds.addAll(loaded.filter { it.name in alreadySelectedNames }.map { it.id })
         isLoading = false
     }
 
@@ -96,7 +101,7 @@ fun ExercisePickerDialog(onDismiss: () -> Unit, onConfirm: (List<Exercise>) -> U
                             .padding(16.dp)
                     ) {
                         val count = selectedIds.size
-                        Text(if (count == 0) "Select exercises" else "Add $count exercise${if (count == 1) "" else "s"}")
+                        Text(if (count == 0) "Select exercises" else "Use $count exercise${if (count == 1) "" else "s"}")
                     }
                 }
             }

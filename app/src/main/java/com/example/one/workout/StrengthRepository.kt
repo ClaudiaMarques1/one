@@ -41,8 +41,4 @@ class StrengthRepository {
     suspend fun addSession(session: StrengthSession) {
         sessionsCollection()?.add(session)?.await()
     }
-
-    suspend fun deleteSession(id: String) {
-        sessionsCollection()?.document(id)?.delete()?.await()
-    }
 }

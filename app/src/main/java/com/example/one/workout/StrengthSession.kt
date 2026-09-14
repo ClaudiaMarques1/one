@@ -13,6 +13,7 @@ data class StrengthExercise(
 data class StrengthSession(
     val id: String = "",
     val date: String = "",
+    val templateName: String = "",
     val exercises: List<StrengthExercise> = emptyList(),
     val createdAt: Long = System.currentTimeMillis()
 )
