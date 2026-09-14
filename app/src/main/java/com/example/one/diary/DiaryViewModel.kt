@@ -17,10 +17,26 @@ class DiaryViewModel(private val repository: DiaryRepository = DiaryRepository()
     val entries: StateFlow<List<DiaryEntry>> = repository.observeEntries()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addEntry(text: String) {
-        if (text.isBlank()) return
+    fun addEntry(
+        mood: String,
+        energyLevel: Int,
+        sleepHours: Int,
+        sorePartIds: List<String>,
+        reflection: String
+    ) {
         val today = dateFormat.format(Date())
-        viewModelScope.launch { repository.addEntry(today, text) }
+        viewModelScope.launch {
+            repository.addEntry(
+                DiaryEntry(
+                    date = today,
+                    mood = mood,
+                    energyLevel = energyLevel,
+                    sleepHours = sleepHours,
+                    sorePartIds = sorePartIds,
+                    reflection = reflection
+                )
+            )
+        }
     }
 
     fun deleteEntry(id: String) {

@@ -62,7 +62,7 @@ private fun DashboardScreenContent(
         "No entries yet"
     } else {
         val noun = if (diaryEntryCount == 1) "entry" else "entries"
-        "$diaryEntryCount $noun" + (latestDiaryEntry?.let { " · latest: ${it.text}" } ?: "")
+        "$diaryEntryCount $noun" + (latestDiaryEntry?.let { " · latest: ${it.mood} ${it.date}" } ?: "")
     }
 
     val cards = listOf(
@@ -117,7 +117,7 @@ private fun DashboardScreenPreview() {
     OneTheme {
         DashboardScreenContent(
             diaryEntryCount = 2,
-            latestDiaryEntry = DiaryEntry(id = "1", date = "2026-09-12", text = "Leg day, felt strong."),
+            latestDiaryEntry = DiaryEntry(id = "1", date = "2026-09-12", mood = "💪"),
             onSignOut = {}
         )
     }

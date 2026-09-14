@@ -38,8 +38,8 @@ class DiaryRepository {
         awaitClose { registration.remove() }
     }
 
-    suspend fun addEntry(date: String, text: String) {
-        entriesCollection()?.add(DiaryEntry(date = date, text = text))?.await()
+    suspend fun addEntry(entry: DiaryEntry) {
+        entriesCollection()?.add(entry)?.await()
     }
 
     suspend fun deleteEntry(id: String) {
