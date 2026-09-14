@@ -17,6 +17,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.one.auth.AuthViewModel
 import com.example.one.calendar.CalendarScreen
+import com.example.one.dashboard.DashboardScreen
 import com.example.one.diary.DiaryScreen
 import com.example.one.meals.MealsScreen
 import com.example.one.workout.WorkoutScreen
@@ -53,10 +54,11 @@ fun OneNavHost(authViewModel: AuthViewModel) {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Destination.Calendar.route,
+            startDestination = Destination.Home.route,
             modifier = Modifier.padding(padding)
         ) {
-            composable(Destination.Calendar.route) { CalendarScreen(onSignOut = authViewModel::signOut) }
+            composable(Destination.Home.route) { DashboardScreen(onSignOut = authViewModel::signOut) }
+            composable(Destination.Calendar.route) { CalendarScreen() }
             composable(Destination.Workout.route) { WorkoutScreen() }
             composable(Destination.Meals.route) { MealsScreen() }
             composable(Destination.Diary.route) { DiaryScreen() }

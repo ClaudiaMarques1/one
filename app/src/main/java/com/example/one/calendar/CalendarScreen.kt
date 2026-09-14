@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,7 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.one.ui.theme.OneTheme
 
 @Composable
-fun CalendarScreen(onSignOut: () -> Unit) {
+fun CalendarScreen() {
     Scaffold { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -22,7 +21,6 @@ fun CalendarScreen(onSignOut: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("Calendar — coming soon")
-            Button(onClick = onSignOut) { Text("Sign out") }
         }
     }
 }
@@ -31,6 +29,6 @@ fun CalendarScreen(onSignOut: () -> Unit) {
 @Composable
 private fun CalendarScreenPreview() {
     OneTheme {
-        CalendarScreen(onSignOut = {})
+        CalendarScreen()
     }
 }
