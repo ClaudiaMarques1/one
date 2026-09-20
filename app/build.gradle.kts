@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.one"
+    namespace = "app.theone.android"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.one"
+        applicationId = "app.theone.android"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
