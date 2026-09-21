@@ -41,4 +41,25 @@ class StrengthRepository {
     suspend fun addSession(session: StrengthSession) {
         sessionsCollection()?.add(session)?.await()
     }
+
+    // Writes the session and (optionally) the template's carried-over exercises in one Firestore
+    // transaction, so a failure partway through leaves neither write applied - see
+    // .claude/rules/architecture.md's atomic multi-write note.
+    suspend fun addSessionAndUpdateTemplate(
+        session: StrengthSession,
+        templateId: String?,
+        templateExercises: List<TemplateExercise>?
+    ) {
+        val sessions = sessionsCollection() ?: return
+        val uid = FirebaseModule.auth.currentUser?.uid ?: return
+        FirebaseModule.firestore.runTransaction { transaction ->
+            transaction.set(sessions.document(), session)
+            if (!templateId.isNullOrEmpty() && templateExercises != null) {
+                val templateRef = FirebaseModule.firestore
+                    .collection("users").document(uid)
+                    .collection("workoutTemplates").document(templateId)
+                transaction.update(templateRef, "exercises", templateExercises)
+            }
+        }.await()
+    }
 }

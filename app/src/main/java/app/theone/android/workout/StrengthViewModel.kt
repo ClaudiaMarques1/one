@@ -15,7 +15,6 @@ import java.util.Locale
 
 class StrengthViewModel(
     private val repository: StrengthRepository = StrengthRepository(),
-    private val templateRepository: WorkoutTemplateRepository = WorkoutTemplateRepository(),
     private val savedStateHandle: SavedStateHandle = SavedStateHandle()
 ) : ViewModel() {
 
@@ -110,20 +109,16 @@ class StrengthViewModel(
         val templateName = activeTemplateName.value
         viewModelScope.launch {
             runCatching {
-                repository.addSession(
-                    StrengthSession(date = dateFormat.format(Date()), templateName = templateName, exercises = exercises)
+                repository.addSessionAndUpdateTemplate(
+                    session = StrengthSession(date = dateFormat.format(Date()), templateName = templateName, exercises = exercises),
+                    templateId = templateId.ifEmpty { null },
+                    templateExercises = if (templateId.isEmpty()) null else exercises.map { exercise ->
+                        TemplateExercise(
+                            name = exercise.name,
+                            sets = exercise.sets.map { TemplateSet(it.reps, it.weightKg) }
+                        )
+                    }
                 )
-                if (templateId.isNotEmpty()) {
-                    templateRepository.updateTemplateExercises(
-                        templateId,
-                        exercises.map { exercise ->
-                            TemplateExercise(
-                                name = exercise.name,
-                                sets = exercise.sets.map { TemplateSet(it.reps, it.weightKg) }
-                            )
-                        }
-                    )
-                }
             }.onFailure { _workoutError.value = it.message }
                 .onSuccess {
                     savedStateHandle[KEY_CURRENT_EXERCISES] = emptyList<StrengthExercise>()
