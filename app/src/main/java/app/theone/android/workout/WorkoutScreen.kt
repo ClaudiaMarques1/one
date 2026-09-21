@@ -54,7 +54,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import app.theone.android.exercise.Exercise
 import app.theone.android.exercise.ExercisePickerDialog
 import app.theone.android.ui.theme.OneTheme
@@ -63,7 +66,11 @@ import kotlinx.coroutines.delay
 @Composable
 fun WorkoutScreen(
     templateViewModel: WorkoutTemplateViewModel = viewModel(),
-    strengthViewModel: StrengthViewModel = viewModel()
+    strengthViewModel: StrengthViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { StrengthViewModel(savedStateHandle = createSavedStateHandle()) }
+        }
+    )
 ) {
     val templates by templateViewModel.templates.collectAsState()
     val sessions by strengthViewModel.sessions.collectAsState()
