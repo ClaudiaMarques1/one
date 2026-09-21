@@ -67,7 +67,15 @@ app/src/main/java/com/example/one/
    ./gradlew signingReport
    ```
 5. Download `google-services.json` from Firebase and place it at `app/google-services.json`.
-6. Build and run:
+6. Deploy the Firestore security rules (`firestore.rules`) so per-user data scoping is actually
+   enforced server-side, not just by convention in the client code:
+   ```
+   npm install -g firebase-tools   # one-time
+   firebase login
+   firebase use <your-firebase-project-id>
+   firebase deploy --only firestore:rules
+   ```
+7. Build and run:
    ```
    ./gradlew installDebug
    ```

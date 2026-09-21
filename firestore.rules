@@ -1,0 +1,13 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All app data lives under users/{uid}/<collection>/{docId} — diaryEntries, goals,
+    // strengthSessions, workoutTemplates (see DiaryRepository.kt, GoalRepository.kt,
+    // StrengthRepository.kt, WorkoutTemplateRepository.kt). Only the owning signed-in user
+    // may read or write their own subtree; everything else is denied by default.
+    match /users/{uid}/{collection}/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
