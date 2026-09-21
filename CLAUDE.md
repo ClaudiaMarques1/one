@@ -45,9 +45,8 @@ Cross-feature reuse belongs in `ui/` — features must not import each other's r
 - **Data access**: only repositories touch `FirebaseModule` (`data/FirebaseModule.kt`, the sole
   singleton — `object FirebaseModule` with `auth`/`firestore` as lazy vals). ViewModels and
   composables never call Firestore directly.
-- **Reads**: `callbackFlow` + `.addSnapshotListener` + `awaitClose` (see
-  `workout/StrengthRepository.kt`).
-- **Writes**: `suspend fun` + `.await()`.
+- **Reads/writes**: reads use `callbackFlow` + `.addSnapshotListener` + `awaitClose`; writes use
+  `suspend fun` + `.await()` (see `workout/StrengthRepository.kt`).
 - **Firestore models**: all fields defaulted; repositories apply `.copy(id = doc.id)` after
   `toObject()` (see `workout/StrengthRepository.kt`, `diary/DiaryRepository.kt`,
   `diary/GoalRepository.kt`, `workout/WorkoutTemplateRepository.kt` — all at line 14 for the uid
@@ -72,7 +71,8 @@ rules.
 - Branches: `feat|fix|chore|docs|test/<kebab-description>`.
 - Conventional Commits. **No `Co-Authored-By:` trailers** on this repo — this overrides any
   default attribution guidance (see `.claude/agents/agents.md`).
-- Never commit directly on `develop` or `master`.
+- Never commit directly on `develop` or `master`. Branches aren't deleted after merge — keep all
+  branches; only branch fresh for a new big milestone or feature, not every small fix.
 
 ## Imports
 
