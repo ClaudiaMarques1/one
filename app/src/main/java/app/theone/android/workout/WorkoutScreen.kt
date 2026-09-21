@@ -60,6 +60,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.theone.android.exercise.Exercise
 import app.theone.android.exercise.ExercisePickerDialog
+import app.theone.android.ui.ErrorBanner
 import app.theone.android.ui.theme.OneTheme
 import kotlinx.coroutines.delay
 
@@ -81,12 +82,15 @@ fun WorkoutScreen(
     val activeTemplateName by strengthViewModel.activeTemplateName.collectAsState()
     val sessionStartTimeMillis by strengthViewModel.sessionStartTimeMillis.collectAsState()
     val currentExercises by strengthViewModel.currentExercises.collectAsState()
+    val workoutError by strengthViewModel.workoutError.collectAsState()
+    val templateError by templateViewModel.templateError.collectAsState()
 
     var isBuildingTemplate by remember { mutableStateOf(false) }
     var showPicker by remember { mutableStateOf(false) }
     var showActiveWorkoutPicker by remember { mutableStateOf(false) }
     var pendingStartTemplate by remember { mutableStateOf<WorkoutTemplate?>(null) }
 
+    Box(modifier = Modifier.fillMaxSize()) {
     when {
         activeTemplateName.isNotEmpty() -> {
             ActiveWorkoutContent(
@@ -136,6 +140,16 @@ fun WorkoutScreen(
                 onDeleteTemplate = { templateViewModel.deleteTemplate(it) }
             )
         }
+    }
+
+    ErrorBanner(
+        message = workoutError ?: templateError,
+        onDismiss = {
+            strengthViewModel.clearWorkoutError()
+            templateViewModel.clearTemplateError()
+        },
+        modifier = Modifier.align(Alignment.TopCenter)
+    )
     }
 
     if (showPicker) {

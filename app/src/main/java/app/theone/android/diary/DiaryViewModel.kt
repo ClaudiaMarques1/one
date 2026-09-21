@@ -2,8 +2,10 @@ package app.theone.android.diary
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -14,8 +16,16 @@ class DiaryViewModel(private val repository: DiaryRepository = DiaryRepository()
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
+    private val _diaryError = MutableStateFlow<String?>(null)
+    val diaryError: StateFlow<String?> = _diaryError
+
     val entries: StateFlow<List<DiaryEntry>> = repository.observeEntries()
+        .catch { e -> _diaryError.value = e.message }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun clearDiaryError() {
+        _diaryError.value = null
+    }
 
     fun addEntry(
         mood: String,
@@ -26,20 +36,25 @@ class DiaryViewModel(private val repository: DiaryRepository = DiaryRepository()
     ) {
         val today = dateFormat.format(Date())
         viewModelScope.launch {
-            repository.addEntry(
-                DiaryEntry(
-                    date = today,
-                    mood = mood,
-                    energyLevel = energyLevel,
-                    sleepHours = sleepHours,
-                    sorePartIds = sorePartIds,
-                    reflection = reflection
+            runCatching {
+                repository.addEntry(
+                    DiaryEntry(
+                        date = today,
+                        mood = mood,
+                        energyLevel = energyLevel,
+                        sleepHours = sleepHours,
+                        sorePartIds = sorePartIds,
+                        reflection = reflection
+                    )
                 )
-            )
+            }.onFailure { _diaryError.value = it.message }
         }
     }
 
     fun deleteEntry(id: String) {
-        viewModelScope.launch { repository.deleteEntry(id) }
+        viewModelScope.launch {
+            runCatching { repository.deleteEntry(id) }
+                .onFailure { _diaryError.value = it.message }
+        }
     }
 }

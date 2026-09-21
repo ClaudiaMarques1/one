@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -12,8 +13,16 @@ class WorkoutTemplateViewModel(
     private val repository: WorkoutTemplateRepository = WorkoutTemplateRepository()
 ) : ViewModel() {
 
+    private val _templateError = MutableStateFlow<String?>(null)
+    val templateError: StateFlow<String?> = _templateError
+
     val templates: StateFlow<List<WorkoutTemplate>> = repository.observeTemplates()
+        .catch { e -> _templateError.value = e.message }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun clearTemplateError() {
+        _templateError.value = null
+    }
 
     private val _draftName = MutableStateFlow("")
     val draftName: StateFlow<String> = _draftName
@@ -65,16 +74,21 @@ class WorkoutTemplateViewModel(
         if (name.isBlank() || exercises.isEmpty()) return
         val editing = _editingTemplate.value
         viewModelScope.launch {
-            if (editing != null) {
-                repository.updateTemplate(editing.copy(name = name, description = description, exercises = exercises))
-            } else {
-                repository.addTemplate(WorkoutTemplate(name = name, description = description, exercises = exercises))
-            }
-            clearDraft()
+            runCatching {
+                if (editing != null) {
+                    repository.updateTemplate(editing.copy(name = name, description = description, exercises = exercises))
+                } else {
+                    repository.addTemplate(WorkoutTemplate(name = name, description = description, exercises = exercises))
+                }
+            }.onFailure { _templateError.value = it.message }
+                .onSuccess { clearDraft() }
         }
     }
 
     fun deleteTemplate(id: String) {
-        viewModelScope.launch { repository.deleteTemplate(id) }
+        viewModelScope.launch {
+            runCatching { repository.deleteTemplate(id) }
+                .onFailure { _templateError.value = it.message }
+        }
     }
 }

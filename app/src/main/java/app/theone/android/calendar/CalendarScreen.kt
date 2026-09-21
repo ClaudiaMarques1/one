@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.theone.android.navigation.Destination
+import app.theone.android.ui.ErrorBanner
 import app.theone.android.ui.theme.OneTheme
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -49,6 +50,7 @@ private val DiaryDotColor = Destination.Diary.accentColor!!
 @Composable
 fun CalendarScreen(viewModel: CalendarViewModel = viewModel()) {
     val activityByDate by viewModel.activityByDate.collectAsState()
+    val calendarError by viewModel.calendarError.collectAsState()
     var year by remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
     var month by remember { mutableStateOf(Calendar.getInstance().get(Calendar.MONTH)) }
 
@@ -56,6 +58,8 @@ fun CalendarScreen(viewModel: CalendarViewModel = viewModel()) {
         year = year,
         month = month,
         activityByDate = activityByDate,
+        errorMessage = calendarError,
+        onDismissError = { viewModel.clearCalendarError() },
         onPreviousMonth = {
             if (month == 0) {
                 month = 11
@@ -80,6 +84,8 @@ private fun CalendarScreenContent(
     year: Int,
     month: Int,
     activityByDate: Map<String, Set<ActivityType>>,
+    errorMessage: String? = null,
+    onDismissError: () -> Unit = {},
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit
 ) {
@@ -107,6 +113,7 @@ private fun CalendarScreenContent(
                 .padding(padding)
                 .padding(16.dp)
         ) {
+            ErrorBanner(message = errorMessage, onDismiss = onDismissError)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

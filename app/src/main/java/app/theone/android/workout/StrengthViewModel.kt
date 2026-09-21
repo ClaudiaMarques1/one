@@ -3,8 +3,10 @@ package app.theone.android.workout
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -19,8 +21,16 @@ class StrengthViewModel(
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
+    private val _workoutError = MutableStateFlow<String?>(null)
+    val workoutError: StateFlow<String?> = _workoutError
+
     val sessions: StateFlow<List<StrengthSession>> = repository.observeSessions()
+        .catch { e -> _workoutError.value = e.message }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun clearWorkoutError() {
+        _workoutError.value = null
+    }
 
     // Backed by SavedStateHandle (not plain MutableStateFlow) so an in-progress session
     // survives process death - see StrengthSet/StrengthExercise's Serializable conformance.
@@ -99,24 +109,28 @@ class StrengthViewModel(
         val templateId = activeTemplateId.value
         val templateName = activeTemplateName.value
         viewModelScope.launch {
-            repository.addSession(
-                StrengthSession(date = dateFormat.format(Date()), templateName = templateName, exercises = exercises)
-            )
-            if (templateId.isNotEmpty()) {
-                templateRepository.updateTemplateExercises(
-                    templateId,
-                    exercises.map { exercise ->
-                        TemplateExercise(
-                            name = exercise.name,
-                            sets = exercise.sets.map { TemplateSet(it.reps, it.weightKg) }
-                        )
-                    }
+            runCatching {
+                repository.addSession(
+                    StrengthSession(date = dateFormat.format(Date()), templateName = templateName, exercises = exercises)
                 )
-            }
-            savedStateHandle[KEY_CURRENT_EXERCISES] = emptyList<StrengthExercise>()
-            savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = ""
-            savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = ""
-            savedStateHandle[KEY_SESSION_START_TIME] = null
+                if (templateId.isNotEmpty()) {
+                    templateRepository.updateTemplateExercises(
+                        templateId,
+                        exercises.map { exercise ->
+                            TemplateExercise(
+                                name = exercise.name,
+                                sets = exercise.sets.map { TemplateSet(it.reps, it.weightKg) }
+                            )
+                        }
+                    )
+                }
+            }.onFailure { _workoutError.value = it.message }
+                .onSuccess {
+                    savedStateHandle[KEY_CURRENT_EXERCISES] = emptyList<StrengthExercise>()
+                    savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = ""
+                    savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = ""
+                    savedStateHandle[KEY_SESSION_START_TIME] = null
+                }
         }
     }
 
