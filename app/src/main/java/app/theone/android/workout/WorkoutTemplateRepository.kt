@@ -10,10 +10,7 @@ import kotlinx.coroutines.tasks.await
 
 class WorkoutTemplateRepository {
 
-    private fun templatesCollection(): CollectionReference? {
-        val uid = FirebaseModule.auth.currentUser?.uid ?: return null
-        return FirebaseModule.firestore.collection("users").document(uid).collection("workoutTemplates")
-    }
+    private fun templatesCollection(): CollectionReference? = FirebaseModule.userCollection("workoutTemplates")
 
     fun observeTemplates(): Flow<List<WorkoutTemplate>> = callbackFlow {
         val collection = templatesCollection()

@@ -10,10 +10,7 @@ import kotlinx.coroutines.tasks.await
 
 class GoalRepository {
 
-    private fun goalsCollection(): CollectionReference? {
-        val uid = FirebaseModule.auth.currentUser?.uid ?: return null
-        return FirebaseModule.firestore.collection("users").document(uid).collection("goals")
-    }
+    private fun goalsCollection(): CollectionReference? = FirebaseModule.userCollection("goals")
 
     fun observeGoals(): Flow<List<Goal>> = callbackFlow {
         val collection = goalsCollection()
