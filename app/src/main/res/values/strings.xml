@@ -1,3 +1,38 @@
 <resources>
     <string name="app_name">One</string>
+
+    <!-- auth/SignInScreen.kt -->
+    <string name="auth_logo_content_description">One logo</string>
+    <string name="auth_email_label">Email</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_create_account">Create account</string>
+    <string name="auth_sign_in">Sign in</string>
+    <string name="auth_toggle_to_sign_in">Already have an account? Sign in</string>
+    <string name="auth_toggle_to_sign_up">Don\'t have an account? Sign up</string>
+    <string name="auth_or_divider">  OR  </string>
+    <string name="auth_continue_with_google">Continue with Google</string>
+
+    <!-- dashboard/DashboardScreen.kt -->
+    <string name="dashboard_no_entries">No entries yet</string>
+    <string name="dashboard_latest_suffix"> · latest: %1$s %2$s</string>
+    <string name="dashboard_card_diary">Diary</string>
+    <string name="dashboard_card_workout">Workout</string>
+    <string name="dashboard_card_meals">Meals</string>
+    <string name="dashboard_card_calendar">Calendar</string>
+    <string name="dashboard_coming_soon">Coming soon</string>
+    <string name="dashboard_overview_title">Overview</string>
+    <string name="dashboard_sign_out">Sign out</string>
+    <plurals name="dashboard_entry_count">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+
+    <!-- workout/WorkoutHomeContent.kt -->
+    <string name="workout_templates_title">Workout Templates</string>
+    <string name="workout_new_template">New template</string>
+    <string name="workout_no_templates">No templates yet — create one to plan a workout you can reuse.</string>
+    <string name="workout_last_workouts">Last workouts</string>
+    <string name="workout_template_options">Template options</string>
+    <string name="workout_edit">Edit</string>
+    <string name="workout_delete">Delete</string>
 </resources>

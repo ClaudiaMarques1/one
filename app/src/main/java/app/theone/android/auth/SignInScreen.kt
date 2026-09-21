@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -85,17 +86,17 @@ private fun SignInScreenContent(
         ) {
             Image(
                 painter = painterResource(R.drawable.logo),
-                contentDescription = "One logo",
+                contentDescription = stringResource(R.string.auth_logo_content_description),
                 modifier = Modifier.size(120.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text("One", style = MaterialTheme.typography.headlineMedium)
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
                 value = email,
                 onValueChange = onEmailChange,
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.auth_email_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth()
@@ -104,7 +105,7 @@ private fun SignInScreenContent(
             OutlinedTextField(
                 value = password,
                 onValueChange = onPasswordChange,
-                label = { Text("Password") },
+                label = { Text(stringResource(R.string.auth_password_label)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -113,12 +114,14 @@ private fun SignInScreenContent(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(onClick = onSubmit, modifier = Modifier.fillMaxWidth()) {
-                Text(if (isSignUpMode) "Create account" else "Sign in")
+                Text(stringResource(if (isSignUpMode) R.string.auth_create_account else R.string.auth_sign_in))
             }
             TextButton(onClick = onToggleMode) {
                 Text(
-                    if (isSignUpMode) "Already have an account? Sign in"
-                    else "Don't have an account? Sign up"
+                    stringResource(
+                        if (isSignUpMode) R.string.auth_toggle_to_sign_in
+                        else R.string.auth_toggle_to_sign_up
+                    )
                 )
             }
 
@@ -133,13 +136,13 @@ private fun SignInScreenContent(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 HorizontalDivider(modifier = Modifier.weight(1f))
-                Text("  OR  ")
+                Text(stringResource(R.string.auth_or_divider))
                 HorizontalDivider(modifier = Modifier.weight(1f))
             }
             Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedButton(onClick = onGoogleClick, modifier = Modifier.fillMaxWidth()) {
-                Text("Continue with Google")
+                Text(stringResource(R.string.auth_continue_with_google))
             }
         }
     }
