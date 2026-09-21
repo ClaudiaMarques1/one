@@ -22,6 +22,7 @@ class WorkoutTemplateRepository {
 
         val registration = collection
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(100) // templates are a curated set, not a growing log, but bound defensively
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)

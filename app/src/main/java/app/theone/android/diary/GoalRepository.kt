@@ -22,6 +22,7 @@ class GoalRepository {
 
         val registration = collection
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(100) // goals are a curated set, not a growing log, but bound defensively
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)

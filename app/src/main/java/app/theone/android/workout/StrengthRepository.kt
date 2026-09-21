@@ -22,6 +22,7 @@ class StrengthRepository {
 
         val registration = collection
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(365) // bounds re-read cost as history grows; ~a year of daily sessions
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
