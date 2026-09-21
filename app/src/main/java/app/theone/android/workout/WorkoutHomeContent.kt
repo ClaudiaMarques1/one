@@ -28,8 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import app.theone.android.R
 import app.theone.android.ui.theme.OneTheme
 
 @Composable
@@ -49,18 +51,18 @@ fun WorkoutHomeContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item { Text("Workout Templates", style = MaterialTheme.typography.headlineSmall) }
+            item { Text(stringResource(R.string.workout_templates_title), style = MaterialTheme.typography.headlineSmall) }
 
             item {
                 Button(onClick = onCreateTemplateClick, modifier = Modifier.fillMaxWidth()) {
-                    Text("New template")
+                    Text(stringResource(R.string.workout_new_template))
                 }
             }
 
             if (templates.isEmpty()) {
                 item {
                     Text(
-                        "No templates yet — create one to plan a workout you can reuse.",
+                        stringResource(R.string.workout_no_templates),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -76,7 +78,7 @@ fun WorkoutHomeContent(
             }
 
             if (sessions.isNotEmpty()) {
-                item { Text("Last workouts", style = MaterialTheme.typography.titleMedium) }
+                item { Text(stringResource(R.string.workout_last_workouts), style = MaterialTheme.typography.titleMedium) }
                 items(sessions.take(3), key = { it.id }) { session ->
                     SessionCard(session = session)
                 }
@@ -106,18 +108,18 @@ private fun TemplateCard(
                 Text(template.name, style = MaterialTheme.typography.titleMedium)
                 Box {
                     IconButton(onClick = { menuExpanded = true }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "Template options")
+                        Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.workout_template_options))
                     }
                     DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
                         DropdownMenuItem(
-                            text = { Text("Edit") },
+                            text = { Text(stringResource(R.string.workout_edit)) },
                             onClick = {
                                 menuExpanded = false
                                 onEdit()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Delete") },
+                            text = { Text(stringResource(R.string.workout_delete)) },
                             onClick = {
                                 menuExpanded = false
                                 onDelete()

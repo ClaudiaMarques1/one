@@ -27,9 +27,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.theone.android.R
 import app.theone.android.diary.DiaryEntry
 import app.theone.android.diary.DiaryViewModel
 import app.theone.android.ui.theme.OneTheme
@@ -58,25 +61,26 @@ private fun DashboardScreenContent(
     latestDiaryEntry: DiaryEntry?,
     onSignOut: () -> Unit
 ) {
+    val comingSoon = stringResource(R.string.dashboard_coming_soon)
     val diarySummary = if (diaryEntryCount == 0) {
-        "No entries yet"
+        stringResource(R.string.dashboard_no_entries)
     } else {
-        val noun = if (diaryEntryCount == 1) "entry" else "entries"
-        "$diaryEntryCount $noun" + (latestDiaryEntry?.let { " · latest: ${it.mood} ${it.date}" } ?: "")
+        pluralStringResource(R.plurals.dashboard_entry_count, diaryEntryCount, diaryEntryCount) +
+            (latestDiaryEntry?.let { stringResource(R.string.dashboard_latest_suffix, it.mood, it.date) } ?: "")
     }
 
     val cards = listOf(
-        DashboardCardData("Diary", Icons.Filled.Book, diarySummary),
-        DashboardCardData("Workout", Icons.Filled.FitnessCenter, "Coming soon"),
-        DashboardCardData("Meals", Icons.Filled.Restaurant, "Coming soon"),
-        DashboardCardData("Calendar", Icons.Filled.CalendarMonth, "Coming soon")
+        DashboardCardData(stringResource(R.string.dashboard_card_diary), Icons.Filled.Book, diarySummary),
+        DashboardCardData(stringResource(R.string.dashboard_card_workout), Icons.Filled.FitnessCenter, comingSoon),
+        DashboardCardData(stringResource(R.string.dashboard_card_meals), Icons.Filled.Restaurant, comingSoon),
+        DashboardCardData(stringResource(R.string.dashboard_card_calendar), Icons.Filled.CalendarMonth, comingSoon)
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Overview") },
-                actions = { TextButton(onClick = onSignOut) { Text("Sign out") } }
+                title = { Text(stringResource(R.string.dashboard_overview_title)) },
+                actions = { TextButton(onClick = onSignOut) { Text(stringResource(R.string.dashboard_sign_out)) } }
             )
         }
     ) { padding ->
