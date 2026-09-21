@@ -1,8 +1,8 @@
 package app.theone.android.workout
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -13,7 +13,8 @@ import java.util.Locale
 
 class StrengthViewModel(
     private val repository: StrengthRepository = StrengthRepository(),
-    private val templateRepository: WorkoutTemplateRepository = WorkoutTemplateRepository()
+    private val templateRepository: WorkoutTemplateRepository = WorkoutTemplateRepository(),
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle()
 ) : ViewModel() {
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -21,21 +22,24 @@ class StrengthViewModel(
     val sessions: StateFlow<List<StrengthSession>> = repository.observeSessions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _currentExercises = MutableStateFlow<List<StrengthExercise>>(emptyList())
-    val currentExercises: StateFlow<List<StrengthExercise>> = _currentExercises
+    // Backed by SavedStateHandle (not plain MutableStateFlow) so an in-progress session
+    // survives process death - see StrengthSet/StrengthExercise's Serializable conformance.
+    val currentExercises: StateFlow<List<StrengthExercise>> =
+        savedStateHandle.getStateFlow(KEY_CURRENT_EXERCISES, emptyList())
 
-    private val _activeTemplateId = MutableStateFlow("")
-    private val _activeTemplateName = MutableStateFlow("")
-    val activeTemplateName: StateFlow<String> = _activeTemplateName
+    private val activeTemplateId: StateFlow<String> =
+        savedStateHandle.getStateFlow(KEY_ACTIVE_TEMPLATE_ID, "")
+    val activeTemplateName: StateFlow<String> =
+        savedStateHandle.getStateFlow(KEY_ACTIVE_TEMPLATE_NAME, "")
 
-    private val _sessionStartTimeMillis = MutableStateFlow<Long?>(null)
-    val sessionStartTimeMillis: StateFlow<Long?> = _sessionStartTimeMillis
+    val sessionStartTimeMillis: StateFlow<Long?> =
+        savedStateHandle.getStateFlow(KEY_SESSION_START_TIME, null)
 
     fun startSessionFromTemplate(template: WorkoutTemplate) {
-        _activeTemplateId.value = template.id
-        _activeTemplateName.value = template.name
-        _sessionStartTimeMillis.value = System.currentTimeMillis()
-        _currentExercises.value = template.exercises.map { exercise ->
+        savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = template.id
+        savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = template.name
+        savedStateHandle[KEY_SESSION_START_TIME] = System.currentTimeMillis()
+        savedStateHandle[KEY_CURRENT_EXERCISES] = template.exercises.map { exercise ->
             StrengthExercise(
                 name = exercise.name,
                 sets = exercise.sets.map { StrengthSet(it.reps, it.weightKg) }
@@ -44,26 +48,27 @@ class StrengthViewModel(
     }
 
     fun discardSession() {
-        _activeTemplateId.value = ""
-        _activeTemplateName.value = ""
-        _sessionStartTimeMillis.value = null
-        _currentExercises.value = emptyList()
+        savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = ""
+        savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = ""
+        savedStateHandle[KEY_SESSION_START_TIME] = null
+        savedStateHandle[KEY_CURRENT_EXERCISES] = emptyList<StrengthExercise>()
     }
 
     fun setExercises(names: List<String>) {
-        val existingByName = _currentExercises.value.associateBy { it.name }
-        _currentExercises.value = names.map { name -> existingByName[name] ?: StrengthExercise(name = name) }
+        val existingByName = currentExercises.value.associateBy { it.name }
+        savedStateHandle[KEY_CURRENT_EXERCISES] =
+            names.map { name -> existingByName[name] ?: StrengthExercise(name = name) }
     }
 
     fun addSet(exerciseIndex: Int, set: StrengthSet) {
-        _currentExercises.value = _currentExercises.value.toMutableList().also { list ->
+        savedStateHandle[KEY_CURRENT_EXERCISES] = currentExercises.value.toMutableList().also { list ->
             val exercise = list[exerciseIndex]
             list[exerciseIndex] = exercise.copy(sets = exercise.sets + set)
         }
     }
 
     fun updateSet(exerciseIndex: Int, setIndex: Int, set: StrengthSet) {
-        _currentExercises.value = _currentExercises.value.toMutableList().also { list ->
+        savedStateHandle[KEY_CURRENT_EXERCISES] = currentExercises.value.toMutableList().also { list ->
             val exercise = list[exerciseIndex]
             list[exerciseIndex] = exercise.copy(
                 sets = exercise.sets.toMutableList().apply { this[setIndex] = set }
@@ -72,27 +77,27 @@ class StrengthViewModel(
     }
 
     fun removeSet(exerciseIndex: Int, setIndex: Int) {
-        _currentExercises.value = _currentExercises.value.toMutableList().also { list ->
+        savedStateHandle[KEY_CURRENT_EXERCISES] = currentExercises.value.toMutableList().also { list ->
             val exercise = list[exerciseIndex]
             list[exerciseIndex] = exercise.copy(sets = exercise.sets.toMutableList().apply { removeAt(setIndex) })
         }
     }
 
     fun removeExercise(index: Int) {
-        _currentExercises.value = _currentExercises.value.toMutableList().apply { removeAt(index) }
+        savedStateHandle[KEY_CURRENT_EXERCISES] = currentExercises.value.toMutableList().apply { removeAt(index) }
     }
 
     fun duplicateExercise(index: Int) {
-        _currentExercises.value = _currentExercises.value.toMutableList().apply {
+        savedStateHandle[KEY_CURRENT_EXERCISES] = currentExercises.value.toMutableList().apply {
             add(index + 1, StrengthExercise(name = this[index].name))
         }
     }
 
     fun saveSession() {
-        val exercises = _currentExercises.value
+        val exercises = currentExercises.value
         if (exercises.isEmpty()) return
-        val templateId = _activeTemplateId.value
-        val templateName = _activeTemplateName.value
+        val templateId = activeTemplateId.value
+        val templateName = activeTemplateName.value
         viewModelScope.launch {
             repository.addSession(
                 StrengthSession(date = dateFormat.format(Date()), templateName = templateName, exercises = exercises)
@@ -108,10 +113,17 @@ class StrengthViewModel(
                     }
                 )
             }
-            _currentExercises.value = emptyList()
-            _activeTemplateId.value = ""
-            _activeTemplateName.value = ""
-            _sessionStartTimeMillis.value = null
+            savedStateHandle[KEY_CURRENT_EXERCISES] = emptyList<StrengthExercise>()
+            savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = ""
+            savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = ""
+            savedStateHandle[KEY_SESSION_START_TIME] = null
         }
+    }
+
+    private companion object {
+        const val KEY_CURRENT_EXERCISES = "currentExercises"
+        const val KEY_ACTIVE_TEMPLATE_ID = "activeTemplateId"
+        const val KEY_ACTIVE_TEMPLATE_NAME = "activeTemplateName"
+        const val KEY_SESSION_START_TIME = "sessionStartTimeMillis"
     }
 }
