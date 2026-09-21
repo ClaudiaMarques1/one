@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Claude Code
+.claude/settings.local.json
+
+# Firebase client config (see .claude/rules/architecture.md — never read/echo)
+app/google-services.json
