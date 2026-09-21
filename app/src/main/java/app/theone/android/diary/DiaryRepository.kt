@@ -22,6 +22,7 @@ class DiaryRepository {
 
         val registration = collection
             .orderBy("date", Query.Direction.DESCENDING)
+            .limit(365) // bounds re-read cost as history grows; ~a year of daily entries
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
