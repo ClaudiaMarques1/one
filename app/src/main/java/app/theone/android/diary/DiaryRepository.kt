@@ -10,10 +10,7 @@ import kotlinx.coroutines.tasks.await
 
 class DiaryRepository {
 
-    private fun entriesCollection(): CollectionReference? {
-        val uid = FirebaseModule.auth.currentUser?.uid ?: return null
-        return FirebaseModule.firestore.collection("users").document(uid).collection("diaryEntries")
-    }
+    private fun entriesCollection(): CollectionReference? = FirebaseModule.userCollection("diaryEntries")
 
     fun observeEntries(): Flow<List<DiaryEntry>> = callbackFlow {
         val collection = entriesCollection()

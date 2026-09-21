@@ -10,10 +10,7 @@ import kotlinx.coroutines.tasks.await
 
 class StrengthRepository {
 
-    private fun sessionsCollection(): CollectionReference? {
-        val uid = FirebaseModule.auth.currentUser?.uid ?: return null
-        return FirebaseModule.firestore.collection("users").document(uid).collection("strengthSessions")
-    }
+    private fun sessionsCollection(): CollectionReference? = FirebaseModule.userCollection("strengthSessions")
 
     fun observeSessions(): Flow<List<StrengthSession>> = callbackFlow {
         val collection = sessionsCollection()
@@ -51,14 +48,13 @@ class StrengthRepository {
         templateExercises: List<TemplateExercise>?
     ) {
         val sessions = sessionsCollection() ?: return
-        val uid = FirebaseModule.auth.currentUser?.uid ?: return
         FirebaseModule.firestore.runTransaction { transaction ->
             transaction.set(sessions.document(), session)
             if (!templateId.isNullOrEmpty() && templateExercises != null) {
-                val templateRef = FirebaseModule.firestore
-                    .collection("users").document(uid)
-                    .collection("workoutTemplates").document(templateId)
-                transaction.update(templateRef, "exercises", templateExercises)
+                val templateRef = FirebaseModule.userCollection("workoutTemplates")?.document(templateId)
+                if (templateRef != null) {
+                    transaction.update(templateRef, "exercises", templateExercises)
+                }
             }
         }.await()
     }
