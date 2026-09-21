@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.theone.android.notifications.HabitReminderScheduler
+import app.theone.android.ui.ErrorBanner
 import app.theone.android.ui.theme.OneTheme
 
 @Composable
@@ -54,6 +55,8 @@ fun DiaryScreen(viewModel: DiaryViewModel = viewModel(), goalViewModel: GoalView
     val draftName by goalViewModel.draftName.collectAsState()
     val draftHabits by goalViewModel.draftHabits.collectAsState()
     val editingGoal by goalViewModel.editingGoal.collectAsState()
+    val diaryError by viewModel.diaryError.collectAsState()
+    val goalError by goalViewModel.goalError.collectAsState()
 
     val context = LocalContext.current
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -135,6 +138,15 @@ fun DiaryScreen(viewModel: DiaryViewModel = viewModel(), goalViewModel: GoalView
                     onDeleteClick = { viewModel.deleteEntry(it) }
                 )
             }
+
+            ErrorBanner(
+                message = diaryError ?: goalError,
+                onDismiss = {
+                    viewModel.clearDiaryError()
+                    goalViewModel.clearGoalError()
+                },
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
     }
 

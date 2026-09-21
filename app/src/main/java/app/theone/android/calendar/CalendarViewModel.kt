@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.theone.android.diary.DiaryRepository
 import app.theone.android.workout.StrengthRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
@@ -15,6 +17,9 @@ class CalendarViewModel(
     private val strengthRepository: StrengthRepository = StrengthRepository(),
     private val diaryRepository: DiaryRepository = DiaryRepository()
 ) : ViewModel() {
+
+    private val _calendarError = MutableStateFlow<String?>(null)
+    val calendarError: StateFlow<String?> = _calendarError
 
     val activityByDate: StateFlow<Map<String, Set<ActivityType>>> = combine(
         strengthRepository.observeSessions(),
@@ -28,5 +33,10 @@ class CalendarViewModel(
             result.getOrPut(entry.date) { mutableSetOf() }.add(ActivityType.DIARY)
         }
         result
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    }.catch { e -> _calendarError.value = e.message }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    fun clearCalendarError() {
+        _calendarError.value = null
+    }
 }

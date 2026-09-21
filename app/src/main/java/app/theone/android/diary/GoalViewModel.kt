@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -13,8 +14,16 @@ class GoalViewModel(
     private val repository: GoalRepository = GoalRepository()
 ) : ViewModel() {
 
+    private val _goalError = MutableStateFlow<String?>(null)
+    val goalError: StateFlow<String?> = _goalError
+
     val goals: StateFlow<List<Goal>> = repository.observeGoals()
+        .catch { e -> _goalError.value = e.message }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun clearGoalError() {
+        _goalError.value = null
+    }
 
     private val _draftName = MutableStateFlow("")
     val draftName: StateFlow<String> = _draftName
@@ -62,16 +71,21 @@ class GoalViewModel(
         if (name.isBlank() || habits.isEmpty()) return
         val editing = _editingGoal.value
         viewModelScope.launch {
-            if (editing != null) {
-                repository.updateGoal(editing.copy(name = name, habits = habits))
-            } else {
-                repository.addGoal(Goal(name = name, habits = habits))
-            }
-            clearDraft()
+            runCatching {
+                if (editing != null) {
+                    repository.updateGoal(editing.copy(name = name, habits = habits))
+                } else {
+                    repository.addGoal(Goal(name = name, habits = habits))
+                }
+            }.onFailure { _goalError.value = it.message }
+                .onSuccess { clearDraft() }
         }
     }
 
     fun deleteGoal(id: String) {
-        viewModelScope.launch { repository.deleteGoal(id) }
+        viewModelScope.launch {
+            runCatching { repository.deleteGoal(id) }
+                .onFailure { _goalError.value = it.message }
+        }
     }
 }
