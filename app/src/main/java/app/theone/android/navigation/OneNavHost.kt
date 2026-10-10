@@ -71,7 +71,12 @@ fun OneNavHost(authViewModel: AuthViewModel) {
         ) {
             composable(Destination.Home.route) { DashboardScreen(onSignOut = authViewModel::signOut) }
             composable(Destination.Calendar.route) {
-                SectionTheme(Destination.Calendar.accentColor!!) { CalendarScreen() }
+                SectionTheme(Destination.Calendar.accentColor!!) {
+                    CalendarScreen(
+                        onNavigateToWorkout = { navController.navigate(Destination.Workout.route) },
+                        onNavigateToDiary = { navController.navigate(Destination.Diary.route) }
+                    )
+                }
             }
             composable(Destination.Workout.route) {
                 SectionTheme(Destination.Workout.accentColor!!) { WorkoutScreen() }
