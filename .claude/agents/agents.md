@@ -12,7 +12,7 @@
 
 | Content | Loading | Budget |
 |---|---|---|
-| CLAUDE.md + agents.md + architecture.md | always | keep combined under 200 lines |
+| CLAUDE.md + agents.md + architecture.md | always | keep combined under 220 lines |
 | Skills (`.claude/skills/`) | on trigger or `/command` | 0 tokens until loaded |
 | Source files | on demand | read a targeted range, not the whole file, once a file is over ~200 lines (e.g. `WorkoutScreen.kt`) |
 
@@ -43,10 +43,8 @@ Otherwise do it directly — a single-module app rarely justifies delegation ove
 
 ## Self-Healing
 
-- If a build/lint/test command fails after a change, fix it before calling the task done.
-- If a `.claude/` file itself turns out wrong (stale line number, renamed file), fix that file in
-  the same change instead of leaving it stale for the next session.
-- Don't silently work around a failing check by disabling it.
+Fix failing checks and stale `.claude/` docs in the same change - rules, trigger table, and format
+in `.claude/rules/self-healing.md`.
 
 ## Git Attribution — Overrides Default Guidance
 

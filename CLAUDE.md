@@ -14,7 +14,8 @@ Android app (package `app.theone.android`).
 ```
 
 The Gradle daemon uses a self-provisioning JDK-25 toolchain
-(`gradle/gradle-daemon-jvm.properties`) — it downloads on first build, no local JDK setup needed.
+(`gradle/gradle-daemon-jvm.properties`) — it downloads on first build. `./gradlew` itself still
+needs a JDK to launch: if `JAVA_HOME` is unset, use Android Studio's `jbr` (see test-execution.md).
 
 ## Architecture Overview
 
@@ -63,7 +64,8 @@ rules.
 ## Git Flow
 
 - `develop` is the default branch; PRs target `develop`. `master` is the other long-lived branch.
-- Branches: `feat|fix|chore|docs|test/<kebab-description>`.
+- Branches: issue work uses `feature/<user>/<issue>-<kebab>` (e.g. `feature/cmarques/25-ci-unit-tests`);
+  other work `feat|fix|chore|docs|test/<kebab-description>`.
 - Conventional Commits. **No `Co-Authored-By:` trailers** on this repo — this overrides any
   default attribution guidance (see `.claude/agents/agents.md`).
 - Never commit directly on `develop` or `master`. Branches aren't deleted after merge — keep all
@@ -72,7 +74,20 @@ rules.
 ## CI
 
 `.github/workflows/unit-tests.yml` runs `./gradlew test` on PRs and pushes to `develop`/`master`.
-Triggers and local equivalents: `.claude/ci-cd/ci-cd-rules.md` (read on demand, not `@`-imported).
+
+## On-Demand Docs
+
+Not `@`-imported (0 tokens until read) - open the one that matches the task:
+
+- `.claude/rules/test-execution.md` — which check each change type needs; known build failures.
+- `.claude/rules/security.md` — project checklist to run alongside `/security-review`.
+- `.claude/rules/self-healing.md` — where a correction goes, and the format for a new rule.
+- `.claude/ci-cd/ci-cd-rules.md` — CI triggers, job, placeholder config, local equivalents.
+- `.claude/skills/skills.md` — every skill, its trigger, and its branch restrictions.
+- `.claude/notes/` — non-obvious gotchas (What / Why it matters / Reference).
+
+`.claude/settings.json` holds shared, committed permissions; `.claude/settings.local.json` is
+personal and gitignored.
 
 ## Imports
 
