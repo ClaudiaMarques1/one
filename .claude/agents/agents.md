@@ -7,6 +7,8 @@
 - Prefer the smallest correct change over a broader rewrite.
 - Ask before introducing a new dependency, abstraction, or architectural layer — see
   architecture.md's Deliberate Non-Goals.
+- Multi-step work gets a plan in `.claude/plans/<issue>-<kebab>.md`, created before coding and
+  updated (decisions, ticked items, next step) as work lands - sessions don't share memory.
 
 ## Token Budget Rules
 

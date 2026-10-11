@@ -85,6 +85,7 @@ Not `@`-imported (0 tokens until read) - open the one that matches the task:
 - `.claude/ci-cd/ci-cd-rules.md` — CI triggers, job, placeholder config, local equivalents.
 - `.claude/skills/skills.md` — every skill, its trigger, and its branch restrictions.
 - `.claude/notes/` — non-obvious gotchas (What / Why it matters / Reference).
+- `.claude/plans/` — one plan per issue/branch (decisions, checklist, next step); read at session start.
 
 `.claude/settings.json` holds shared, committed permissions; `.claude/settings.local.json` is
 personal and gitignored.
