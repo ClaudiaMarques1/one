@@ -47,8 +47,8 @@ Issue: https://github.com/ClaudiaMarques1/one/issues/37 (Phase 1 checkboxes not 
 - [x] Strength: `StrengthRepository` interface + `FirestoreStrengthRepository`, `FakeStrengthRepository`
       (records template carry-overs in `templateUpdates`; transaction atomicity not modelled),
       `saveSession` tests: from template / without template / empty no-op / error path
-- [ ] Calendar: `CalendarViewModel.dayByDate` test using the Diary + Strength fakes (default already
-      switched to `FirestoreStrengthRepository`, test already on the fakes)
+- [x] Calendar: `CalendarViewModelTest` on the Diary + Strength fakes; `dayByDate` tests for merging by
+      date, several sessions on a date, newest diary entry wins, live updates. Phase 1 done.
 
 ## Phase 2 - CI
 
@@ -70,4 +70,5 @@ Out of scope: Compose UI tests, coverage gate, `AuthViewModel` seam.
 
 ## Next step
 
-`CalendarViewModel.dayByDate` test with `FakeDiaryRepository` + `FakeStrengthRepository`; that closes Phase 1.
+Phase 2 (CI): add a lint job to `.github/workflows/unit-tests.yml` (Android Lint + ktlint), then the
+JaCoCo coverage artifact + summary, then the shared placeholder `google-services.json` action.
