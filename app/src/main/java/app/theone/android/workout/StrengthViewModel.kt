@@ -9,17 +9,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.LocalDate
 
 class StrengthViewModel(
     private val repository: StrengthRepository = StrengthRepository(),
     private val savedStateHandle: SavedStateHandle = SavedStateHandle()
 ) : ViewModel() {
-
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-
     private val _workoutError = MutableStateFlow<String?>(null)
     val workoutError: StateFlow<String?> = _workoutError
 
@@ -110,9 +105,9 @@ class StrengthViewModel(
         viewModelScope.launch {
             runCatching {
                 repository.addSessionAndUpdateTemplate(
-                    session = StrengthSession(date = dateFormat.format(Date()), templateName = templateName, exercises = exercises),
+                    session = StrengthSession(date = LocalDate.now().toString(), templateName = templateName, exercises = exercises),
                     templateId = templateId.ifEmpty { null },
-                    templateExercises = if (templateId.isEmpty()) null else exercises.map { exercise ->
+                    templateExercises = exercises.takeIf { templateId.isNotEmpty() }?.map { exercise ->
                         TemplateExercise(
                             name = exercise.name,
                             sets = exercise.sets.map { TemplateSet(it.reps, it.weightKg) }
