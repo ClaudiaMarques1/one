@@ -1,11 +1,10 @@
 package app.theone.android.calendar
 
-import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.util.Calendar
 
 class CalendarDateUtilsTest {
-
     @Test
     fun `addMonths keeps day-of-month when the target month is long enough`() {
         assertEquals("2026-02-15", CalendarDateUtils.addMonths("2026-01-15", delta = 1))

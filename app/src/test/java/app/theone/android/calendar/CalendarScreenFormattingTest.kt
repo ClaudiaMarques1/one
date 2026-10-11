@@ -6,7 +6,6 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class CalendarScreenFormattingTest {
-
     @Test
     fun `formatWeight drops the decimal for whole numbers`() {
         assertEquals("60", formatWeight(60.0))

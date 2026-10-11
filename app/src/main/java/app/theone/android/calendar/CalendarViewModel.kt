@@ -31,7 +31,6 @@ class CalendarViewModel(
     private val diaryRepository: DiaryRepository = DiaryRepository(),
     private val savedStateHandle: SavedStateHandle = SavedStateHandle()
 ) : ViewModel() {
-
     private val _calendarError = MutableStateFlow<String?>(null)
     val calendarError: StateFlow<String?> = _calendarError
 

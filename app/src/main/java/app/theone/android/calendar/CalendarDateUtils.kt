@@ -9,7 +9,6 @@ import java.util.Locale
  * the calendar screen. Kept free of ViewModel/repository state so it's directly unit-testable.
  */
 internal object CalendarDateUtils {
-
     fun todayKey(): String = formatDateKey(Calendar.getInstance())
 
     fun formatDateKey(calendar: Calendar): String =
@@ -61,11 +60,11 @@ internal object CalendarDateUtils {
 
     /** Leading `null` blanks (not clickable) followed by one date key per day of the month. */
     fun monthGridCells(year: Int, month: Int, firstDayOfWeek: Int): List<String?> {
-        val first = Calendar.getInstance().apply { clear(); set(year, month, 1) }
+        val first = calendarOf(year, month, 1)
         val daysInMonth = first.getActualMaximum(Calendar.DAY_OF_MONTH)
         val leadingBlanks = ((first.get(Calendar.DAY_OF_WEEK) - firstDayOfWeek) + 7) % 7
         val days = (1..daysInMonth).map { day ->
-            formatDateKey(Calendar.getInstance().apply { clear(); set(year, month, day) })
+            formatDateKey(calendarOf(year, month, day))
         }
         return List(leadingBlanks) { null } + days
     }
@@ -101,11 +100,16 @@ internal object CalendarDateUtils {
 
     /** Date keys of every day in [year]/[month] up to and including [todayKey] (string-ordered). */
     fun monthKeysUpToToday(year: Int, month: Int, todayKey: String): List<String> {
-        val first = Calendar.getInstance().apply { clear(); set(year, month, 1) }
+        val first = calendarOf(year, month, 1)
         val daysInMonth = first.getActualMaximum(Calendar.DAY_OF_MONTH)
         return (1..daysInMonth)
-            .map { day -> formatDateKey(Calendar.getInstance().apply { clear(); set(year, month, day) }) }
+            .map { day -> formatDateKey(calendarOf(year, month, day)) }
             .filter { it <= todayKey }
+    }
+
+    private fun calendarOf(year: Int, month: Int, day: Int): Calendar = Calendar.getInstance().apply {
+        clear()
+        set(year, month, day)
     }
 
     fun longestActiveStreak(orderedDateKeys: List<String>, isActive: (String) -> Boolean): Int {

@@ -15,7 +15,6 @@ import org.junit.Test
 // StrengthRepository/DiaryRepository are final, Firebase-coupled classes with no seam for a fake,
 // so dayByDate's repository-backed merge isn't covered here (see StrengthViewModelTest).
 class CalendarViewModelTest {
-
     private val viewModel = CalendarViewModel(
         strengthRepository = StrengthRepository(),
         diaryRepository = DiaryRepository(),
