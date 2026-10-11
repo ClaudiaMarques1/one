@@ -21,12 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -48,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import app.theone.android.diary.journal.backend.DiaryDateKeys
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.backend.effectiveSoreness
+import app.theone.android.ui.EditDeleteMenu
 import app.theone.android.ui.theme.OneTheme
 
 private val Accent = Color(0xFF8E24AA)
@@ -183,24 +180,7 @@ private fun EntryCard(entry: DiaryEntry, onEdit: () -> Unit, onDelete: () -> Uni
                 IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(44.dp)) {
                     Icon(Icons.Filled.MoreVert, contentDescription = "More", tint = Color(0xFF49454F), modifier = Modifier.size(22.dp))
                 }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                    DropdownMenuItem(
-                        text = { Text("Edit") },
-                        leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null, tint = Color(0xFF49454F)) },
-                        onClick = {
-                            menuOpen = false
-                            onEdit()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Delete", color = Color(0xFFB3261E)) },
-                        leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null, tint = Color(0xFFB3261E)) },
-                        onClick = {
-                            menuOpen = false
-                            onDelete()
-                        }
-                    )
-                }
+                EditDeleteMenu(expanded = menuOpen, onDismiss = { menuOpen = false }, onEdit = onEdit, onDelete = onDelete)
             }
         }
 

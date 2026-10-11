@@ -25,48 +25,105 @@ class GoalViewModelTest {
     }
 
     @Test
-    fun `addDraftHabit ignores blank name`() {
-        viewModel.addDraftHabit("", listOf("MORNING"))
-        assertTrue(viewModel.draftHabits.value.isEmpty())
+    fun `addDraftHabit appends a blank habit by default and returns its id`() {
+        val id = viewModel.addDraftHabit()
+
+        val habit = viewModel.draftHabits.value.single()
+        assertEquals(id, habit.id)
+        assertEquals("", habit.name)
+        assertTrue(habit.reminders.isEmpty())
     }
 
     @Test
-    fun `addDraftHabit ignores empty timesOfDay`() {
-        viewModel.addDraftHabit("Stretch", emptyList())
-        assertTrue(viewModel.draftHabits.value.isEmpty())
+    fun `addDraftHabit keeps the given name and sorts its reminders by time`() {
+        viewModel.addDraftHabit("Stretch", listOf(HabitReminder(id = "b", hour = 18), HabitReminder(id = "a", hour = 7, minute = 30)))
+
+        val habit = viewModel.draftHabits.value.single()
+        assertEquals("Stretch", habit.name)
+        assertEquals(listOf("a", "b"), habit.reminders.map { it.id })
     }
 
     @Test
-    fun `addDraftHabit appends a habit with the given name and times`() {
-        viewModel.addDraftHabit("Stretch", listOf("MORNING", "EVENING"))
-        val habits = viewModel.draftHabits.value
-        assertEquals(1, habits.size)
-        assertEquals("Stretch", habits[0].name)
-        assertEquals(listOf("MORNING", "EVENING"), habits[0].timesOfDay)
+    fun `renameDraftHabit renames only the matching habit`() {
+        val first = viewModel.addDraftHabit()
+        viewModel.addDraftHabit("Meditate")
+
+        viewModel.renameDraftHabit(first, "Stretch")
+
+        assertEquals(listOf("Stretch", "Meditate"), viewModel.draftHabits.value.map { it.name })
     }
 
     @Test
-    fun `removeDraftHabit removes at index`() {
-        viewModel.addDraftHabit("Stretch", listOf("MORNING"))
-        viewModel.addDraftHabit("Meditate", listOf("EVENING"))
-        viewModel.removeDraftHabit(0)
+    fun `removeDraftHabit removes the matching habit`() {
+        val stretchId = viewModel.addDraftHabit("Stretch")
+        viewModel.addDraftHabit("Meditate")
+        viewModel.removeDraftHabit(stretchId)
         val habits = viewModel.draftHabits.value
         assertEquals(1, habits.size)
         assertEquals("Meditate", habits[0].name)
     }
 
     @Test
-    fun `updateHabitReminders updates only the matching habit`() {
-        viewModel.addDraftHabit("Stretch", listOf("MORNING"))
-        viewModel.addDraftHabit("Meditate", listOf("EVENING"))
-        val stretchId = viewModel.draftHabits.value[0].id
-        val newReminders = listOf(HabitReminder(timeOfDay = "MORNING", hour = 7, minute = 30))
+    fun `updateHabitReminders updates only the matching habit, sorted by time`() {
+        val stretchId = viewModel.addDraftHabit("Stretch")
+        viewModel.addDraftHabit("Meditate")
+        val late = HabitReminder(id = "late", hour = 21)
+        val early = HabitReminder(id = "early", hour = 7, minute = 30)
 
-        viewModel.updateHabitReminders(stretchId, newReminders)
+        viewModel.updateHabitReminders(stretchId, listOf(late, early))
 
         val habits = viewModel.draftHabits.value
-        assertEquals(newReminders, habits.first { it.id == stretchId }.reminders)
+        assertEquals(listOf(early, late), habits.first { it.id == stretchId }.reminders)
         assertTrue(habits.first { it.name == "Meditate" }.reminders.isEmpty())
+    }
+
+    @Test
+    fun `addReminderTime adds 9 AM first, then 2 hours after the latest time`() {
+        val id = viewModel.addDraftHabit("Drink water")
+
+        viewModel.addReminderTime(id)
+        viewModel.addReminderTime(id)
+
+        val reminders = viewModel.draftHabits.value.single().reminders
+        assertEquals(listOf(9 to 0, 11 to 0), reminders.map { it.hour to it.minute })
+        assertTrue(reminders.all { it.enabled && it.id.isNotEmpty() })
+        assertEquals(2, reminders.map { it.id }.distinct().size)
+    }
+
+    @Test
+    fun `changeReminderTime re-sorts, toggleReminder flips, removeReminderTime drops`() {
+        val id = viewModel.addDraftHabit("Drink water", listOf(HabitReminder(id = "a", hour = 7), HabitReminder(id = "b", hour = 12)))
+
+        viewModel.changeReminderTime(id, "a", 15, 45)
+        assertEquals(listOf("b", "a"), viewModel.draftHabits.value.single().reminders.map { it.id })
+
+        viewModel.toggleReminder(id, "b")
+        assertEquals(false, viewModel.draftHabits.value.single().reminders.first { it.id == "b" }.enabled)
+
+        viewModel.removeReminderTime(id, "b")
+        assertEquals(listOf("a"), viewModel.draftHabits.value.single().reminders.map { it.id })
+    }
+
+    @Test
+    fun `canSave needs a goal name and at least one named habit`() = runTest {
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.canSave.collect {} }
+        val id = viewModel.addDraftHabit()
+        viewModel.updateDraftName("Stay hydrated")
+        assertEquals(false, viewModel.canSave.value)
+
+        viewModel.renameDraftHabit(id, "Drink water")
+        assertEquals(true, viewModel.canSave.value)
+    }
+
+    @Test
+    fun `habitsToSave drops unnamed habits and derives timesOfDay`() {
+        viewModel.addDraftHabit("", listOf(HabitReminder(id = "x", hour = 8)))
+        viewModel.addDraftHabit(" Drink water ", listOf(HabitReminder(id = "a", hour = 19), HabitReminder(id = "b", hour = 7, minute = 30)))
+
+        val habit = viewModel.habitsToSave().single()
+        assertEquals("Drink water", habit.name)
+        assertEquals(listOf("MORNING", "EVENING"), habit.timesOfDay)
+        assertEquals(listOf("MORNING", "EVENING"), habit.reminders.map { it.timeOfDay })
     }
 
     @Test
@@ -102,7 +159,7 @@ class GoalViewModelTest {
     @Test
     fun `saveDraftGoal adds a new goal and clears the draft`() {
         viewModel.updateDraftName("Morning routine")
-        viewModel.addDraftHabit("Stretch", listOf("MORNING"))
+        viewModel.addDraftHabit("Stretch")
 
         viewModel.saveDraftGoal()
 
@@ -152,7 +209,7 @@ class GoalViewModelTest {
     fun `a failed save surfaces in goalError and keeps the draft`() {
         repository.failNext = IllegalStateException("offline")
         viewModel.updateDraftName("Morning routine")
-        viewModel.addDraftHabit("Stretch", listOf("MORNING"))
+        viewModel.addDraftHabit("Stretch")
 
         viewModel.saveDraftGoal()
 

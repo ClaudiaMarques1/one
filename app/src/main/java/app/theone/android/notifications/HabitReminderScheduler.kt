@@ -10,18 +10,23 @@ import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
 /**
- * Schedules/cancels daily habit reminder notifications via WorkManager. Each (habitId, timeOfDay)
+ * Schedules/cancels daily habit reminder notifications via WorkManager. Each (habitId, reminderId)
  * pair maps to one unique periodic work request, so re-scheduling with new data simply replaces it.
  */
 object HabitReminderScheduler {
-    private fun workName(habitId: String, timeOfDay: String) = "habit_reminder_${habitId}_$timeOfDay"
+    private fun workName(habitId: String, reminderId: String) = "habit_reminder_$habitId:$reminderId"
+
+    // Before per-time reminders, work was keyed by part of the day.
+    private val legacyParts = listOf("MORNING", "AFTERNOON", "EVENING", "NIGHT")
+
+    private fun legacyWorkName(habitId: String, part: String) = "habit_reminder_${habitId}_$part"
 
     fun schedule(
         context: Context,
         habitId: String,
+        reminderId: String,
         habitName: String,
         goalName: String,
-        timeOfDay: String,
         timeOfDayLabel: String,
         hour: Int,
         minute: Int
@@ -30,7 +35,7 @@ object HabitReminderScheduler {
             .putString(HabitReminderWorker.KEY_HABIT_NAME, habitName)
             .putString(HabitReminderWorker.KEY_GOAL_NAME, goalName)
             .putString(HabitReminderWorker.KEY_TIME_OF_DAY_LABEL, timeOfDayLabel)
-            .putInt(HabitReminderWorker.KEY_NOTIFICATION_ID, "$habitId-$timeOfDay".hashCode())
+            .putInt(HabitReminderWorker.KEY_NOTIFICATION_ID, workName(habitId, reminderId).hashCode())
             .build()
 
         val request = PeriodicWorkRequestBuilder<HabitReminderWorker>(24, TimeUnit.HOURS)
@@ -39,14 +44,20 @@ object HabitReminderScheduler {
             .build()
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-            workName(habitId, timeOfDay),
+            workName(habitId, reminderId),
             ExistingPeriodicWorkPolicy.REPLACE,
             request
         )
     }
 
-    fun cancel(context: Context, habitId: String, timeOfDay: String) {
-        WorkManager.getInstance(context).cancelUniqueWork(workName(habitId, timeOfDay))
+    fun cancel(context: Context, habitId: String, reminderId: String) {
+        WorkManager.getInstance(context).cancelUniqueWork(workName(habitId, reminderId))
+    }
+
+    /** Cancels any reminder scheduled for [habitId] under the old per-part-of-day work names. */
+    fun cancelLegacy(context: Context, habitId: String) {
+        val workManager = WorkManager.getInstance(context)
+        legacyParts.forEach { workManager.cancelUniqueWork(legacyWorkName(habitId, it)) }
     }
 
     // ZonedDateTime keeps the wall-clock time across DST changes, as Calendar did.

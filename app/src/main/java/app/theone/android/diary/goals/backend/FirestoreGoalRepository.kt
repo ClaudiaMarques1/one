@@ -28,7 +28,9 @@ class FirestoreGoalRepository : GoalRepository {
                     return@addSnapshotListener
                 }
                 val goals = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Goal::class.java)?.copy(id = doc.id)
+                    doc.toObject(Goal::class.java)?.let { goal ->
+                        goal.copy(id = doc.id, habits = goal.habits.map { it.withMigratedReminders() })
+                    }
                 } ?: emptyList()
                 trySend(goals)
             }
