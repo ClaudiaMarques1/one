@@ -48,6 +48,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.theone.android.ui.theme.OneTheme
+import app.theone.android.ui.theme.SwipeDeleteBackground
 import kotlinx.coroutines.delay
 
 @Composable
@@ -334,7 +335,7 @@ private fun SwipeableExerciseCard(onDelete: () -> Unit, onCopy: () -> Unit, cont
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(0xFFD32F2F), shape = RoundedCornerShape(12.dp))
+                            .background(SwipeDeleteBackground, shape = RoundedCornerShape(12.dp))
                             .padding(horizontal = 20.dp),
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
@@ -348,7 +349,7 @@ private fun SwipeableExerciseCard(onDelete: () -> Unit, onCopy: () -> Unit, cont
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(0xFF1E88E5), shape = RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(12.dp))
                             .padding(horizontal = 20.dp),
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
