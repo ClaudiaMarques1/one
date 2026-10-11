@@ -35,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.theone.android.R
 import app.theone.android.diary.DiaryEntry
 import app.theone.android.diary.DiaryViewModel
+import app.theone.android.ui.formatDisplayDate
 import app.theone.android.ui.theme.OneTheme
 
 @Composable
@@ -66,7 +67,7 @@ private fun DashboardScreenContent(
         stringResource(R.string.dashboard_no_entries)
     } else {
         pluralStringResource(R.plurals.dashboard_entry_count, diaryEntryCount, diaryEntryCount) +
-            (latestDiaryEntry?.let { stringResource(R.string.dashboard_latest_suffix, it.mood, it.date) } ?: "")
+            (latestDiaryEntry?.let { stringResource(R.string.dashboard_latest_suffix, it.mood, formatDisplayDate(it.date)) } ?: "")
     }
 
     val cards = listOf(

@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.theone.android.R
+import app.theone.android.ui.formatDisplayDate
 import app.theone.android.ui.theme.OneTheme
 
 @Composable
@@ -96,9 +97,11 @@ private fun TemplateCard(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Card(modifier = Modifier
-        .fillMaxWidth()
-        .clickable(onClick = onClick)) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -139,7 +142,7 @@ private fun TemplateCard(
 private fun SessionCard(session: StrengthSession) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(session.date, style = MaterialTheme.typography.titleSmall)
+            Text(formatDisplayDate(session.date), style = MaterialTheme.typography.titleSmall)
             if (session.templateName.isNotEmpty()) {
                 Text(session.templateName, style = MaterialTheme.typography.bodySmall)
             }
