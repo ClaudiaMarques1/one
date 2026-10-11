@@ -47,9 +47,8 @@ Reference: `auth/AuthViewModel.kt:33-34` (`_authError: MutableStateFlow<String?>
 (`:46-49`, `:55-58`) wrapped in `runCatching { }.onFailure { }`. New ViewModels that need error
 state follow this shape — field named `_<domain>Error`, `runCatching` around the failable call.
 
-Known gap, not a pattern to copy: `signInWithGoogle` (`:38-40`) reads
-`result.exceptionOrNull()?.message` from a `Result` instead of using `runCatching` — inconsistent
-with the rest of the file. Don't propagate this variant into new code.
+When the failable call already returns a `Result` (e.g. `GoogleAuthClient.signIn`), chain
+`.onFailure { }` on it directly instead of re-wrapping - see `signInWithGoogle` (`:36-42`).
 
 ## Deliberate Non-Goals
 
