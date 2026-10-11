@@ -24,17 +24,17 @@ no `di/`. Each top-level package under `app/src/main/java/app/theone/android/` o
 screens, ViewModel(s), repository, and Firestore models:
 
 ```
-auth/            Sign-in/sign-up, AuthViewModel, GoogleAuthClient
-calendar/        Calendar screen + ViewModel (aggregates workout/diary activity by date)
-dashboard/       Home/overview screen
+auth/            backend/ AuthViewModel, GoogleAuthClient; frontend/ SignInScreen
+calendar/        backend/ ViewModel + date keys; frontend/ screen + date labels (workout/diary by date)
+dashboard/       frontend/ Home/overview screen
 data/            FirebaseModule — the app's only shared singleton
-diary/           Journal + Goals/Habits, ViewModels, repositories, Firestore models
-exercise/        Exercise catalog model, asset loader, category picker dialog
-meals/           Meals screen (placeholder)
-navigation/      Bottom nav destinations (per-section accent colors) and NavHost
-notifications/   Habit reminder notification channel, WorkManager worker + scheduler
+diary/           frontend/ overview (tabs); journal/ + goals/, each backend/ (VMs, repos) + frontend/ (UI)
+exercise/        backend/ catalog model + asset loader; frontend/ category picker dialog
+meals/           frontend/ Meals screen (placeholder)
+navigation/      Bottom nav destinations (per-section accent colors) and NavHost - flat, app plumbing
+notifications/   Reminder channel, worker + scheduler - flat: WorkManager stores the worker class name
 ui/              Compose theme (ui/theme/) and shared UI
-workout/         Templates, active session, StrengthSession history
+workout/         frontend/ overview + home list; templates/ + sessions/, each backend/ + frontend/
 ```
 
 Cross-feature reuse belongs in `ui/` — features must not import each other's repositories.
@@ -47,7 +47,7 @@ Cross-feature reuse belongs in `ui/` — features must not import each other's r
   singleton — `object FirebaseModule` with `auth`/`firestore` as lazy vals). ViewModels and
   composables never call Firestore directly.
 - **Reads/writes**: reads use `callbackFlow` + `.addSnapshotListener` + `awaitClose`; writes use
-  `suspend fun` + `.await()` (see `workout/StrengthRepository.kt`).
+  `suspend fun` + `.await()` (see `workout/sessions/backend/StrengthRepository.kt`).
 - **Firestore models**: all fields defaulted; repositories apply `.copy(id = doc.id)` after `toObject()`.
 - **State**: ViewModels expose `stateIn(..., WhileSubscribed(5000), <empty>)`; composables only render.
 - **Theme**: Material3, `SectionTheme` per-feature accent colors.
@@ -85,6 +85,7 @@ Not `@`-imported (0 tokens until read) - open the one that matches the task:
 - `.claude/ci-cd/ci-cd-rules.md` — CI triggers, job, placeholder config, local equivalents.
 - `.claude/skills/skills.md` — every skill, its trigger, and its branch restrictions.
 - `.claude/notes/` — non-obvious gotchas (What / Why it matters / Reference).
+- `.claude/plans/` — one plan per issue/branch (decisions, checklist, next step); read at session start.
 
 `.claude/settings.json` holds shared, committed permissions; `.claude/settings.local.json` is
 personal and gitignored.

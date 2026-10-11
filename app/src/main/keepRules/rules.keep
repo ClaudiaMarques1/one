@@ -5,17 +5,17 @@
 # no-arg constructor and getters/setters, so R8 must not rename or remove any of them - otherwise
 # saved data silently stops (de)serializing. Keep this list in sync with every class passed to
 # toObject()/set()/add() in a *Repository, including nested types and enums.
--keep class app.theone.android.diary.DiaryEntry { *; }
--keep class app.theone.android.diary.Goal { *; }
--keep class app.theone.android.diary.Habit { *; }
--keep class app.theone.android.diary.HabitReminder { *; }
--keep enum app.theone.android.diary.TimeOfDay { *; }
--keep class app.theone.android.workout.StrengthSession { *; }
--keep class app.theone.android.workout.StrengthExercise { *; }
--keep class app.theone.android.workout.StrengthSet { *; }
--keep class app.theone.android.workout.WorkoutTemplate { *; }
--keep class app.theone.android.workout.TemplateExercise { *; }
--keep class app.theone.android.workout.TemplateSet { *; }
+-keep class app.theone.android.diary.journal.backend.DiaryEntry { *; }
+-keep class app.theone.android.diary.goals.backend.Goal { *; }
+-keep class app.theone.android.diary.goals.backend.Habit { *; }
+-keep class app.theone.android.diary.goals.backend.HabitReminder { *; }
+-keep enum app.theone.android.diary.goals.backend.TimeOfDay { *; }
+-keep class app.theone.android.workout.sessions.backend.StrengthSession { *; }
+-keep class app.theone.android.workout.sessions.backend.StrengthExercise { *; }
+-keep class app.theone.android.workout.sessions.backend.StrengthSet { *; }
+-keep class app.theone.android.workout.templates.backend.WorkoutTemplate { *; }
+-keep class app.theone.android.workout.templates.backend.TemplateExercise { *; }
+-keep class app.theone.android.workout.templates.backend.TemplateSet { *; }
 
 # Room databases are created by reflection through their generated *_Impl no-arg constructor.
 # WorkManager's WorkDatabase_Impl had it stripped under R8 (WorkManager 2.10.0), crashing the
