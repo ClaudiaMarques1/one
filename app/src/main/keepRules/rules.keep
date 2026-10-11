@@ -16,3 +16,8 @@
 -keep class app.theone.android.workout.WorkoutTemplate { *; }
 -keep class app.theone.android.workout.TemplateExercise { *; }
 -keep class app.theone.android.workout.TemplateSet { *; }
+
+# Room databases are created by reflection through their generated *_Impl no-arg constructor.
+# WorkManager's WorkDatabase_Impl had it stripped under R8 (WorkManager 2.10.0), crashing the
+# release build at startup: NoSuchMethodException: androidx.work.impl.WorkDatabase_Impl.<init> [].
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
