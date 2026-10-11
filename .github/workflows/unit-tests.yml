@@ -25,6 +25,36 @@ jobs:
       # gradle/gradle-daemon-jvm.properties provisions via Foojay on first run).
       - uses: gradle/actions/setup-gradle@v6
 
+      # app/google-services.json is gitignored (local only). The google-services plugin just needs a
+      # valid file to generate resources - unit tests never reach Firebase - so write a placeholder.
+      # The web OAuth client (client_type 3) is required: it generates R.string.default_web_client_id,
+      # which GoogleAuthClient reads.
+      - name: Write placeholder google-services.json
+        run: |
+          cat > app/google-services.json <<'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "ci-placeholder",
+              "storage_bucket": "ci-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": { "package_name": "app.theone.android" }
+                },
+                "oauth_client": [
+                  { "client_id": "ci-placeholder.apps.googleusercontent.com", "client_type": 3 }
+                ],
+                "api_key": [{ "current_key": "ci-placeholder-api-key" }],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
       - name: Run unit tests
         run: ./gradlew test
 

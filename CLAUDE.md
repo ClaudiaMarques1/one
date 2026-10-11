@@ -51,8 +51,8 @@ Cross-feature reuse belongs in `ui/` — features must not import each other's r
 - **State**: ViewModels expose `stateIn(..., WhileSubscribed(5000), <empty>)`; composables only render.
 - **Theme**: Material3, `SectionTheme` per-feature accent colors.
 - **`minSdk = 24`.**
-- **Never read or echo `app/google-services.json`** — it's a committed Firebase client config
-  file; treat it as off-limits content even though it's already in the repo.
+- **Never read or echo `app/google-services.json`** — the Firebase client config; gitignored and
+  local-only (CI writes a placeholder). Treat it as off-limits content.
 - **Naming**: `PascalCase` composables, `lowerCamelCase` members. Plain hyphens, no em-dashes.
 - **Known limitations**: see README's Status section — don't treat those as fresh bugs to fix
   unprompted or duplicate into new issues.
