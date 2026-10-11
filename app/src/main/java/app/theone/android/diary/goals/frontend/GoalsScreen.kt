@@ -36,11 +36,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.theone.android.diary.goals.backend.Goal
 import app.theone.android.diary.goals.backend.Habit
 import app.theone.android.diary.goals.backend.HabitReminder
 import app.theone.android.diary.goals.backend.TimeOfDay
+import app.theone.android.ui.theme.OneTheme
 
 @Composable
 fun GoalsHomeContent(
@@ -349,4 +351,26 @@ private fun formatHour(hour: Int): String {
         else -> hour
     }
     return "$displayHour:00 $period"
+}
+
+@Preview(showBackground = true, name = "Goals")
+@Composable
+private fun GoalsHomeContentPreview() {
+    OneTheme {
+        GoalsHomeContent(
+            goals = listOf(
+                Goal(
+                    id = "1",
+                    name = "Better sleep",
+                    habits = listOf(
+                        Habit(id = "h1", name = "No screens", timesOfDay = listOf("NIGHT")),
+                        Habit(id = "h2", name = "Drink water", timesOfDay = listOf("MORNING", "AFTERNOON", "EVENING"))
+                    )
+                )
+            ),
+            onCreateGoalClick = {},
+            onEditGoal = {},
+            onDeleteGoal = {}
+        )
+    }
 }

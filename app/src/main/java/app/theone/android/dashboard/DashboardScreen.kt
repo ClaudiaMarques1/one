@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.theone.android.R
 import app.theone.android.diary.journal.backend.DiaryEntry
-import app.theone.android.diary.journal.frontend.DiaryViewModel
+import app.theone.android.diary.journal.backend.DiaryViewModel
 import app.theone.android.ui.formatDisplayDate
 import app.theone.android.ui.theme.OneTheme
 

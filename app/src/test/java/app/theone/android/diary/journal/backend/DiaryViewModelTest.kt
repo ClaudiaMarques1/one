@@ -1,7 +1,5 @@
-package app.theone.android.diary.journal.frontend
+package app.theone.android.diary.journal.backend
 
-import app.theone.android.diary.journal.backend.DiaryEntry
-import app.theone.android.diary.journal.backend.FakeDiaryRepository
 import app.theone.android.testing.MainDispatcherRule
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -31,7 +29,7 @@ class DiaryViewModelTest {
         )
 
         val saved = repository.stored.single()
-        assertEquals(DiaryDateUtils.todayKey(), saved.date)
+        assertEquals(DiaryDateKeys.todayKey(), saved.date)
         assertEquals(mapOf("quads" to 3), saved.soreness)
         assertEquals(listOf("quads"), saved.sorePartIds)
         assertEquals("Leg day", saved.reflection)

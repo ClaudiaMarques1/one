@@ -1,9 +1,5 @@
-package app.theone.android.diary.goals.frontend
+package app.theone.android.diary.goals.backend
 
-import app.theone.android.diary.goals.backend.FakeGoalRepository
-import app.theone.android.diary.goals.backend.Goal
-import app.theone.android.diary.goals.backend.Habit
-import app.theone.android.diary.goals.backend.HabitReminder
 import app.theone.android.testing.MainDispatcherRule
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest

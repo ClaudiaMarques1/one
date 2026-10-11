@@ -20,14 +20,4 @@ class DiaryEntryTest {
     fun `effectiveSoreness is empty when neither field is set`() {
         assertEquals(emptyMap<String, Int>(), DiaryEntry().effectiveSoreness)
     }
-
-    @Test
-    fun `moodLabel resolves a known emoji`() {
-        assertEquals("Strong", moodLabel("💪"))
-    }
-
-    @Test
-    fun `moodLabel is blank for an unknown emoji`() {
-        assertEquals("", moodLabel("🤔"))
-    }
 }

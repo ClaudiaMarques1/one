@@ -66,7 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.theone.android.diary.journal.backend.DiaryEntry
-import app.theone.android.diary.journal.backend.bodyPartLabels
+import app.theone.android.diary.journal.frontend.bodyPartLabels
 import app.theone.android.ui.ErrorBanner
 import app.theone.android.ui.theme.OneTheme
 import app.theone.android.workout.StrengthExercise

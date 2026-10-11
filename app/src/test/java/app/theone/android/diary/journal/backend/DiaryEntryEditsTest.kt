@@ -1,10 +1,10 @@
-package app.theone.android.diary.journal.frontend
+package app.theone.android.diary.journal.backend
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
 
-class DiaryEntryComposerTest {
+class DiaryEntryEditsTest {
     @Test
     fun `cycleSorenessLevel moves an unmarked part to Mild`() {
         assertEquals(mapOf("quads" to 1), cycleSorenessLevel(emptyMap(), "quads"))

@@ -1,12 +1,7 @@
-package app.theone.android.diary.goals.frontend
+package app.theone.android.diary.goals.backend
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.theone.android.diary.goals.backend.FirestoreGoalRepository
-import app.theone.android.diary.goals.backend.Goal
-import app.theone.android.diary.goals.backend.GoalRepository
-import app.theone.android.diary.goals.backend.Habit
-import app.theone.android.diary.goals.backend.HabitReminder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

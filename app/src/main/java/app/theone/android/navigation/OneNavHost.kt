@@ -19,7 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import app.theone.android.auth.AuthViewModel
 import app.theone.android.calendar.CalendarScreen
 import app.theone.android.dashboard.DashboardScreen
-import app.theone.android.diary.journal.frontend.DiaryScreen
+import app.theone.android.diary.frontend.DiaryScreen
 import app.theone.android.meals.MealsScreen
 import app.theone.android.ui.theme.SectionTheme
 import app.theone.android.workout.WorkoutScreen

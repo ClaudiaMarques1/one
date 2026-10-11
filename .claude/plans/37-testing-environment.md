@@ -14,14 +14,20 @@ Issue: https://github.com/ClaudiaMarques1/one/issues/37 (Phase 1 checkboxes not 
 - Fakes live next to their tests (`app/src/test/.../<feature>/FakeXRepository.kt`) and expose a
   `failNext: Throwable?` switch for error paths. Shared rule: `test/.../testing/MainDispatcherRule.kt`.
 
-- **Diary package layout** (user's call, 2026-10-11): `diary/journal/` and `diary/goals/`, each
-  split into `backend/` (models, repository interface, `Firestore*` impl) and `frontend/`
-  (screens, composables, ViewModel, display helpers). Tests mirror it. Keep `rules.keep` and the
-  ktlint baseline paths in sync when moving. Other features not yet asked about.
+- **Feature package layout** (user's call, 2026-10-11, applies to every feature): the overview
+  lives in `<feature>/frontend/` (+ `backend/` if it gets logic); each part gets
+  `<feature>/<part>/backend/` and `frontend/`. Displayed = frontend (composables, labels, date
+  labels); functional or button-driven = backend (ViewModels, models, repositories, tap/edit
+  logic, date keys, reminder sync). Mixed files get split. Tests mirror it. Keep `rules.keep` and
+  the ktlint baseline paths in sync when moving.
 
 ## Phase 1 - repository interfaces + test infra
 
 - [x] Diary restructure into journal|goals / backend|frontend - committed together with the Goal split
+- [x] Diary layout corrected to the displayed/functional rule: overview to `diary/frontend/`,
+      ViewModels to backend, `DiaryDateUtils` -> `DiaryDateKeys` + `DiaryDateLabels`, composer tap
+      logic -> `DiaryEntryEdits`, entry labels -> `DiaryEntryLabels`, reminder sync -> `HabitReminderSync`
+- [ ] Restructure `workout/` (and other features) the same way - map overview vs parts, confirm part names first
 
 - [x] Diary: `DiaryRepository` interface + `FirestoreDiaryRepository`, `FakeDiaryRepository`,
       `MainDispatcherRule`, `DiaryViewModelTest` (add / newest-first / update / delete+undo / error) - `dfbb453`
@@ -57,5 +63,5 @@ Out of scope: Compose UI tests, coverage gate, `AuthViewModel` seam.
 
 ## Next step
 
-Workout templates split (first unchecked Phase 1 item). Ask whether `workout/` should get the
-same backend/frontend layout as `diary/` before moving anything.
+Propose the `workout/` overview/parts mapping and confirm the part names, then restructure it
+before splitting the Workout templates and Strength repositories.

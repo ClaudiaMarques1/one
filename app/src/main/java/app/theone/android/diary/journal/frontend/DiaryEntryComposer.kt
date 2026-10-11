@@ -56,13 +56,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import app.theone.android.diary.journal.backend.DiaryDateKeys
 import app.theone.android.diary.journal.backend.DiaryEntry
-import app.theone.android.diary.journal.backend.bodyPartLabels
-import app.theone.android.diary.journal.backend.bodyPartOrder
+import app.theone.android.diary.journal.backend.clampSleepHours
+import app.theone.android.diary.journal.backend.cycleSorenessLevel
 import app.theone.android.diary.journal.backend.effectiveSoreness
-import app.theone.android.diary.journal.backend.moodLabel
-import app.theone.android.diary.journal.backend.moodOptions
-import app.theone.android.diary.journal.backend.sorenessLevelLabels
+import app.theone.android.diary.journal.backend.sorenessCount
 import java.time.LocalDate
 import kotlin.random.Random
 
@@ -88,16 +87,6 @@ private val reflectionPrompts = listOf(
     "How did your body feel today?"
 )
 
-/** 0 (none) -> 1 (Mild) -> 2 (Sore) -> 3 (Very sore) -> 0. */
-internal fun cycleSorenessLevel(soreness: Map<String, Int>, partId: String): Map<String, Int> {
-    val next = ((soreness[partId] ?: 0) + 1) % 4
-    return if (next == 0) soreness - partId else soreness + (partId to next)
-}
-
-internal fun clampSleepHours(value: Int): Int = value.coerceIn(0, 14)
-
-internal fun sorenessCount(soreness: Map<String, Int>, ids: List<String>): Int = ids.count { soreness.containsKey(it) }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiaryEntryComposerDialog(
@@ -114,8 +103,8 @@ fun DiaryEntryComposerDialog(
     var promptIndex by rememberSaveable { mutableIntStateOf(Random.nextInt(reflectionPrompts.size)) }
 
     val subtitleDate = remember(existingEntry) {
-        val date = existingEntry?.let { runCatching { DiaryDateUtils.parseDateKey(it.date) }.getOrNull() }
-        DiaryDateUtils.fullDateLabel(date ?: LocalDate.now())
+        val date = existingEntry?.let { runCatching { DiaryDateKeys.parseDateKey(it.date) }.getOrNull() }
+        DiaryDateLabels.fullDateLabel(date ?: LocalDate.now())
     }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {

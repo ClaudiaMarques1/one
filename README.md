@@ -31,7 +31,7 @@ No CI pipeline is configured yet (there is no `.github/workflows/`). Quality gat
 │   │   ├── calendar/                             # Calendar screen + ViewModel (workout/diary activity by date)
 │   │   ├── dashboard/                            # Home/overview screen
 │   │   ├── data/                                 # FirebaseModule - the app's only shared singleton
-│   │   ├── diary/                                # journal/ + goals/, each backend/ (models, repos) + frontend/ (UI, VMs)
+│   │   ├── diary/                                # frontend/ overview; journal/ + goals/, each backend/ (logic) + frontend/ (UI)
 │   │   ├── exercise/                             # Exercise catalog model, asset loader, category picker dialog
 │   │   ├── meals/                                # Meals screen (placeholder)
 │   │   ├── navigation/                           # Bottom nav destinations (per-section accents) + NavHost
