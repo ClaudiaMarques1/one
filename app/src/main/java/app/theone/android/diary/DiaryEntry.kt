@@ -12,11 +12,13 @@ data class DiaryEntry(
     val soreness: Map<String, Int> = emptyMap(),
     val reflection: String = "",
     val createdAt: Long = System.currentTimeMillis()
-) {
-    // Entries saved before `soreness` existed only have sorePartIds - treat those ids as level 2 (Sore).
-    val effectiveSoreness: Map<String, Int>
-        get() = soreness.ifEmpty { sorePartIds.associateWith { 2 } }
-}
+)
+
+// Entries saved before `soreness` existed only have sorePartIds - treat those ids as level 2 (Sore).
+// An extension, not a class member: Firestore serializes every public getter on the model, so a
+// member property would be written into each document as a redundant `effectiveSoreness` field.
+val DiaryEntry.effectiveSoreness: Map<String, Int>
+    get() = soreness.ifEmpty { sorePartIds.associateWith { 2 } }
 
 val bodyPartLabels = mapOf(
     "shoulders" to "Shoulders",
