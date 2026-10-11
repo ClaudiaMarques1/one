@@ -1,45 +1,37 @@
 package app.theone.android.calendar
 
-import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.time.temporal.WeekFields
 import java.util.Locale
 
 /**
  * Pure date-key ("yyyy-MM-dd", matching the Firestore-backed models' `date` field) arithmetic for
  * the calendar screen. Kept free of ViewModel/repository state so it's directly unit-testable.
+ *
+ * Public weekday ints use `java.util.Calendar` numbering (SUNDAY = 1 .. SATURDAY = 7) and months are
+ * 0-based, as before the java.time migration, so callers are unchanged.
  */
 internal object CalendarDateUtils {
-    fun todayKey(): String = formatDateKey(Calendar.getInstance())
+    fun todayKey(): String = formatDateKey(LocalDate.now())
 
-    fun formatDateKey(calendar: Calendar): String =
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).format(calendar.time)
+    /** ISO-8601 local date, i.e. "yyyy-MM-dd". */
+    fun formatDateKey(date: LocalDate): String = date.toString()
 
-    fun parseDateKey(dateKey: String): Calendar {
-        val (year, month, day) = dateKey.split("-").map { it.toInt() }
-        return Calendar.getInstance().apply {
-            clear()
-            set(year, month - 1, day)
-        }
-    }
+    fun parseDateKey(dateKey: String): LocalDate = LocalDate.parse(dateKey)
 
     /** Calendar.SUNDAY (1) .. Calendar.SATURDAY (7), derived from the device locale. */
     fun firstDayOfWeek(locale: Locale = Locale.getDefault()): Int =
-        Calendar.getInstance(locale).firstDayOfWeek
+        WeekFields.of(locale).firstDayOfWeek.toCalendarDay()
 
-    fun addMonths(dateKey: String, delta: Int): String {
-        val calendar = parseDateKey(dateKey)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-        calendar.set(Calendar.DAY_OF_MONTH, 1) // avoid rollover (e.g. May 31 + 1 month skipping June)
-        calendar.add(Calendar.MONTH, delta)
-        calendar.set(Calendar.DAY_OF_MONTH, minOf(day, calendar.getActualMaximum(Calendar.DAY_OF_MONTH)))
-        return formatDateKey(calendar)
-    }
+    // LocalDate.plusMonths clamps to the target month's last day (May 31 + 1 month = June 30).
+    fun addMonths(dateKey: String, delta: Int): String =
+        formatDateKey(parseDateKey(dateKey).plusMonths(delta.toLong()))
 
-    fun addDays(dateKey: String, delta: Int): String {
-        val calendar = parseDateKey(dateKey)
-        calendar.add(Calendar.DAY_OF_MONTH, delta)
-        return formatDateKey(calendar)
-    }
+    fun addDays(dateKey: String, delta: Int): String =
+        formatDateKey(parseDateKey(dateKey).plusDays(delta.toLong()))
 
     fun step(dateKey: String, view: CalendarView, delta: Int): String = when (view) {
         CalendarView.MONTH -> addMonths(dateKey, delta)
@@ -49,23 +41,17 @@ internal object CalendarDateUtils {
 
     /** The 7 date keys of the week containing [dateKey], starting on [firstDayOfWeek]. */
     fun weekDateKeys(dateKey: String, firstDayOfWeek: Int): List<String> {
-        val calendar = parseDateKey(dateKey)
-        val currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
-        val offsetFromStart = ((currentDayOfWeek - firstDayOfWeek) + 7) % 7
-        calendar.add(Calendar.DAY_OF_MONTH, -offsetFromStart)
-        return List(7) { index ->
-            formatDateKey(calendar).also { if (index < 6) calendar.add(Calendar.DAY_OF_MONTH, 1) }
-        }
+        val date = parseDateKey(dateKey)
+        val offsetFromStart = ((date.dayOfWeek.toCalendarDay() - firstDayOfWeek) + 7) % 7
+        val start = date.minusDays(offsetFromStart.toLong())
+        return List(7) { index -> formatDateKey(start.plusDays(index.toLong())) }
     }
 
     /** Leading `null` blanks (not clickable) followed by one date key per day of the month. */
     fun monthGridCells(year: Int, month: Int, firstDayOfWeek: Int): List<String?> {
-        val first = calendarOf(year, month, 1)
-        val daysInMonth = first.getActualMaximum(Calendar.DAY_OF_MONTH)
-        val leadingBlanks = ((first.get(Calendar.DAY_OF_WEEK) - firstDayOfWeek) + 7) % 7
-        val days = (1..daysInMonth).map { day ->
-            formatDateKey(calendarOf(year, month, day))
-        }
+        val yearMonth = YearMonth.of(year, month + 1)
+        val leadingBlanks = ((yearMonth.atDay(1).dayOfWeek.toCalendarDay() - firstDayOfWeek) + 7) % 7
+        val days = (1..yearMonth.lengthOfMonth()).map { day -> formatDateKey(yearMonth.atDay(day)) }
         return List(leadingBlanks) { null } + days
     }
 
@@ -75,41 +61,28 @@ internal object CalendarDateUtils {
         return List(7) { index -> sundayFirst[(firstDayOfWeek - 1 + index) % 7] }
     }
 
-    fun shortWeekdayLabel(dateKey: String): String =
-        SimpleDateFormat("EEE", Locale.getDefault()).format(parseDateKey(dateKey).time)
+    fun shortWeekdayLabel(dateKey: String): String = format(dateKey, "EEE")
 
-    fun monthTitle(dateKey: String): String =
-        SimpleDateFormat("MMMM", Locale.getDefault()).format(parseDateKey(dateKey).time)
+    fun monthTitle(dateKey: String): String = format(dateKey, "MMMM")
 
-    fun dayTitle(dateKey: String): String =
-        SimpleDateFormat("d MMMM", Locale.getDefault()).format(parseDateKey(dateKey).time)
+    fun dayTitle(dateKey: String): String = format(dateKey, "d MMMM")
 
-    fun yearOf(dateKey: String): Int = parseDateKey(dateKey).get(Calendar.YEAR)
+    fun yearOf(dateKey: String): Int = parseDateKey(dateKey).year
 
-    fun monthOf(dateKey: String): Int = parseDateKey(dateKey).get(Calendar.MONTH)
+    /** 0-based (January = 0), matching `java.util.Calendar.MONTH`. */
+    fun monthOf(dateKey: String): Int = parseDateKey(dateKey).monthValue - 1
 
-    fun dayOfWeekFullLabel(dateKey: String): String =
-        SimpleDateFormat("EEEE", Locale.getDefault()).format(parseDateKey(dateKey).time)
+    fun dayOfWeekFullLabel(dateKey: String): String = format(dateKey, "EEEE")
 
-    fun weekRangeLabel(weekKeys: List<String>): String {
-        val format = SimpleDateFormat("d MMM", Locale.getDefault())
-        val start = format.format(parseDateKey(weekKeys.first()).time)
-        val end = format.format(parseDateKey(weekKeys.last()).time)
-        return "$start – $end"
-    }
+    fun weekRangeLabel(weekKeys: List<String>): String =
+        "${format(weekKeys.first(), "d MMM")} – ${format(weekKeys.last(), "d MMM")}"
 
     /** Date keys of every day in [year]/[month] up to and including [todayKey] (string-ordered). */
     fun monthKeysUpToToday(year: Int, month: Int, todayKey: String): List<String> {
-        val first = calendarOf(year, month, 1)
-        val daysInMonth = first.getActualMaximum(Calendar.DAY_OF_MONTH)
-        return (1..daysInMonth)
-            .map { day -> formatDateKey(calendarOf(year, month, day)) }
+        val yearMonth = YearMonth.of(year, month + 1)
+        return (1..yearMonth.lengthOfMonth())
+            .map { day -> formatDateKey(yearMonth.atDay(day)) }
             .filter { it <= todayKey }
-    }
-
-    private fun calendarOf(year: Int, month: Int, day: Int): Calendar = Calendar.getInstance().apply {
-        clear()
-        set(year, month, day)
     }
 
     fun longestActiveStreak(orderedDateKeys: List<String>, isActive: (String) -> Boolean): Int {
@@ -121,4 +94,10 @@ internal object CalendarDateUtils {
         }
         return longest
     }
+
+    private fun format(dateKey: String, pattern: String): String =
+        parseDateKey(dateKey).format(DateTimeFormatter.ofPattern(pattern, Locale.getDefault()))
+
+    // DayOfWeek is MONDAY = 1 .. SUNDAY = 7; Calendar is SUNDAY = 1 .. SATURDAY = 7.
+    private fun DayOfWeek.toCalendarDay(): Int = value % 7 + 1
 }
