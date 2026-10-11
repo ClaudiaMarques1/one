@@ -8,14 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class DiaryViewModel(private val repository: DiaryRepository = DiaryRepository()) : ViewModel() {
-
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-
     private val _diaryError = MutableStateFlow<String?>(null)
     val diaryError: StateFlow<String?> = _diaryError
 
@@ -34,7 +28,7 @@ class DiaryViewModel(private val repository: DiaryRepository = DiaryRepository()
         soreness: Map<String, Int>,
         reflection: String
     ) {
-        val today = dateFormat.format(Date())
+        val today = DiaryDateUtils.todayKey()
         viewModelScope.launch {
             runCatching {
                 repository.addEntry(

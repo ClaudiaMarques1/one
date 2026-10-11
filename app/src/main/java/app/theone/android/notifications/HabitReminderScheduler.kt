@@ -5,7 +5,8 @@ import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import java.util.Calendar
+import java.time.Duration
+import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
 /**
@@ -13,7 +14,6 @@ import java.util.concurrent.TimeUnit
  * pair maps to one unique periodic work request, so re-scheduling with new data simply replaces it.
  */
 object HabitReminderScheduler {
-
     private fun workName(habitId: String, timeOfDay: String) = "habit_reminder_${habitId}_$timeOfDay"
 
     fun schedule(
@@ -49,17 +49,10 @@ object HabitReminderScheduler {
         WorkManager.getInstance(context).cancelUniqueWork(workName(habitId, timeOfDay))
     }
 
-    private fun computeInitialDelayMillis(hour: Int, minute: Int): Long {
-        val now = Calendar.getInstance()
-        val target = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        if (target.timeInMillis <= now.timeInMillis) {
-            target.add(Calendar.DAY_OF_MONTH, 1)
-        }
-        return target.timeInMillis - now.timeInMillis
+    // ZonedDateTime keeps the wall-clock time across DST changes, as Calendar did.
+    internal fun computeInitialDelayMillis(hour: Int, minute: Int, now: ZonedDateTime = ZonedDateTime.now()): Long {
+        val todayAtTime = now.withHour(hour).withMinute(minute).withSecond(0).withNano(0)
+        val target = if (todayAtTime.isAfter(now)) todayAtTime else todayAtTime.plusDays(1)
+        return Duration.between(now, target).toMillis()
     }
 }

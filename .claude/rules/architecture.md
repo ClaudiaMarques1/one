@@ -41,6 +41,8 @@ ViewModels expose `stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000),
 Reference: `diary/DiaryViewModel.kt:13,17-18` (default-arg repository injection + `stateIn`).
 `Color(0x...)` literals live only in `ui/theme/`; screens use `MaterialTheme.colorScheme` roles
 (in `SectionTheme`, `primary` is the section accent), else a named val from `ui/theme/Color.kt`.
+Dates: `java.time` only (desugaring on for minSdk 24). Store ISO `yyyy-MM-dd` keys - they sort as
+text (`DiaryRepository` `orderBy("date")`); show numeric dates via `ui/formatDisplayDate` (dd-MM-yyyy).
 
 ## The Error Pattern
 

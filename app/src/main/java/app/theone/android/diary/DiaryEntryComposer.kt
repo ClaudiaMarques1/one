@@ -56,9 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.LocalDate
 import kotlin.random.Random
 
 private val Accent = Color(0xFF8E24AA)
@@ -108,12 +106,9 @@ fun DiaryEntryComposerDialog(
     var reflection by rememberSaveable(existingEntry) { mutableStateOf(existingEntry?.reflection ?: "") }
     var promptIndex by rememberSaveable { mutableIntStateOf(Random.nextInt(reflectionPrompts.size)) }
 
-    val dateFormat = remember { SimpleDateFormat("EEEE, d MMMM", Locale.getDefault()) }
     val subtitleDate = remember(existingEntry) {
-        val date = existingEntry?.let {
-            runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(it.date) }.getOrNull()
-        } ?: Date()
-        dateFormat.format(date)
+        val date = existingEntry?.let { runCatching { DiaryDateUtils.parseDateKey(it.date) }.getOrNull() }
+        DiaryDateUtils.fullDateLabel(date ?: LocalDate.now())
     }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
