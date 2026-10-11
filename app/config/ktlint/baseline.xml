@@ -652,7 +652,7 @@
         <error line="10" column="46" source="standard:trailing-comma-on-declaration-site" />
         <error line="18" column="53" source="standard:trailing-comma-on-declaration-site" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/templates/backend/WorkoutTemplateRepository.kt">
+    <file name="src/main/java/app/theone/android/workout/templates/backend/FirestoreWorkoutTemplateRepository.kt">
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="15" column="59" source="standard:multiline-expression-wrapping" />
         <error line="15" column="59" source="standard:function-signature" />

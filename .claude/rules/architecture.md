@@ -29,7 +29,7 @@ Firebase class.
 - **Writes**: `suspend fun` + `.await()`. Reference: `workout/sessions/backend/StrengthRepository.kt:39-41`.
 - **Models**: all fields defaulted; the repository applies `.copy(id = doc.id)` after
   `toObject()` (model files themselves stay plain data classes). Reference: `StrengthRepository.kt:32`
-  — same shape in `FirestoreDiaryRepository.kt`, `FirestoreGoalRepository.kt`, `WorkoutTemplateRepository.kt`.
+  — same shape in `FirestoreDiaryRepository.kt`, `FirestoreGoalRepository.kt`, `FirestoreWorkoutTemplateRepository.kt`.
 - **uid lookup**: `FirebaseModule.auth.currentUser?.uid ?: return null`, currently duplicated at
   line 14 in the four repositories above. Don't add a fifth duplicate — ask before extracting a
   shared helper (tracked separately as a refactor).

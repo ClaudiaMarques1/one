@@ -265,7 +265,7 @@ All app data is per-user and lives under `users/{uid}/`:
 | `users/{uid}/diaryEntries`          | `diary/journal/backend/FirestoreDiaryRepository.kt` | `DiaryEntry`             |
 | `users/{uid}/goals`                 | `diary/goals/backend/FirestoreGoalRepository.kt` | `Goal` (+ habits)        |
 | `users/{uid}/strengthSessions`      | `workout/sessions/backend/StrengthRepository.kt` | `StrengthSession`        |
-| `users/{uid}/workoutTemplates`      | `workout/templates/backend/WorkoutTemplateRepository.kt` | `WorkoutTemplate`     |
+| `users/{uid}/workoutTemplates`      | `workout/templates/backend/FirestoreWorkoutTemplateRepository.kt` | `WorkoutTemplate`     |
 
 ### Access Rules
 

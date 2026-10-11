@@ -41,8 +41,9 @@ Issue: https://github.com/ClaudiaMarques1/one/issues/37 (Phase 1 checkboxes not 
 - [x] Goal: `GoalRepository` interface + `FirestoreGoalRepository` (moved unchanged),
       `FakeGoalRepository`, `GoalViewModelTest` + newest-first / add / blank-draft no-op /
       edit in place / delete / error path
-- [ ] Workout templates: split `workout/templates/backend/WorkoutTemplateRepository.kt` (`observeTemplates`,
-      `addTemplate`, `updateTemplate`, `updateTemplateExercises`, `deleteTemplate`); `FakeWorkoutTemplateRepository`
+- [x] Workout templates: `WorkoutTemplateRepository` interface + `FirestoreWorkoutTemplateRepository`,
+      `FakeWorkoutTemplateRepository`, ViewModel tests for newest-first / add / blank-draft no-op /
+      edit in place / delete / error path
 - [ ] Strength: split `workout/sessions/backend/StrengthRepository.kt` (`observeSessions`, `addSession`,
       `addSessionAndUpdateTemplate`). The last one is a Firestore transaction touching
       `workoutTemplates` too - the fake just records both writes; atomicity stays untested.
@@ -70,5 +71,6 @@ Out of scope: Compose UI tests, coverage gate, `AuthViewModel` seam.
 
 ## Next step
 
-Workout templates split: `workout/templates/backend/WorkoutTemplateRepository.kt` -> interface +
-`FirestoreWorkoutTemplateRepository`, fake, and ViewModel tests.
+Strength split: `workout/sessions/backend/StrengthRepository.kt` -> interface + `FirestoreStrengthRepository`,
+fake (records `addSessionAndUpdateTemplate` calls), `StrengthViewModel.saveSession` tests; then
+`CalendarViewModel` default + `dayByDate` test.
