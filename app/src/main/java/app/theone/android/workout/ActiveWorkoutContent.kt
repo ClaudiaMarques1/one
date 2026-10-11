@@ -384,7 +384,11 @@ private fun SetRow(
             value = if (set.reps == 0) "" else set.reps.toString(),
             onValueChange = { text ->
                 val reps = text.toIntOrNull()
-                if (reps != null) onUpdate(set.copy(reps = reps)) else if (text.isEmpty()) onUpdate(set.copy(reps = 0))
+                if (reps != null) {
+                    onUpdate(set.copy(reps = reps))
+                } else if (text.isEmpty()) {
+                    onUpdate(set.copy(reps = 0))
+                }
             },
             label = { Text("Reps") },
             singleLine = true,
@@ -395,7 +399,11 @@ private fun SetRow(
             value = if (set.weightKg == 0.0) "" else set.weightKg.toString(),
             onValueChange = { text ->
                 val weight = text.replace(',', '.').toDoubleOrNull()
-                if (weight != null) onUpdate(set.copy(weightKg = weight)) else if (text.isEmpty()) onUpdate(set.copy(weightKg = 0.0))
+                if (weight != null) {
+                    onUpdate(set.copy(weightKg = weight))
+                } else if (text.isEmpty()) {
+                    onUpdate(set.copy(weightKg = 0.0))
+                }
             },
             label = { Text("Weight (kg)") },
             singleLine = true,

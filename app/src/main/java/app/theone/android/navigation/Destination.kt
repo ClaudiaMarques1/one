@@ -20,9 +20,13 @@ sealed class Destination(
     val accentColor: Color? = null
 ) {
     data object Home : Destination("home", "Home", Icons.Filled.Home)
+
     data object Calendar : Destination("calendar", "Calendar", Icons.Filled.CalendarMonth, CalendarAccent)
+
     data object Workout : Destination("workout", "Workout", Icons.Filled.FitnessCenter, WorkoutAccent)
+
     data object Meals : Destination("meals", "Meals", Icons.Filled.Restaurant, MealsAccent)
+
     data object Diary : Destination("diary", "Diary", Icons.Filled.Book, DiaryAccent)
 }
 
