@@ -23,8 +23,10 @@ android {
 
     buildTypes {
         release {
+            // R8 shrinking + obfuscation. Reflection-based classes (Firestore models) are kept in
+            // src/main/keepRules/rules.keep.
             optimization {
-                enable = false
+                enable = true
             }
         }
     }
