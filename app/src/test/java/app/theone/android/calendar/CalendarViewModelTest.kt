@@ -2,7 +2,7 @@ package app.theone.android.calendar
 
 import androidx.lifecycle.SavedStateHandle
 import app.theone.android.diary.DiaryEntry
-import app.theone.android.diary.DiaryRepository
+import app.theone.android.diary.FakeDiaryRepository
 import app.theone.android.workout.StrengthRepository
 import app.theone.android.workout.StrengthSession
 import org.junit.Assert.assertEquals
@@ -17,7 +17,7 @@ import org.junit.Test
 class CalendarViewModelTest {
     private val viewModel = CalendarViewModel(
         strengthRepository = StrengthRepository(),
-        diaryRepository = DiaryRepository(),
+        diaryRepository = FakeDiaryRepository(),
         savedStateHandle = SavedStateHandle()
     )
 

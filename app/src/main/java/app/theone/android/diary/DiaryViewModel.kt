@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class DiaryViewModel(private val repository: DiaryRepository = DiaryRepository()) : ViewModel() {
+class DiaryViewModel(private val repository: DiaryRepository = FirestoreDiaryRepository()) : ViewModel() {
     private val _diaryError = MutableStateFlow<String?>(null)
     val diaryError: StateFlow<String?> = _diaryError
 
