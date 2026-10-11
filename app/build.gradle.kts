@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.ktlint)
 }
 
 android {
@@ -72,4 +73,37 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+ktlint {
+    // Pre-existing violations are grandfathered in here; new/changed lines are still checked.
+    baseline = file("config/ktlint/baseline.xml")
+}
+
+// The org.jlleitschuh.gradle.ktlint plugin only auto-discovers Kotlin source sets via the
+// classic Kotlin Gradle Plugin, which this module doesn't apply (AGP 9's built-in Kotlin support
+// compiles app/src/**/*.kt instead - applying org.jetbrains.kotlin.android alongside it fails
+// with "extension 'kotlin' already registered"). So ktlintCheck above only covers *.gradle.kts;
+// this task runs the same ktlint CLI the plugin resolves, directly against app/src.
+val ktlintCli by configurations.creating
+
+dependencies {
+    ktlintCli(libs.ktlint.cli)
+}
+
+val ktlintCheckSource by tasks.registering(JavaExec::class) {
+    group = "verification"
+    description = "Check app/src Kotlin source files with ktlint"
+    classpath = ktlintCli
+    mainClass.set("com.pinterest.ktlint.Main")
+    args("src/**/*.kt", "--baseline=config/ktlint/baseline.xml")
+}
+
+tasks.named("ktlintCheck") {
+    dependsOn(ktlintCheckSource)
+}
+
+// So `./gradlew lint` catches style violations too, not just Android Lint's own checks.
+tasks.named("lint") {
+    dependsOn("ktlintCheck")
 }
