@@ -31,7 +31,7 @@ class DiaryViewModel(private val repository: DiaryRepository = DiaryRepository()
         mood: String,
         energyLevel: Int,
         sleepHours: Int,
-        sorePartIds: List<String>,
+        soreness: Map<String, Int>,
         reflection: String
     ) {
         val today = dateFormat.format(Date())
@@ -43,11 +43,49 @@ class DiaryViewModel(private val repository: DiaryRepository = DiaryRepository()
                         mood = mood,
                         energyLevel = energyLevel,
                         sleepHours = sleepHours,
-                        sorePartIds = sorePartIds,
+                        sorePartIds = soreness.keys.toList(),
+                        soreness = soreness,
                         reflection = reflection
                     )
                 )
             }.onFailure { _diaryError.value = it.message }
+        }
+    }
+
+    fun updateEntry(
+        id: String,
+        date: String,
+        mood: String,
+        energyLevel: Int,
+        sleepHours: Int,
+        soreness: Map<String, Int>,
+        reflection: String,
+        createdAt: Long
+    ) {
+        viewModelScope.launch {
+            runCatching {
+                repository.updateEntry(
+                    DiaryEntry(
+                        id = id,
+                        date = date,
+                        mood = mood,
+                        energyLevel = energyLevel,
+                        sleepHours = sleepHours,
+                        sorePartIds = soreness.keys.toList(),
+                        soreness = soreness,
+                        reflection = reflection,
+                        createdAt = createdAt
+                    )
+                )
+            }.onFailure { _diaryError.value = it.message }
+        }
+    }
+
+    // Restores a deleted entry from a cached copy (delete-with-undo), keeping its original id.
+    fun restoreEntry(entry: DiaryEntry) {
+        viewModelScope.launch {
+            runCatching { repository.updateEntry(entry) }
+                .onFailure { _diaryError.value = it.message }
         }
     }
 
