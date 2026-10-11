@@ -1,6 +1,7 @@
 # Plan: #37 - make every feature unit-testable and checked in CI
 
-Branch: `feature/cmarques/37-testing-environment` (local only - not pushed, no PR yet).
+Branch: `feature/cmarques/37-testing-environment`, built on `chore/feature-package-structure`
+(PR #38 -> develop: restructure + Diary/Goal groundwork). Remaining #37 work continues here.
 Issue: https://github.com/ClaudiaMarques1/one/issues/37 (Phase 1 checkboxes not yet ticked there).
 
 ## Decisions
