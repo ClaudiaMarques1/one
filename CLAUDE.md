@@ -47,17 +47,12 @@ Cross-feature reuse belongs in `ui/` — features must not import each other's r
   composables never call Firestore directly.
 - **Reads/writes**: reads use `callbackFlow` + `.addSnapshotListener` + `awaitClose`; writes use
   `suspend fun` + `.await()` (see `workout/StrengthRepository.kt`).
-- **Firestore models**: all fields defaulted; repositories apply `.copy(id = doc.id)` after
-  `toObject()` (see `workout/StrengthRepository.kt`, `diary/DiaryRepository.kt`,
-  `diary/GoalRepository.kt`, `workout/WorkoutTemplateRepository.kt` — all at line 14 for the uid
-  lookup and line 34 for the copy).
-- **State**: ViewModels expose `stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000),
-  <empty>)` (see `diary/DiaryViewModel.kt`). Composables render; they own no Firestore-shaped
-  logic.
+- **Firestore models**: all fields defaulted; repositories apply `.copy(id = doc.id)` after `toObject()`.
+- **State**: ViewModels expose `stateIn(..., WhileSubscribed(5000), <empty>)`; composables only render.
 - **Theme**: Material3, `SectionTheme` per-feature accent colors.
 - **`minSdk = 24`.**
-- **Never read or echo `app/google-services.json`** — it's a committed Firebase client config
-  file; treat it as off-limits content even though it's already in the repo.
+- **Never read or echo `app/google-services.json`** — the Firebase client config; gitignored and
+  local-only (CI writes a placeholder). Treat it as off-limits content.
 - **Naming**: `PascalCase` composables, `lowerCamelCase` members. Plain hyphens, no em-dashes.
 - **Known limitations**: see README's Status section — don't treat those as fresh bugs to fix
   unprompted or duplicate into new issues.
@@ -73,6 +68,11 @@ rules.
   default attribution guidance (see `.claude/agents/agents.md`).
 - Never commit directly on `develop` or `master`. Branches aren't deleted after merge — keep all
   branches; only branch fresh for a new big milestone or feature, not every small fix.
+
+## CI
+
+`.github/workflows/unit-tests.yml` runs `./gradlew test` on PRs and pushes to `develop`/`master`.
+Triggers and local equivalents: `.claude/ci-cd/ci-cd-rules.md` (read on demand, not `@`-imported).
 
 ## Imports
 
