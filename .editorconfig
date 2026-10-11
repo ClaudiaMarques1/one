@@ -1,0 +1,17 @@
+root = true
+
+[*.{kt,kts}]
+indent_size = 4
+insert_final_newline = true
+max_line_length = 140
+# Composables are PascalCase per CLAUDE.md's naming convention, not lowerCamelCase.
+ktlint_function_naming_ignore_when_annotated_with = Composable
+# Android Studio's default Kotlin formatter doesn't add trailing commas or force these wraps -
+# disabled so ktlint doesn't fight the IDE's own formatting.
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+ktlint_standard_multiline-expression-wrapping = disabled
+# string-template-indent requires multiline-expression-wrapping; ktlint 1.0.1 crashes if it's
+# left enabled while its dependency is disabled.
+ktlint_standard_string-template-indent = disabled
+ktlint_standard_function-signature = disabled

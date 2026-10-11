@@ -36,8 +36,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun signInWithGoogle(activityContext: Context) {
         viewModelScope.launch {
             _authError.value = null
-            val result = googleAuthClient.signIn(activityContext)
-            _authError.value = result.exceptionOrNull()?.message
+            googleAuthClient.signIn(activityContext)
+                .onFailure { _authError.value = it.message }
         }
     }
 

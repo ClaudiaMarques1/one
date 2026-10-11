@@ -39,6 +39,8 @@ Firebase class.
 Composables render; ViewModels own state. No Firestore-shaped logic in `@Composable` functions.
 ViewModels expose `stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), <empty>)`.
 Reference: `diary/DiaryViewModel.kt:13,17-18` (default-arg repository injection + `stateIn`).
+`Color(0x...)` literals live only in `ui/theme/`; screens use `MaterialTheme.colorScheme` roles
+(in `SectionTheme`, `primary` is the section accent), else a named val from `ui/theme/Color.kt`.
 
 ## The Error Pattern
 
@@ -46,10 +48,7 @@ Reference: `auth/AuthViewModel.kt:33-34` (`_authError: MutableStateFlow<String?>
 `authError: StateFlow<String?>`) with mutations in `signInWithEmail`/`signUpWithEmail`
 (`:46-49`, `:55-58`) wrapped in `runCatching { }.onFailure { }`. New ViewModels that need error
 state follow this shape — field named `_<domain>Error`, `runCatching` around the failable call.
-
-Known gap, not a pattern to copy: `signInWithGoogle` (`:38-40`) reads
-`result.exceptionOrNull()?.message` from a `Result` instead of using `runCatching` — inconsistent
-with the rest of the file. Don't propagate this variant into new code.
+If the call already returns a `Result`, chain `.onFailure { }` on it directly (`signInWithGoogle`).
 
 ## Deliberate Non-Goals
 
