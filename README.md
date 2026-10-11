@@ -210,7 +210,7 @@ Runtime permissions declared in `app/src/main/AndroidManifest.xml`:
 - The active session is held in a `SavedStateHandle`, so it survives process death
 - Finishing a session writes the session to history **and** carries the performed reps/weight back
   onto the template in a single Firestore **transaction**
-  (`StrengthRepository.addSessionAndUpdateTemplate`), so a partial failure applies neither write
+  (`FirestoreStrengthRepository.addSessionAndUpdateTemplate`), so a partial failure applies neither write
 
 ### Calendar
 
@@ -264,8 +264,8 @@ All app data is per-user and lives under `users/{uid}/`:
 | ----------------------------------- | ----------------------------------- | ------------------------ |
 | `users/{uid}/diaryEntries`          | `diary/journal/backend/FirestoreDiaryRepository.kt` | `DiaryEntry`             |
 | `users/{uid}/goals`                 | `diary/goals/backend/FirestoreGoalRepository.kt` | `Goal` (+ habits)        |
-| `users/{uid}/strengthSessions`      | `workout/sessions/backend/StrengthRepository.kt` | `StrengthSession`        |
-| `users/{uid}/workoutTemplates`      | `workout/templates/backend/WorkoutTemplateRepository.kt` | `WorkoutTemplate`     |
+| `users/{uid}/strengthSessions`      | `workout/sessions/backend/FirestoreStrengthRepository.kt` | `StrengthSession`        |
+| `users/{uid}/workoutTemplates`      | `workout/templates/backend/FirestoreWorkoutTemplateRepository.kt` | `WorkoutTemplate`     |
 
 ### Access Rules
 
@@ -451,6 +451,6 @@ is built first; the others follow the same Firestore-backed pattern.
   changed and there is no migration.
 - Habit reminders use WorkManager rather than exact alarms, so timing can drift, especially on OEMs
   that aggressively kill background work.
-- Repositories are final, Firebase-coupled classes with no seam for a fake, so unit tests cover
-  ViewModel state management only, not the Firestore calls themselves.
+- ViewModels are tested against in-memory fake repositories; the Firestore implementations
+  themselves (queries, the session+template transaction) aren't unit-tested.
 - No CI pipeline; `./gradlew test lint` must be run locally before opening a PR.

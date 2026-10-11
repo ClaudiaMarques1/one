@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class WorkoutTemplateViewModel(
-    private val repository: WorkoutTemplateRepository = WorkoutTemplateRepository()
+    private val repository: WorkoutTemplateRepository = FirestoreWorkoutTemplateRepository()
 ) : ViewModel() {
 
     private val _templateError = MutableStateFlow<String?>(null)

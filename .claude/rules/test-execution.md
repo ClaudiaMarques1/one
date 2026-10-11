@@ -17,10 +17,11 @@ CI (`.github/workflows/unit-tests.yml`) runs `./gradlew test` only - lint and de
 
 ## What the unit tests can cover
 
-ViewModel tests construct the real repository and exercise only state that never reaches it
-(`SavedStateHandle`, draft fields) - repositories are final and Firebase-coupled, with no seam for a
-fake. Reference: `workout/sessions/backend/StrengthViewModelTest.kt:12-14`. Don't add Robolectric or a mocking library
-to work around this without asking (see `architecture.md` Deliberate Non-Goals).
+Each repository is an interface with a `Firestore*` implementation; ViewModel tests pass an in-memory
+`Fake*Repository` (test source set, next to the test) plus `testing/MainDispatcherRule`. Reference:
+`workout/sessions/backend/StrengthViewModelTest.kt` + `FakeStrengthRepository.kt`. The `Firestore*`
+classes themselves (queries, the transaction) stay untested - don't add Robolectric or a mocking
+library for them without asking (see `architecture.md` Deliberate Non-Goals).
 
 ## Known failures
 

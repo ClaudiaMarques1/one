@@ -3,23 +3,39 @@ package app.theone.android.calendar.backend
 import androidx.lifecycle.SavedStateHandle
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.backend.FakeDiaryRepository
-import app.theone.android.workout.sessions.backend.StrengthRepository
+import app.theone.android.testing.MainDispatcherRule
+import app.theone.android.workout.sessions.backend.FakeStrengthRepository
 import app.theone.android.workout.sessions.backend.StrengthSession
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
-// Covers view/selected-date state management only, which is pure SavedStateHandle mutation -
-// StrengthRepository/DiaryRepository are final, Firebase-coupled classes with no seam for a fake,
-// so dayByDate's repository-backed merge isn't covered here (see StrengthViewModelTest).
 class CalendarViewModelTest {
-    private val viewModel = CalendarViewModel(
-        strengthRepository = StrengthRepository(),
-        diaryRepository = FakeDiaryRepository(),
-        savedStateHandle = SavedStateHandle()
-    )
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val strengthRepository = FakeStrengthRepository()
+    private val diaryRepository = FakeDiaryRepository()
+
+    // Lazy: the ViewModel must be built after MainDispatcherRule has replaced Dispatchers.Main.
+    private val viewModel by lazy {
+        CalendarViewModel(
+            strengthRepository = strengthRepository,
+            diaryRepository = diaryRepository,
+            savedStateHandle = SavedStateHandle()
+        )
+    }
+
+    // dayByDate is WhileSubscribed, so it only reflects the repositories while something collects it.
+    private fun CoroutineScope.collectDayByDate() {
+        launch(mainDispatcherRule.testDispatcher) { viewModel.dayByDate.collect {} }
+    }
 
     @Test
     fun `defaults to Month view on today`() {
@@ -110,5 +126,55 @@ class CalendarViewModelTest {
         assertFalse(DayActivity().isActive)
         assertTrue(DayActivity(sessions = listOf(StrengthSession(templateName = "Push Day"))).isActive)
         assertTrue(DayActivity(diary = DiaryEntry(mood = "😀")).isActive)
+    }
+
+    @Test
+    fun `dayByDate merges sessions and diary entries by date`() = runTest {
+        strengthRepository.addSession(StrengthSession(date = "2026-10-01", templateName = "Push Day"))
+        strengthRepository.addSession(StrengthSession(date = "2026-10-03", templateName = "Legs"))
+        diaryRepository.addEntry(DiaryEntry(date = "2026-10-02", mood = "🙂"))
+        diaryRepository.addEntry(DiaryEntry(date = "2026-10-03", mood = "💪"))
+        backgroundScope.collectDayByDate()
+
+        val days = viewModel.dayByDate.value
+        assertEquals(setOf("2026-10-01", "2026-10-02", "2026-10-03"), days.keys)
+        assertEquals(listOf("Push Day"), days.getValue("2026-10-01").sessions.map { it.templateName })
+        assertNull(days.getValue("2026-10-01").diary)
+        assertTrue(days.getValue("2026-10-02").sessions.isEmpty())
+        assertEquals("🙂", days.getValue("2026-10-02").diary?.mood)
+        assertEquals(listOf("Legs"), days.getValue("2026-10-03").sessions.map { it.templateName })
+        assertEquals("💪", days.getValue("2026-10-03").diary?.mood)
+    }
+
+    @Test
+    fun `dayByDate keeps every session on a date`() = runTest {
+        strengthRepository.addSession(StrengthSession(date = "2026-10-01", templateName = "Push Day", createdAt = 1L))
+        strengthRepository.addSession(StrengthSession(date = "2026-10-01", templateName = "Pull Day", createdAt = 2L))
+        backgroundScope.collectDayByDate()
+
+        assertEquals(
+            setOf("Push Day", "Pull Day"),
+            viewModel.dayByDate.value.getValue("2026-10-01").sessions.map { it.templateName }.toSet()
+        )
+    }
+
+    @Test
+    fun `dayByDate shows the most recently created diary entry when a date has several`() = runTest {
+        diaryRepository.addEntry(DiaryEntry(date = "2026-10-01", mood = "😴", createdAt = 1L))
+        diaryRepository.addEntry(DiaryEntry(date = "2026-10-01", mood = "😄", createdAt = 3L))
+        diaryRepository.addEntry(DiaryEntry(date = "2026-10-01", mood = "😐", createdAt = 2L))
+        backgroundScope.collectDayByDate()
+
+        assertEquals("😄", viewModel.dayByDate.value.getValue("2026-10-01").diary?.mood)
+    }
+
+    @Test
+    fun `dayByDate updates when a repository changes`() = runTest {
+        backgroundScope.collectDayByDate()
+        assertTrue(viewModel.dayByDate.value.isEmpty())
+
+        strengthRepository.addSession(StrengthSession(date = "2026-10-05", templateName = "Push Day"))
+
+        assertTrue(viewModel.dayByDate.value.getValue("2026-10-05").isActive)
     }
 }
