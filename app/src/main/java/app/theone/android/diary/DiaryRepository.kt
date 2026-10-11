@@ -40,6 +40,13 @@ class DiaryRepository {
         entriesCollection()?.add(entry)?.await()
     }
 
+    // Upsert by id - used both for editing an existing entry and for restoring one from a cached
+    // copy after a delete-with-undo, so the restored entry keeps its original id.
+    suspend fun updateEntry(entry: DiaryEntry) {
+        if (entry.id.isEmpty()) return
+        entriesCollection()?.document(entry.id)?.set(entry)?.await()
+    }
+
     suspend fun deleteEntry(id: String) {
         entriesCollection()?.document(id)?.delete()?.await()
     }
