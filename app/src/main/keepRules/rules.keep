@@ -10,12 +10,12 @@
 -keep class app.theone.android.diary.goals.backend.Habit { *; }
 -keep class app.theone.android.diary.goals.backend.HabitReminder { *; }
 -keep enum app.theone.android.diary.goals.backend.TimeOfDay { *; }
--keep class app.theone.android.workout.StrengthSession { *; }
--keep class app.theone.android.workout.StrengthExercise { *; }
--keep class app.theone.android.workout.StrengthSet { *; }
--keep class app.theone.android.workout.WorkoutTemplate { *; }
--keep class app.theone.android.workout.TemplateExercise { *; }
--keep class app.theone.android.workout.TemplateSet { *; }
+-keep class app.theone.android.workout.sessions.backend.StrengthSession { *; }
+-keep class app.theone.android.workout.sessions.backend.StrengthExercise { *; }
+-keep class app.theone.android.workout.sessions.backend.StrengthSet { *; }
+-keep class app.theone.android.workout.templates.backend.WorkoutTemplate { *; }
+-keep class app.theone.android.workout.templates.backend.TemplateExercise { *; }
+-keep class app.theone.android.workout.templates.backend.TemplateSet { *; }
 
 # Room databases are created by reflection through their generated *_Impl no-arg constructor.
 # WorkManager's WorkDatabase_Impl had it stripped under R8 (WorkManager 2.10.0), crashing the

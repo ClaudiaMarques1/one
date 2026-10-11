@@ -27,17 +27,17 @@ No CI pipeline is configured yet (there is no `.github/workflows/`). Quality gat
 .
 ├── app/                                          # the only Gradle module
 │   ├── src/main/java/app/theone/android/
-│   │   ├── auth/                                 # Sign-in/sign-up screen, AuthViewModel, GoogleAuthClient
-│   │   ├── calendar/                             # Calendar screen + ViewModel (workout/diary activity by date)
-│   │   ├── dashboard/                            # Home/overview screen
+│   │   ├── auth/                                 # backend/ AuthViewModel, GoogleAuthClient; frontend/ sign-in screen
+│   │   ├── calendar/                             # backend/ ViewModel + date keys; frontend/ screen + labels
+│   │   ├── dashboard/                            # frontend/ Home/overview screen
 │   │   ├── data/                                 # FirebaseModule - the app's only shared singleton
 │   │   ├── diary/                                # frontend/ overview; journal/ + goals/, each backend/ (logic) + frontend/ (UI)
-│   │   ├── exercise/                             # Exercise catalog model, asset loader, category picker dialog
-│   │   ├── meals/                                # Meals screen (placeholder)
+│   │   ├── exercise/                             # backend/ catalog model + loader; frontend/ picker dialog
+│   │   ├── meals/                                # frontend/ Meals screen (placeholder)
 │   │   ├── navigation/                           # Bottom nav destinations (per-section accents) + NavHost
 │   │   ├── notifications/                        # Habit reminder channel, WorkManager worker + scheduler
 │   │   ├── ui/                                   # Shared UI (ErrorBanner) and Compose theme (ui/theme/)
-│   │   ├── workout/                              # Templates, active session, StrengthSession history
+│   │   ├── workout/                              # frontend/ overview; templates/ + sessions/, each backend/ + frontend/
 │   │   └── MainActivity.kt
 │   ├── src/main/assets/exercises.json            # Bundled exercise catalog (~1,300 entries)
 │   ├── src/main/res/                             # strings.xml, themes, launcher icons
@@ -189,7 +189,7 @@ Runtime permissions declared in `app/src/main/AndroidManifest.xml`:
 ### Authentication
 
 - Firebase Authentication with **email/password** and **Google Sign-In** (via Credential Manager +
-  `googleid`), handled by `auth/GoogleAuthClient.kt`
+  `googleid`), handled by `auth/backend/GoogleAuthClient.kt`
 - Sign-in renders on a fixed black-and-white screen, independent of the rest of the app's theme
 - Errors surface through `AuthViewModel`'s `_authError: MutableStateFlow<String?>`, wrapped in
   `runCatching { }.onFailure { }`
@@ -264,8 +264,8 @@ All app data is per-user and lives under `users/{uid}/`:
 | ----------------------------------- | ----------------------------------- | ------------------------ |
 | `users/{uid}/diaryEntries`          | `diary/journal/backend/FirestoreDiaryRepository.kt` | `DiaryEntry`             |
 | `users/{uid}/goals`                 | `diary/goals/backend/FirestoreGoalRepository.kt` | `Goal` (+ habits)        |
-| `users/{uid}/strengthSessions`      | `workout/StrengthRepository.kt`     | `StrengthSession`        |
-| `users/{uid}/workoutTemplates`      | `workout/WorkoutTemplateRepository.kt` | `WorkoutTemplate`     |
+| `users/{uid}/strengthSessions`      | `workout/sessions/backend/StrengthRepository.kt` | `StrengthSession`        |
+| `users/{uid}/workoutTemplates`      | `workout/templates/backend/WorkoutTemplateRepository.kt` | `WorkoutTemplate`     |
 
 ### Access Rules
 

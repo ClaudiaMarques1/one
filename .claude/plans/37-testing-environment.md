@@ -27,16 +27,22 @@ Issue: https://github.com/ClaudiaMarques1/one/issues/37 (Phase 1 checkboxes not 
 - [x] Diary layout corrected to the displayed/functional rule: overview to `diary/frontend/`,
       ViewModels to backend, `DiaryDateUtils` -> `DiaryDateKeys` + `DiaryDateLabels`, composer tap
       logic -> `DiaryEntryEdits`, entry labels -> `DiaryEntryLabels`, reminder sync -> `HabitReminderSync`
-- [ ] Restructure `workout/` (and other features) the same way - map overview vs parts, confirm part names first
+- [x] Restructure the rest (confirmed 2026-10-11): `workout/frontend/` overview (WorkoutScreen,
+      WorkoutHomeContent) + `workout/templates/` and `workout/sessions/` {backend,frontend};
+      `calendar/`, `auth/`, `exercise/` -> backend|frontend (CalendarDateUtils split into
+      CalendarDateKeys + CalendarDateLabels); `dashboard/`, `meals/` -> frontend only.
+      Unchanged: `data/`, `navigation/` (stays its own folder), `ui/`, `MainActivity`, and
+      `notifications/` - WorkManager stores HabitReminderWorker's class name for scheduled
+      reminders, so moving it breaks reminders already on devices.
 
 - [x] Diary: `DiaryRepository` interface + `FirestoreDiaryRepository`, `FakeDiaryRepository`,
       `MainDispatcherRule`, `DiaryViewModelTest` (add / newest-first / update / delete+undo / error) - `dfbb453`
 - [x] Goal: `GoalRepository` interface + `FirestoreGoalRepository` (moved unchanged),
       `FakeGoalRepository`, `GoalViewModelTest` + newest-first / add / blank-draft no-op /
       edit in place / delete / error path
-- [ ] Workout templates: split `workout/WorkoutTemplateRepository.kt` (`observeTemplates`,
+- [ ] Workout templates: split `workout/templates/backend/WorkoutTemplateRepository.kt` (`observeTemplates`,
       `addTemplate`, `updateTemplate`, `updateTemplateExercises`, `deleteTemplate`); `FakeWorkoutTemplateRepository`
-- [ ] Strength: split `workout/StrengthRepository.kt` (`observeSessions`, `addSession`,
+- [ ] Strength: split `workout/sessions/backend/StrengthRepository.kt` (`observeSessions`, `addSession`,
       `addSessionAndUpdateTemplate`). The last one is a Firestore transaction touching
       `workoutTemplates` too - the fake just records both writes; atomicity stays untested.
       Then `StrengthViewModel.saveSession` test.
@@ -63,5 +69,5 @@ Out of scope: Compose UI tests, coverage gate, `AuthViewModel` seam.
 
 ## Next step
 
-Propose the `workout/` overview/parts mapping and confirm the part names, then restructure it
-before splitting the Workout templates and Strength repositories.
+Workout templates split: `workout/templates/backend/WorkoutTemplateRepository.kt` -> interface +
+`FirestoreWorkoutTemplateRepository`, fake, and ViewModel tests.

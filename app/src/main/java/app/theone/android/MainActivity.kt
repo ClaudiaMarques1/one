@@ -7,8 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import app.theone.android.auth.AuthViewModel
-import app.theone.android.auth.SignInScreen
+import app.theone.android.auth.backend.AuthViewModel
+import app.theone.android.auth.frontend.SignInScreen
 import app.theone.android.navigation.OneNavHost
 import app.theone.android.ui.theme.OneTheme
 

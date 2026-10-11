@@ -15,7 +15,7 @@ a repository's collection path, `AndroidManifest.xml`, `.github/workflows/`, or 
 |---|---|---|
 | Firestore rules | Every path stays under `users/{uid}/...` with `request.auth.uid == uid`; no wildcard widening, no `allow ... if true` | `firestore.rules:9-11` - owner-only, deny by default |
 | New collections | Repository writes under `users/{uid}/<collection>`, so the existing rule covers it; a top-level collection needs its own rule | uid lookup in each repository at line 14 |
-| Auth | Errors surface via `_authError` without leaking tokens/credentials; sign-out clears both Credential Manager and Firebase | `auth/AuthViewModel.kt` `signOut()` |
+| Auth | Errors surface via `_authError` without leaking tokens/credentials; sign-out clears both Credential Manager and Firebase | `auth/backend/AuthViewModel.kt` `signOut()` |
 | Manifest | New `<activity>`/`<receiver>`/`<service>` is `exported="false"` unless it needs an intent filter; new permissions justified | Only `MainActivity` exported (launcher); `INTERNET`, `POST_NOTIFICATIONS` |
 | Logging | No user data (diary text, emails, uids, tokens) in `Log.*` or `println` | No `Log.*` calls in `app/src/main` |
 | Secrets/config | `app/google-services.json` never read, echoed, or committed (gitignored); no keys in source or workflows | CI uses a placeholder, no repo secrets |

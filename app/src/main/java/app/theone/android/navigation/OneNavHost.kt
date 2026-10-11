@@ -16,13 +16,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import app.theone.android.auth.AuthViewModel
-import app.theone.android.calendar.CalendarScreen
-import app.theone.android.dashboard.DashboardScreen
+import app.theone.android.auth.backend.AuthViewModel
+import app.theone.android.calendar.frontend.CalendarScreen
+import app.theone.android.dashboard.frontend.DashboardScreen
 import app.theone.android.diary.frontend.DiaryScreen
-import app.theone.android.meals.MealsScreen
+import app.theone.android.meals.frontend.MealsScreen
 import app.theone.android.ui.theme.SectionTheme
-import app.theone.android.workout.WorkoutScreen
+import app.theone.android.workout.frontend.WorkoutScreen
 
 @Composable
 fun OneNavHost(authViewModel: AuthViewModel) {
