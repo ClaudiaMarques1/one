@@ -47,7 +47,7 @@ Cross-feature reuse belongs in `ui/` — features must not import each other's r
   singleton — `object FirebaseModule` with `auth`/`firestore` as lazy vals). ViewModels and
   composables never call Firestore directly.
 - **Reads/writes**: reads use `callbackFlow` + `.addSnapshotListener` + `awaitClose`; writes use
-  `suspend fun` + `.await()` (see `workout/sessions/backend/StrengthRepository.kt`).
+  `suspend fun` + `.await()` (see `workout/sessions/backend/FirestoreStrengthRepository.kt`).
 - **Firestore models**: all fields defaulted; repositories apply `.copy(id = doc.id)` after `toObject()`.
 - **State**: ViewModels expose `stateIn(..., WhileSubscribed(5000), <empty>)`; composables only render.
 - **Theme**: Material3, `SectionTheme` per-feature accent colors.

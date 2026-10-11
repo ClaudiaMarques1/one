@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 class StrengthViewModel(
-    private val repository: StrengthRepository = StrengthRepository(),
+    private val repository: StrengthRepository = FirestoreStrengthRepository(),
     private val savedStateHandle: SavedStateHandle = SavedStateHandle()
 ) : ViewModel() {
     private val _workoutError = MutableStateFlow<String?>(null)

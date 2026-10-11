@@ -3,7 +3,7 @@ package app.theone.android.calendar.backend
 import androidx.lifecycle.SavedStateHandle
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.backend.FakeDiaryRepository
-import app.theone.android.workout.sessions.backend.StrengthRepository
+import app.theone.android.workout.sessions.backend.FakeStrengthRepository
 import app.theone.android.workout.sessions.backend.StrengthSession
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -11,12 +11,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-// Covers view/selected-date state management only, which is pure SavedStateHandle mutation -
-// StrengthRepository/DiaryRepository are final, Firebase-coupled classes with no seam for a fake,
-// so dayByDate's repository-backed merge isn't covered here (see StrengthViewModelTest).
 class CalendarViewModelTest {
     private val viewModel = CalendarViewModel(
-        strengthRepository = StrengthRepository(),
+        strengthRepository = FakeStrengthRepository(),
         diaryRepository = FakeDiaryRepository(),
         savedStateHandle = SavedStateHandle()
     )

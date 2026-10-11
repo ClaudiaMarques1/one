@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.backend.DiaryRepository
 import app.theone.android.diary.journal.backend.FirestoreDiaryRepository
+import app.theone.android.workout.sessions.backend.FirestoreStrengthRepository
 import app.theone.android.workout.sessions.backend.StrengthRepository
 import app.theone.android.workout.sessions.backend.StrengthSession
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,7 @@ data class DayActivity(
 }
 
 class CalendarViewModel(
-    private val strengthRepository: StrengthRepository = StrengthRepository(),
+    private val strengthRepository: StrengthRepository = FirestoreStrengthRepository(),
     private val diaryRepository: DiaryRepository = FirestoreDiaryRepository(),
     private val savedStateHandle: SavedStateHandle = SavedStateHandle()
 ) : ViewModel() {

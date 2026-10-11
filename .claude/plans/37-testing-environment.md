@@ -44,12 +44,11 @@ Issue: https://github.com/ClaudiaMarques1/one/issues/37 (Phase 1 checkboxes not 
 - [x] Workout templates: `WorkoutTemplateRepository` interface + `FirestoreWorkoutTemplateRepository`,
       `FakeWorkoutTemplateRepository`, ViewModel tests for newest-first / add / blank-draft no-op /
       edit in place / delete / error path
-- [ ] Strength: split `workout/sessions/backend/StrengthRepository.kt` (`observeSessions`, `addSession`,
-      `addSessionAndUpdateTemplate`). The last one is a Firestore transaction touching
-      `workoutTemplates` too - the fake just records both writes; atomicity stays untested.
-      Then `StrengthViewModel.saveSession` test.
-- [ ] Calendar: switch `CalendarViewModel` default `StrengthRepository()` to the Firestore impl;
-      `CalendarViewModel.dayByDate` test using the Diary + Strength fakes
+- [x] Strength: `StrengthRepository` interface + `FirestoreStrengthRepository`, `FakeStrengthRepository`
+      (records template carry-overs in `templateUpdates`; transaction atomicity not modelled),
+      `saveSession` tests: from template / without template / empty no-op / error path
+- [ ] Calendar: `CalendarViewModel.dayByDate` test using the Diary + Strength fakes (default already
+      switched to `FirestoreStrengthRepository`, test already on the fakes)
 
 ## Phase 2 - CI
 
@@ -60,17 +59,15 @@ Issue: https://github.com/ClaudiaMarques1/one/issues/37 (Phase 1 checkboxes not 
 ## Phase 3 - definition of done + docs
 
 - [ ] Process rule: never merge unless `gh pr checks` is green; feature PRs include ViewModel tests with fakes
-- [ ] `test-execution.md`: "no seam for a fake" is now false - point at `FakeDiaryRepository`
+- [x] `test-execution.md`: "no seam for a fake" replaced with the interface + fake pattern
 - [ ] `architecture.md`: interface + `Firestore*` pattern; stale uid-lookup bullet (now
       `FirebaseModule.userCollection`); stale "no `runTransaction` exists" bullet
       (`StrengthRepository.addSessionAndUpdateTemplate` uses one)
-- [ ] README Status section: line ~454 "no seam for a fake"
+- [x] README Status section: "no seam for a fake" line updated (its "No CI pipeline" line is also stale)
 - [ ] `android-conventions` skill, `pr-review` skill, `ci-cd-rules.md`
 
 Out of scope: Compose UI tests, coverage gate, `AuthViewModel` seam.
 
 ## Next step
 
-Strength split: `workout/sessions/backend/StrengthRepository.kt` -> interface + `FirestoreStrengthRepository`,
-fake (records `addSessionAndUpdateTemplate` calls), `StrengthViewModel.saveSession` tests; then
-`CalendarViewModel` default + `dayByDate` test.
+`CalendarViewModel.dayByDate` test with `FakeDiaryRepository` + `FakeStrengthRepository`; that closes Phase 1.

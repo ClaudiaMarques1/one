@@ -25,10 +25,10 @@ with `auth`/`firestore` as `by lazy` vals). ViewModels and composables never cal
 Firebase class.
 
 - **Reads**: `callbackFlow` + `.addSnapshotListener` + `awaitClose`.
-  Reference: `workout/sessions/backend/StrengthRepository.kt:15-37`.
-- **Writes**: `suspend fun` + `.await()`. Reference: `workout/sessions/backend/StrengthRepository.kt:39-41`.
+  Reference: `workout/sessions/backend/FirestoreStrengthRepository.kt:15-37`.
+- **Writes**: `suspend fun` + `.await()`. Reference: `workout/sessions/backend/FirestoreStrengthRepository.kt:39-41`.
 - **Models**: all fields defaulted; the repository applies `.copy(id = doc.id)` after
-  `toObject()` (model files themselves stay plain data classes). Reference: `StrengthRepository.kt:32`
+  `toObject()` (model files themselves stay plain data classes). Reference: `FirestoreStrengthRepository.kt:32`
   — same shape in `FirestoreDiaryRepository.kt`, `FirestoreGoalRepository.kt`, `FirestoreWorkoutTemplateRepository.kt`.
 - **uid lookup**: `FirebaseModule.auth.currentUser?.uid ?: return null`, currently duplicated at
   line 14 in the four repositories above. Don't add a fifth duplicate — ask before extracting a
