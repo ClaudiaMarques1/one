@@ -17,3 +17,32 @@ val MealsAccent = Color(0xFF43A047)
 val DiaryAccent = Color(0xFF8E24AA)
 
 val SwipeDeleteBackground = Color(0xFFD32F2F)
+
+// Diary section tokens (design handoffs: diary journal, goals time picker).
+val DiaryInk = Color(0xFF6A1B86)
+val DiaryDeepInk = Color(0xFF4A1260)
+val DiaryMenuSurface = Color(0xFFF7F2FA)
+val DiarySelected = Color(0xFFEBDDF0)
+
+// Warm neutrals shared by the diary screens.
+val WarmSurface = Color(0xFFFFFBFE)
+val WarmOnSurface = Color(0xFF1D1B20)
+val WarmSecondaryText = Color(0xFF6B655F)
+val WarmIcon = Color(0xFF49454F)
+val WarmMutedIcon = Color(0xFF9A938C)
+val WarmButtonOutline = Color(0xFFCFC6BE)
+val WarmCardBorder = Color(0xFFEAE4DE)
+val WarmDivider = Color(0xFFF0EBE6)
+
+// Part-of-day labels on habit reminder times (background, text).
+val MorningLabelBackground = Color(0xFFFFF1D6)
+val MorningLabelText = Color(0xFF7A4A00)
+val AfternoonLabelBackground = Color(0xFFE3F0FB)
+val AfternoonLabelText = Color(0xFF0D5BA6)
+val EveningLabelBackground = Color(0xFFF6E3EC)
+val EveningLabelText = Color(0xFF8A1F4F)
+val NightLabelBackground = Color(0xFFE6E3F5)
+val NightLabelText = Color(0xFF3A2F80)
+
+// Destructive menu actions (Delete), Material 3 error red.
+val DeleteRed = Color(0xFFB3261E)

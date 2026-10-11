@@ -71,6 +71,7 @@ fun DiaryScreen(viewModel: DiaryViewModel = viewModel(), goalViewModel: GoalView
     val goals by goalViewModel.goals.collectAsState()
     val draftName by goalViewModel.draftName.collectAsState()
     val draftHabits by goalViewModel.draftHabits.collectAsState()
+    val canSaveGoal by goalViewModel.canSave.collectAsState()
     val editingGoal by goalViewModel.editingGoal.collectAsState()
     val diaryError by viewModel.diaryError.collectAsState()
     val goalError by goalViewModel.goalError.collectAsState()
@@ -93,7 +94,8 @@ fun DiaryScreen(viewModel: DiaryViewModel = viewModel(), goalViewModel: GoalView
     }
 
     Scaffold(
-        topBar = { DiaryTabRow(selectedTab = selectedTab, onSelect = { selectedTab = it }) },
+        // The goal builder is full-screen with its own top bar, so the tabs step aside while it's open.
+        topBar = { if (!isBuildingGoal) DiaryTabRow(selectedTab = selectedTab, onSelect = { selectedTab = it }) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Box(
@@ -108,17 +110,22 @@ fun DiaryScreen(viewModel: DiaryViewModel = viewModel(), goalViewModel: GoalView
                         habits = draftHabits,
                         isEditing = editingGoal != null,
                         onNameChange = { goalViewModel.updateDraftName(it) },
-                        onAddHabit = { habitName, times -> goalViewModel.addDraftHabit(habitName, times) },
-                        onRemoveHabit = { goalViewModel.removeDraftHabit(it) },
-                        onUpdateHabitReminders = { habitId, reminders ->
-                            goalViewModel.updateHabitReminders(habitId, reminders)
+                        canSave = canSaveGoal,
+                        onAddHabit = { goalViewModel.addDraftHabit() },
+                        onRenameHabit = { habitId, name -> goalViewModel.renameDraftHabit(habitId, name) },
+                        onAddTime = { goalViewModel.addReminderTime(it) },
+                        onChangeTime = { habitId, reminderId, hour, minute ->
+                            goalViewModel.changeReminderTime(habitId, reminderId, hour, minute)
                         },
+                        onToggleReminder = { habitId, reminderId -> goalViewModel.toggleReminder(habitId, reminderId) },
+                        onRemoveTime = { habitId, reminderId -> goalViewModel.removeReminderTime(habitId, reminderId) },
+                        onRemoveHabit = { goalViewModel.removeDraftHabit(it) },
                         onCancel = {
                             goalViewModel.clearDraft()
                             isBuildingGoal = false
                         },
                         onSave = {
-                            applyReminderScheduling(context, draftName, editingGoal?.habits.orEmpty(), draftHabits)
+                            applyReminderScheduling(context, draftName.trim(), editingGoal?.habits.orEmpty(), goalViewModel.habitsToSave())
                             goalViewModel.saveDraftGoal()
                             isBuildingGoal = false
                         }
@@ -126,7 +133,10 @@ fun DiaryScreen(viewModel: DiaryViewModel = viewModel(), goalViewModel: GoalView
                 } else {
                     GoalsHomeContent(
                         goals = goals,
-                        onCreateGoalClick = { isBuildingGoal = true },
+                        onCreateGoalClick = {
+                            goalViewModel.addDraftHabit()
+                            isBuildingGoal = true
+                        },
                         onEditGoal = {
                             goalViewModel.startEditingGoal(it)
                             isBuildingGoal = true
