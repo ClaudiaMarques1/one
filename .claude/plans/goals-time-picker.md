@@ -61,8 +61,10 @@ the repo - read it with `/add-dir`.
 - [x] `GoalCard` subtitle `Drink water · 7:30 AM, 1:15 PM` (enabled times only).
 - [x] `DiaryScreen`: hide the tab row while building; wire the new callbacks.
 - [x] `./gradlew assembleDebug test lint` green (109 tests), installed on the emulator (Pixel_7).
-- [ ] User looks at it on the emulator, then testing, then commit + PR.
+- [x] User reviewed on the emulator; committed (`e762a4f`) and opened PR #40 -> develop.
+- [ ] Manual: old per-part goal opens with its times and doesn't double-notify after re-save; a
+      reminder set a few minutes ahead fires.
 
 ## Next step
 
-Wait for the user's look on the emulator; apply feedback; then commit and open a PR to `develop`.
+PR #40: wait for CI green + the two manual checks, then merge.
