@@ -1,7 +1,10 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.frontend
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.theone.android.diary.journal.backend.DiaryEntry
+import app.theone.android.diary.journal.backend.DiaryRepository
+import app.theone.android.diary.journal.backend.FirestoreDiaryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

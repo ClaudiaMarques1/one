@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.backend
 
 import app.theone.android.data.FirebaseModule
 import com.google.firebase.firestore.CollectionReference

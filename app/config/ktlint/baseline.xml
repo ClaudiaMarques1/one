@@ -114,12 +114,12 @@
         <error line="125" column="27" source="standard:trailing-comma-on-call-site" />
         <error line="132" column="13" source="standard:function-naming" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/DiaryEntry.kt">
+    <file name="src/main/java/app/theone/android/diary/journal/backend/DiaryEntry.kt">
         <error line="11" column="53" source="standard:trailing-comma-on-declaration-site" />
         <error line="14" column="22" source="standard:multiline-expression-wrapping" />
         <error line="23" column="33" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/DiaryEntryComposer.kt">
+    <file name="src/main/java/app/theone/android/diary/journal/frontend/DiaryEntryComposer.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="47" column="27" source="standard:multiline-expression-wrapping" />
         <error line="56" column="61" source="standard:trailing-comma-on-call-site" />
@@ -154,14 +154,14 @@
         <error line="223" column="117" source="standard:trailing-comma-on-call-site" />
         <error line="236" column="63" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/DiaryRepository.kt">
+    <file name="src/main/java/app/theone/android/diary/journal/backend/DiaryRepository.kt">
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="15" column="52" source="standard:multiline-expression-wrapping" />
         <error line="15" column="52" source="standard:function-signature" />
         <error line="23" column="28" source="standard:multiline-expression-wrapping" />
         <error line="31" column="31" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/DiaryScreen.kt">
+    <file name="src/main/java/app/theone/android/diary/journal/frontend/DiaryScreen.kt">
         <error line="47" column="5" source="standard:function-naming" />
         <error line="47" column="17" source="standard:function-signature" />
         <error line="47" column="58" source="standard:function-signature" />
@@ -207,27 +207,27 @@
         <error line="318" column="18" source="standard:trailing-comma-on-call-site" />
         <error line="322" column="30" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/DiaryViewModel.kt">
+    <file name="src/main/java/app/theone/android/diary/journal/frontend/DiaryViewModel.kt">
         <error line="16" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="22" column="48" source="standard:multiline-expression-wrapping" />
         <error line="35" column="27" source="standard:trailing-comma-on-declaration-site" />
         <error line="47" column="48" source="standard:trailing-comma-on-call-site" />
         <error line="48" column="22" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/Goal.kt">
+    <file name="src/main/java/app/theone/android/diary/goals/backend/Goal.kt">
         <error line="7" column="26" source="standard:trailing-comma-on-declaration-site" />
         <error line="14" column="32" source="standard:trailing-comma-on-declaration-site" />
         <error line="21" column="53" source="standard:trailing-comma-on-declaration-site" />
         <error line="28" column="53" source="standard:trailing-comma-on-declaration-site" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/GoalRepository.kt">
+    <file name="src/main/java/app/theone/android/diary/goals/backend/FirestoreGoalRepository.kt">
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="15" column="44" source="standard:multiline-expression-wrapping" />
         <error line="15" column="44" source="standard:function-signature" />
         <error line="23" column="28" source="standard:multiline-expression-wrapping" />
         <error line="31" column="29" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/GoalViewModel.kt">
+    <file name="src/main/java/app/theone/android/diary/goals/frontend/GoalViewModel.kt">
         <error line="14" column="62" source="standard:trailing-comma-on-declaration-site" />
         <error line="16" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="20" column="40" source="standard:multiline-expression-wrapping" />
@@ -239,7 +239,7 @@
         <error line="50" column="77" source="standard:function-signature" />
         <error line="51" column="30" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/GoalsScreen.kt">
+    <file name="src/main/java/app/theone/android/diary/goals/frontend/GoalsScreen.kt">
         <error line="10" column="1" source="standard:no-unused-imports" />
         <error line="42" column="5" source="standard:function-naming" />
         <error line="46" column="33" source="standard:trailing-comma-on-declaration-site" />
@@ -672,7 +672,7 @@
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="5" column="1" source="standard:no-wildcard-imports" />
     </file>
-    <file name="src/test/java/app/theone/android/diary/GoalViewModelTest.kt">
+    <file name="src/test/java/app/theone/android/diary/goals/frontend/GoalViewModelTest.kt">
         <error line="13" column="1" source="standard:no-empty-first-line-in-class-body" />
     </file>
     <file name="src/test/java/app/theone/android/workout/StrengthViewModelTest.kt">

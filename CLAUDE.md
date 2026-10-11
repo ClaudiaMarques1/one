@@ -28,7 +28,7 @@ auth/            Sign-in/sign-up, AuthViewModel, GoogleAuthClient
 calendar/        Calendar screen + ViewModel (aggregates workout/diary activity by date)
 dashboard/       Home/overview screen
 data/            FirebaseModule — the app's only shared singleton
-diary/           Journal + Goals/Habits, ViewModels, repositories, Firestore models
+diary/           journal/ + goals/, each split backend/ (models, repos) and frontend/ (screens, VMs)
 exercise/        Exercise catalog model, asset loader, category picker dialog
 meals/           Meals screen (placeholder)
 navigation/      Bottom nav destinations (per-section accent colors) and NavHost

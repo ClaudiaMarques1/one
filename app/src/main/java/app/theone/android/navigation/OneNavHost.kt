@@ -1,10 +1,10 @@
 package app.theone.android.navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import app.theone.android.auth.AuthViewModel
 import app.theone.android.calendar.CalendarScreen
 import app.theone.android.dashboard.DashboardScreen
-import app.theone.android.diary.DiaryScreen
+import app.theone.android.diary.journal.frontend.DiaryScreen
 import app.theone.android.meals.MealsScreen
 import app.theone.android.ui.theme.SectionTheme
 import app.theone.android.workout.WorkoutScreen

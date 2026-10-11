@@ -31,7 +31,7 @@ No CI pipeline is configured yet (there is no `.github/workflows/`). Quality gat
 │   │   ├── calendar/                             # Calendar screen + ViewModel (workout/diary activity by date)
 │   │   ├── dashboard/                            # Home/overview screen
 │   │   ├── data/                                 # FirebaseModule - the app's only shared singleton
-│   │   ├── diary/                                # Journal + Goals/Habits: screens, ViewModels, repositories, models
+│   │   ├── diary/                                # journal/ + goals/, each backend/ (models, repos) + frontend/ (UI, VMs)
 │   │   ├── exercise/                             # Exercise catalog model, asset loader, category picker dialog
 │   │   ├── meals/                                # Meals screen (placeholder)
 │   │   ├── navigation/                           # Bottom nav destinations (per-section accents) + NavHost
@@ -262,8 +262,8 @@ All app data is per-user and lives under `users/{uid}/`:
 
 | Collection                          | Written by                          | Model                    |
 | ----------------------------------- | ----------------------------------- | ------------------------ |
-| `users/{uid}/diaryEntries`          | `diary/DiaryRepository.kt`          | `DiaryEntry`             |
-| `users/{uid}/goals`                 | `diary/GoalRepository.kt`           | `Goal` (+ habits)        |
+| `users/{uid}/diaryEntries`          | `diary/journal/backend/FirestoreDiaryRepository.kt` | `DiaryEntry`             |
+| `users/{uid}/goals`                 | `diary/goals/backend/FirestoreGoalRepository.kt` | `Goal` (+ habits)        |
 | `users/{uid}/strengthSessions`      | `workout/StrengthRepository.kt`     | `StrengthSession`        |
 | `users/{uid}/workoutTemplates`      | `workout/WorkoutTemplateRepository.kt` | `WorkoutTemplate`     |
 

@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.frontend
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures

@@ -14,12 +14,20 @@ Issue: https://github.com/ClaudiaMarques1/one/issues/37 (Phase 1 checkboxes not 
 - Fakes live next to their tests (`app/src/test/.../<feature>/FakeXRepository.kt`) and expose a
   `failNext: Throwable?` switch for error paths. Shared rule: `test/.../testing/MainDispatcherRule.kt`.
 
+- **Diary package layout** (user's call, 2026-10-11): `diary/journal/` and `diary/goals/`, each
+  split into `backend/` (models, repository interface, `Firestore*` impl) and `frontend/`
+  (screens, composables, ViewModel, display helpers). Tests mirror it. Keep `rules.keep` and the
+  ktlint baseline paths in sync when moving. Other features not yet asked about.
+
 ## Phase 1 - repository interfaces + test infra
+
+- [x] Diary restructure into journal|goals / backend|frontend - committed together with the Goal split
 
 - [x] Diary: `DiaryRepository` interface + `FirestoreDiaryRepository`, `FakeDiaryRepository`,
       `MainDispatcherRule`, `DiaryViewModelTest` (add / newest-first / update / delete+undo / error) - `dfbb453`
-- [ ] Goal: split `diary/GoalRepository.kt` (`observeGoals`, `addGoal`, `updateGoal`, `deleteGoal`);
-      `FakeGoalRepository`; `GoalViewModelTest` save/delete + error path
+- [x] Goal: `GoalRepository` interface + `FirestoreGoalRepository` (moved unchanged),
+      `FakeGoalRepository`, `GoalViewModelTest` + newest-first / add / blank-draft no-op /
+      edit in place / delete / error path
 - [ ] Workout templates: split `workout/WorkoutTemplateRepository.kt` (`observeTemplates`,
       `addTemplate`, `updateTemplate`, `updateTemplateExercises`, `deleteTemplate`); `FakeWorkoutTemplateRepository`
 - [ ] Strength: split `workout/StrengthRepository.kt` (`observeSessions`, `addSession`,
@@ -49,4 +57,5 @@ Out of scope: Compose UI tests, coverage gate, `AuthViewModel` seam.
 
 ## Next step
 
-Goal repository split (first unchecked Phase 1 item).
+Workout templates split (first unchecked Phase 1 item). Ask whether `workout/` should get the
+same backend/frontend layout as `diary/` before moving anything.

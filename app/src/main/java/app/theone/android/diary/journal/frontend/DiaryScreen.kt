@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.frontend
 
 import android.Manifest
 import android.content.Context
@@ -63,6 +63,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.theone.android.diary.goals.backend.Goal
+import app.theone.android.diary.goals.backend.Habit
+import app.theone.android.diary.goals.backend.TimeOfDay
+import app.theone.android.diary.goals.frontend.GoalBuilderContent
+import app.theone.android.diary.goals.frontend.GoalViewModel
+import app.theone.android.diary.goals.frontend.GoalsHomeContent
+import app.theone.android.diary.journal.backend.DiaryEntry
+import app.theone.android.diary.journal.backend.bodyPartLabels
+import app.theone.android.diary.journal.backend.bodyPartOrder
+import app.theone.android.diary.journal.backend.effectiveSoreness
+import app.theone.android.diary.journal.backend.moodLabel
+import app.theone.android.diary.journal.backend.sorenessLevelLabels
 import app.theone.android.notifications.HabitReminderScheduler
 import app.theone.android.ui.ErrorBanner
 import app.theone.android.ui.theme.OneTheme

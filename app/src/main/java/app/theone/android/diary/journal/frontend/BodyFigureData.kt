@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.frontend
 
 /**
  * Source geometry for the sore-body-map figure (see design_handoff_diary_journal's "Body map

@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.backend
 
 data class DiaryEntry(
     val id: String = "",

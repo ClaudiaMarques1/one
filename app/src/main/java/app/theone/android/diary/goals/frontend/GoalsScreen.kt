@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.goals.frontend
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +37,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import app.theone.android.diary.goals.backend.Goal
+import app.theone.android.diary.goals.backend.Habit
+import app.theone.android.diary.goals.backend.HabitReminder
+import app.theone.android.diary.goals.backend.TimeOfDay
 
 @Composable
 fun GoalsHomeContent(

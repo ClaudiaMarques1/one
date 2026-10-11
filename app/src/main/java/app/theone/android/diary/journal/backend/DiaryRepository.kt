@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.backend
 
 import kotlinx.coroutines.flow.Flow
 

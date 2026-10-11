@@ -5,11 +5,11 @@
 # no-arg constructor and getters/setters, so R8 must not rename or remove any of them - otherwise
 # saved data silently stops (de)serializing. Keep this list in sync with every class passed to
 # toObject()/set()/add() in a *Repository, including nested types and enums.
--keep class app.theone.android.diary.DiaryEntry { *; }
--keep class app.theone.android.diary.Goal { *; }
--keep class app.theone.android.diary.Habit { *; }
--keep class app.theone.android.diary.HabitReminder { *; }
--keep enum app.theone.android.diary.TimeOfDay { *; }
+-keep class app.theone.android.diary.journal.backend.DiaryEntry { *; }
+-keep class app.theone.android.diary.goals.backend.Goal { *; }
+-keep class app.theone.android.diary.goals.backend.Habit { *; }
+-keep class app.theone.android.diary.goals.backend.HabitReminder { *; }
+-keep enum app.theone.android.diary.goals.backend.TimeOfDay { *; }
 -keep class app.theone.android.workout.StrengthSession { *; }
 -keep class app.theone.android.workout.StrengthExercise { *; }
 -keep class app.theone.android.workout.StrengthSet { *; }

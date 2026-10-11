@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.frontend
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -56,6 +56,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import app.theone.android.diary.journal.backend.DiaryEntry
+import app.theone.android.diary.journal.backend.bodyPartLabels
+import app.theone.android.diary.journal.backend.bodyPartOrder
+import app.theone.android.diary.journal.backend.effectiveSoreness
+import app.theone.android.diary.journal.backend.moodLabel
+import app.theone.android.diary.journal.backend.moodOptions
+import app.theone.android.diary.journal.backend.sorenessLevelLabels
 import java.time.LocalDate
 import kotlin.random.Random
 

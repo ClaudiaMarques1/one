@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.goals.backend
 
 enum class TimeOfDay(val label: String, val startHour: Int, val endHour: Int) {
     MORNING("Morning", 5, 12),

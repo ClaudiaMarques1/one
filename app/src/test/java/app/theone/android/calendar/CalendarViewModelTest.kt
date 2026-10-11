@@ -1,8 +1,8 @@
 package app.theone.android.calendar
 
 import androidx.lifecycle.SavedStateHandle
-import app.theone.android.diary.DiaryEntry
-import app.theone.android.diary.FakeDiaryRepository
+import app.theone.android.diary.journal.backend.DiaryEntry
+import app.theone.android.diary.journal.backend.FakeDiaryRepository
 import app.theone.android.workout.StrengthRepository
 import app.theone.android.workout.StrengthSession
 import org.junit.Assert.assertEquals

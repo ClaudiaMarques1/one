@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.goals.backend
 
 import app.theone.android.data.FirebaseModule
 import com.google.firebase.firestore.CollectionReference
@@ -8,11 +8,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class GoalRepository {
-
+class FirestoreGoalRepository : GoalRepository {
     private fun goalsCollection(): CollectionReference? = FirebaseModule.userCollection("goals")
 
-    fun observeGoals(): Flow<List<Goal>> = callbackFlow {
+    override fun observeGoals(): Flow<List<Goal>> = callbackFlow {
         val collection = goalsCollection()
         if (collection == null) {
             trySend(emptyList())
@@ -36,15 +35,15 @@ class GoalRepository {
         awaitClose { registration.remove() }
     }
 
-    suspend fun addGoal(goal: Goal) {
+    override suspend fun addGoal(goal: Goal) {
         goalsCollection()?.add(goal)?.await()
     }
 
-    suspend fun updateGoal(goal: Goal) {
+    override suspend fun updateGoal(goal: Goal) {
         goalsCollection()?.document(goal.id)?.set(goal)?.await()
     }
 
-    suspend fun deleteGoal(id: String) {
+    override suspend fun deleteGoal(id: String) {
         goalsCollection()?.document(id)?.delete()?.await()
     }
 }

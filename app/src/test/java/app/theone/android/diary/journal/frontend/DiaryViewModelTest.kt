@@ -1,5 +1,7 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.frontend
 
+import app.theone.android.diary.journal.backend.DiaryEntry
+import app.theone.android.diary.journal.backend.FakeDiaryRepository
 import app.theone.android.testing.MainDispatcherRule
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest

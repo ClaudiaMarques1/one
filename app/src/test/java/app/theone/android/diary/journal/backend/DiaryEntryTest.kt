@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.backend
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

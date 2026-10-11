@@ -1,4 +1,4 @@
-package app.theone.android.diary
+package app.theone.android.diary.journal.frontend
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

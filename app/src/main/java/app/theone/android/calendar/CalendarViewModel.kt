@@ -3,9 +3,9 @@ package app.theone.android.calendar
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.theone.android.diary.DiaryEntry
-import app.theone.android.diary.DiaryRepository
-import app.theone.android.diary.FirestoreDiaryRepository
+import app.theone.android.diary.journal.backend.DiaryEntry
+import app.theone.android.diary.journal.backend.DiaryRepository
+import app.theone.android.diary.journal.backend.FirestoreDiaryRepository
 import app.theone.android.workout.StrengthRepository
 import app.theone.android.workout.StrengthSession
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,7 +1,12 @@
-package app.theone.android.diary
+package app.theone.android.diary.goals.frontend
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.theone.android.diary.goals.backend.FirestoreGoalRepository
+import app.theone.android.diary.goals.backend.Goal
+import app.theone.android.diary.goals.backend.GoalRepository
+import app.theone.android.diary.goals.backend.Habit
+import app.theone.android.diary.goals.backend.HabitReminder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -11,9 +16,8 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 class GoalViewModel(
-    private val repository: GoalRepository = GoalRepository()
+    private val repository: GoalRepository = FirestoreGoalRepository()
 ) : ViewModel() {
-
     private val _goalError = MutableStateFlow<String?>(null)
     val goalError: StateFlow<String?> = _goalError
 

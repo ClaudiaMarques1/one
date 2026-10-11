@@ -8,7 +8,8 @@ new ones — cite the reference, don't restate it.
 Each feature package (`auth/ calendar/ dashboard/ diary/ exercise/ meals/ navigation/
 notifications/ workout/`) owns its own `Screen` composable(s), `ViewModel`, `Repository`, and
 Firestore model classes. Features must not import each other's repositories. Cross-feature reuse
-goes in `ui/`.
+goes in `ui/`. `diary/` is split one level further: `journal/` and `goals/`, each with `backend/`
+(models, repository interface, `Firestore*` impl) and `frontend/` (screens, ViewModel); tests mirror it.
 
 - **New screens**: three-step registration, always together — `Destination.kt` (add a `data
   object` + list entry) and a `composable(...) { SectionTheme(...) { XScreen() } }` entry in
@@ -26,7 +27,7 @@ Firebase class.
 - **Writes**: `suspend fun` + `.await()`. Reference: `workout/StrengthRepository.kt:41-43`.
 - **Models**: all fields defaulted; the repository applies `.copy(id = doc.id)` after
   `toObject()` (model files themselves stay plain data classes). Reference: `StrengthRepository.kt:34`
-  — same shape in `DiaryRepository.kt`, `GoalRepository.kt`, `WorkoutTemplateRepository.kt`.
+  — same shape in `FirestoreDiaryRepository.kt`, `FirestoreGoalRepository.kt`, `WorkoutTemplateRepository.kt`.
 - **uid lookup**: `FirebaseModule.auth.currentUser?.uid ?: return null`, currently duplicated at
   line 14 in the four repositories above. Don't add a fifth duplicate — ask before extracting a
   shared helper (tracked separately as a refactor).
@@ -38,11 +39,11 @@ Firebase class.
 
 Composables render; ViewModels own state. No Firestore-shaped logic in `@Composable` functions.
 ViewModels expose `stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), <empty>)`.
-Reference: `diary/DiaryViewModel.kt:13,17-18` (default-arg repository injection + `stateIn`).
+Reference: `diary/journal/frontend/DiaryViewModel.kt:15,19-21` (default-arg repository injection + `stateIn`).
 `Color(0x...)` literals live only in `ui/theme/`; screens use `MaterialTheme.colorScheme` roles
 (in `SectionTheme`, `primary` is the section accent), else a named val from `ui/theme/Color.kt`.
 Dates: `java.time` only (desugaring on for minSdk 24). Store ISO `yyyy-MM-dd` keys - they sort as
-text (`DiaryRepository` `orderBy("date")`); show numeric dates via `ui/formatDisplayDate` (dd-MM-yyyy).
+text (`FirestoreDiaryRepository` `orderBy("date")`); show numeric dates via `ui/formatDisplayDate` (dd-MM-yyyy).
 
 ## The Error Pattern
 
