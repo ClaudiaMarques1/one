@@ -1,12 +1,18 @@
-# Add project specific R8 rules here.
-# AGP will combine all keep rule files in src/main/keepRules to pass to R8
-#
-# For more details, see
-#   https://d.android.com/r/tools/r8/keep-rules
+# Project R8 rules. AGP combines every keep-rule file in src/main/keepRules and passes it to R8.
+# See https://d.android.com/r/tools/r8/keep-rules
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Firestore models. DocumentSnapshot.toObject() and set()/add() map fields by reflection over the
+# no-arg constructor and getters/setters, so R8 must not rename or remove any of them - otherwise
+# saved data silently stops (de)serializing. Keep this list in sync with every class passed to
+# toObject()/set()/add() in a *Repository, including nested types and enums.
+-keep class app.theone.android.diary.DiaryEntry { *; }
+-keep class app.theone.android.diary.Goal { *; }
+-keep class app.theone.android.diary.Habit { *; }
+-keep class app.theone.android.diary.HabitReminder { *; }
+-keep enum app.theone.android.diary.TimeOfDay { *; }
+-keep class app.theone.android.workout.StrengthSession { *; }
+-keep class app.theone.android.workout.StrengthExercise { *; }
+-keep class app.theone.android.workout.StrengthSet { *; }
+-keep class app.theone.android.workout.WorkoutTemplate { *; }
+-keep class app.theone.android.workout.TemplateExercise { *; }
+-keep class app.theone.android.workout.TemplateSet { *; }
