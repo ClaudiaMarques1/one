@@ -53,8 +53,12 @@ covers it). No design yet - plain M3 with existing tokens. Then wire the rest ti
 
 Data + ViewModel layer committed and pushed on `feat/workout-redesign`; draft PR #42 open against
 `develop`. Branch has `develop` merged in (`cf4ee82`, PR #41): sources now live under
-`app/src/*/kotlin/`, not `java/`. `./gradlew assembleDebug test lint` all pass (140 tests) - the old
-`ActiveWorkoutContent`/`WorkoutScreen` wiring does compile against the new ViewModel.
+`app/src/*/kotlin/`, not `java/`. Also merged: `develop` at `e190b02` (PR #45 verification workflow).
+
+**Branch does not compile** (found 2026-10-20): `WorkoutScreen.kt:68-73` still wires the old
+`ActiveWorkoutContent` to removed `StrengthViewModel` APIs - as the original plan said. Earlier local
+"all pass" results were stale incremental output (see `test-execution.md` known failures); CI on PR #42
+has failed since `030bbdd`. Building 1c against the new ViewModel fixes it.
 
 Done since 2026-10-11: the two `ActiveWorkoutTest` expectations fixed (70_000, 130_000); ktlint
 line-length fix in `StrengthViewModel.duplicateExercise`.
@@ -69,8 +73,9 @@ Written (see commits for detail):
 
 ## Next step
 
-1. Add a `moveDraftExercise` test to `WorkoutTemplateViewModelTest`.
-2. Build 1c active workout UI against the new ViewModel. UI labels (rest "2:00"/"Off", elapsed mm:ss,
+1. ~~Add a `moveDraftExercise` test~~ - done (2 tests; runs once the branch compiles).
+2. Give #43 a `## Checks` section (it predates the template), then build 1c active workout UI against
+   the new ViewModel - this makes the branch compile again; confirm with `gh pr checks 42`. UI labels (rest "2:00"/"Off", elapsed mm:ss,
    Previous "60 kg × 8"/"BW × 12", set summaries "3 × 10 · 35 kg", home meta) belong in frontend label
    files with tests.
 3. Then 1a+1b, 1d (+ `sh.calvin.reorderable` in the version catalog), 2b - a commit each.
