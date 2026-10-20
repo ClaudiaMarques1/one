@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <baseline version="1.0">
-    <file name="src/androidTest/java/app/theone/android/ExampleInstrumentedTest.kt">
+    <file name="src/androidTest/kotlin/app/theone/android/ExampleInstrumentedTest.kt">
         <error line="1" column="1" source="standard:final-newline" />
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="9" column="1" source="standard:no-wildcard-imports" />
     </file>
-    <file name="src/main/java/app/theone/android/MainActivity.kt">
+    <file name="src/main/kotlin/app/theone/android/MainActivity.kt">
         <error line="16" column="1" source="standard:no-empty-first-line-in-class-body" />
     </file>
-    <file name="src/main/java/app/theone/android/auth/backend/AuthViewModel.kt">
+    <file name="src/main/kotlin/app/theone/android/auth/backend/AuthViewModel.kt">
         <error line="20" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="23" column="49" source="standard:multiline-expression-wrapping" />
         <error line="30" column="55" source="standard:trailing-comma-on-call-site" />
@@ -19,7 +19,7 @@
         <error line="53" column="40" source="standard:function-signature" />
         <error line="53" column="56" source="standard:function-signature" />
     </file>
-    <file name="src/main/java/app/theone/android/auth/backend/GoogleAuthClient.kt">
+    <file name="src/main/kotlin/app/theone/android/auth/backend/GoogleAuthClient.kt">
         <error line="15" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="18" column="66" source="standard:multiline-expression-wrapping" />
         <error line="18" column="66" source="standard:function-signature" />
@@ -27,7 +27,7 @@
         <error line="24" column="23" source="standard:multiline-expression-wrapping" />
         <error line="31" column="91" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/auth/frontend/SignInScreen.kt">
+    <file name="src/main/kotlin/app/theone/android/auth/frontend/SignInScreen.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="41" column="5" source="standard:function-naming" />
         <error line="58" column="35" source="standard:multiline-if-else" />
@@ -56,7 +56,7 @@
         <error line="189" column="13" source="standard:function-naming" />
         <error line="200" column="31" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/calendar/frontend/CalendarScreen.kt">
+    <file name="src/main/kotlin/app/theone/android/calendar/frontend/CalendarScreen.kt">
         <error line="51" column="5" source="standard:function-naming" />
         <error line="78" column="10" source="standard:trailing-comma-on-call-site" />
         <error line="83" column="13" source="standard:function-naming" />
@@ -85,13 +85,13 @@
         <error line="214" column="85" source="standard:trailing-comma-on-call-site" />
         <error line="222" column="29" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/calendar/backend/CalendarViewModel.kt">
+    <file name="src/main/kotlin/app/theone/android/calendar/backend/CalendarViewModel.kt">
         <error line="18" column="69" source="standard:trailing-comma-on-declaration-site" />
         <error line="20" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="24" column="69" source="standard:multiline-expression-wrapping" />
         <error line="26" column="41" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/dashboard/frontend/DashboardScreen.kt">
+    <file name="src/main/kotlin/app/theone/android/dashboard/frontend/DashboardScreen.kt">
         <error line="41" column="5" source="standard:function-naming" />
         <error line="41" column="21" source="standard:function-signature" />
         <error line="41" column="44" source="standard:function-signature" />
@@ -114,12 +114,12 @@
         <error line="125" column="27" source="standard:trailing-comma-on-call-site" />
         <error line="132" column="13" source="standard:function-naming" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/journal/backend/DiaryEntry.kt">
+    <file name="src/main/kotlin/app/theone/android/diary/journal/backend/DiaryEntry.kt">
         <error line="11" column="53" source="standard:trailing-comma-on-declaration-site" />
         <error line="14" column="22" source="standard:multiline-expression-wrapping" />
         <error line="23" column="33" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/journal/frontend/DiaryEntryComposer.kt">
+    <file name="src/main/kotlin/app/theone/android/diary/journal/frontend/DiaryEntryComposer.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="47" column="27" source="standard:multiline-expression-wrapping" />
         <error line="56" column="61" source="standard:trailing-comma-on-call-site" />
@@ -154,14 +154,14 @@
         <error line="223" column="117" source="standard:trailing-comma-on-call-site" />
         <error line="236" column="63" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/journal/backend/DiaryRepository.kt">
+    <file name="src/main/kotlin/app/theone/android/diary/journal/backend/DiaryRepository.kt">
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="15" column="52" source="standard:multiline-expression-wrapping" />
         <error line="15" column="52" source="standard:function-signature" />
         <error line="23" column="28" source="standard:multiline-expression-wrapping" />
         <error line="31" column="31" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/frontend/DiaryScreen.kt">
+    <file name="src/main/kotlin/app/theone/android/diary/frontend/DiaryScreen.kt">
         <error line="47" column="5" source="standard:function-naming" />
         <error line="47" column="17" source="standard:function-signature" />
         <error line="47" column="58" source="standard:function-signature" />
@@ -207,27 +207,27 @@
         <error line="318" column="18" source="standard:trailing-comma-on-call-site" />
         <error line="322" column="30" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/journal/backend/DiaryViewModel.kt">
+    <file name="src/main/kotlin/app/theone/android/diary/journal/backend/DiaryViewModel.kt">
         <error line="16" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="22" column="48" source="standard:multiline-expression-wrapping" />
         <error line="35" column="27" source="standard:trailing-comma-on-declaration-site" />
         <error line="47" column="48" source="standard:trailing-comma-on-call-site" />
         <error line="48" column="22" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/goals/backend/Goal.kt">
+    <file name="src/main/kotlin/app/theone/android/diary/goals/backend/Goal.kt">
         <error line="7" column="26" source="standard:trailing-comma-on-declaration-site" />
         <error line="14" column="32" source="standard:trailing-comma-on-declaration-site" />
         <error line="21" column="53" source="standard:trailing-comma-on-declaration-site" />
         <error line="28" column="53" source="standard:trailing-comma-on-declaration-site" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/goals/backend/FirestoreGoalRepository.kt">
+    <file name="src/main/kotlin/app/theone/android/diary/goals/backend/FirestoreGoalRepository.kt">
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="15" column="44" source="standard:multiline-expression-wrapping" />
         <error line="15" column="44" source="standard:function-signature" />
         <error line="23" column="28" source="standard:multiline-expression-wrapping" />
         <error line="31" column="29" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/goals/backend/GoalViewModel.kt">
+    <file name="src/main/kotlin/app/theone/android/diary/goals/backend/GoalViewModel.kt">
         <error line="14" column="62" source="standard:trailing-comma-on-declaration-site" />
         <error line="16" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="20" column="40" source="standard:multiline-expression-wrapping" />
@@ -239,7 +239,7 @@
         <error line="50" column="77" source="standard:function-signature" />
         <error line="51" column="30" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/main/java/app/theone/android/diary/goals/frontend/GoalsScreen.kt">
+    <file name="src/main/kotlin/app/theone/android/diary/goals/frontend/GoalsScreen.kt">
         <error line="10" column="1" source="standard:no-unused-imports" />
         <error line="42" column="5" source="standard:function-naming" />
         <error line="46" column="33" source="standard:trailing-comma-on-declaration-site" />
@@ -282,15 +282,15 @@
         <error line="329" column="10" source="standard:trailing-comma-on-call-site" />
         <error line="342" column="23" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/main/java/app/theone/android/exercise/backend/Exercise.kt">
+    <file name="src/main/kotlin/app/theone/android/exercise/backend/Exercise.kt">
         <error line="12" column="23" source="standard:trailing-comma-on-declaration-site" />
     </file>
-    <file name="src/main/java/app/theone/android/exercise/backend/ExerciseCatalogLoader.kt">
+    <file name="src/main/kotlin/app/theone/android/exercise/backend/ExerciseCatalogLoader.kt">
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="32" column="74" source="standard:trailing-comma-on-call-site" />
         <error line="33" column="22" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/exercise/frontend/ExercisePickerDialog.kt">
+    <file name="src/main/kotlin/app/theone/android/exercise/frontend/ExercisePickerDialog.kt">
         <error line="48" column="5" source="standard:function-naming" />
         <error line="51" column="40" source="standard:trailing-comma-on-declaration-site" />
         <error line="70" column="28" source="standard:multiline-expression-wrapping" />
@@ -327,12 +327,12 @@
         <error line="200" column="60" source="standard:trailing-comma-on-call-site" />
         <error line="205" column="44" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/meals/frontend/MealsScreen.kt">
+    <file name="src/main/kotlin/app/theone/android/meals/frontend/MealsScreen.kt">
         <error line="16" column="5" source="standard:function-naming" />
         <error line="21" column="63" source="standard:trailing-comma-on-call-site" />
         <error line="30" column="13" source="standard:function-naming" />
     </file>
-    <file name="src/main/java/app/theone/android/navigation/Destination.kt">
+    <file name="src/main/kotlin/app/theone/android/navigation/Destination.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="16" column="35" source="standard:trailing-comma-on-declaration-site" />
         <error line="19" column="5" source="standard:blank-line-before-declaration" />
@@ -342,7 +342,7 @@
         <error line="25" column="29" source="standard:multiline-expression-wrapping" />
         <error line="30" column="22" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/navigation/OneNavHost.kt">
+    <file name="src/main/kotlin/app/theone/android/navigation/OneNavHost.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="28" column="5" source="standard:function-naming" />
         <error line="53" column="34" source="standard:multiline-expression-wrapping" />
@@ -351,7 +351,7 @@
         <error line="65" column="10" source="standard:trailing-comma-on-call-site" />
         <error line="70" column="49" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/notifications/HabitReminderScheduler.kt">
+    <file name="src/main/kotlin/app/theone/android/notifications/HabitReminderScheduler.kt">
         <error line="16" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="17" column="26" source="standard:function-signature" />
         <error line="17" column="43" source="standard:function-signature" />
@@ -369,11 +369,11 @@
         <error line="52" column="65" source="standard:function-signature" />
         <error line="54" column="22" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/main/java/app/theone/android/notifications/HabitReminderWorker.kt">
+    <file name="src/main/kotlin/app/theone/android/notifications/HabitReminderWorker.kt">
         <error line="8" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="15" column="20" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/main/java/app/theone/android/notifications/NotificationHelper.kt">
+    <file name="src/main/kotlin/app/theone/android/notifications/NotificationHelper.kt">
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="17" column="27" source="standard:multiline-expression-wrapping" />
         <error line="20" column="55" source="standard:trailing-comma-on-call-site" />
@@ -384,7 +384,7 @@
         <error line="30" column="88" source="standard:function-signature" />
         <error line="32" column="28" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/main/java/app/theone/android/ui/ErrorBanner.kt">
+    <file name="src/main/kotlin/app/theone/android/ui/ErrorBanner.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="24" column="5" source="standard:function-naming" />
         <error line="24" column="17" source="standard:function-signature" />
@@ -398,13 +398,13 @@
         <error line="39" column="47" source="standard:trailing-comma-on-call-site" />
         <error line="45" column="70" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/ui/theme/MonochromeTheme.kt">
+    <file name="src/main/kotlin/app/theone/android/ui/theme/MonochromeTheme.kt">
         <error line="8" column="37" source="standard:multiline-expression-wrapping" />
         <error line="25" column="26" source="standard:trailing-comma-on-call-site" />
         <error line="30" column="5" source="standard:function-naming" />
         <error line="34" column="26" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/ui/theme/SectionTheme.kt">
+    <file name="src/main/kotlin/app/theone/android/ui/theme/SectionTheme.kt">
         <error line="16" column="5" source="standard:function-naming" />
         <error line="16" column="18" source="standard:function-signature" />
         <error line="16" column="33" source="standard:function-signature" />
@@ -412,7 +412,7 @@
         <error line="20" column="26" source="standard:trailing-comma-on-call-site" />
         <error line="36" column="43" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/ui/theme/Theme.kt">
+    <file name="src/main/kotlin/app/theone/android/ui/theme/Theme.kt">
         <error line="13" column="31" source="standard:multiline-expression-wrapping" />
         <error line="16" column="22" source="standard:trailing-comma-on-call-site" />
         <error line="19" column="32" source="standard:multiline-expression-wrapping" />
@@ -422,13 +422,13 @@
         <error line="31" column="23" source="standard:multiline-expression-wrapping" />
         <error line="43" column="26" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/ui/theme/Type.kt">
+    <file name="src/main/kotlin/app/theone/android/ui/theme/Type.kt">
         <error line="9" column="18" source="standard:multiline-expression-wrapping" />
         <error line="10" column="17" source="standard:multiline-expression-wrapping" />
         <error line="15" column="31" source="standard:trailing-comma-on-call-site" />
         <error line="16" column="6" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/sessions/frontend/ActiveWorkoutContent.kt">
+    <file name="src/main/kotlin/app/theone/android/workout/sessions/frontend/ActiveWorkoutContent.kt">
         <error line="54" column="5" source="standard:function-naming" />
         <error line="65" column="25" source="standard:trailing-comma-on-declaration-site" />
         <error line="98" column="26" source="standard:trailing-comma-on-call-site" />
@@ -484,7 +484,7 @@
         <error line="426" column="50" source="standard:trailing-comma-on-call-site" />
         <error line="435" column="26" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/sessions/backend/FirestoreStrengthRepository.kt">
+    <file name="src/main/kotlin/app/theone/android/workout/sessions/backend/FirestoreStrengthRepository.kt">
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="15" column="58" source="standard:multiline-expression-wrapping" />
         <error line="15" column="58" source="standard:function-signature" />
@@ -492,12 +492,12 @@
         <error line="31" column="32" source="standard:multiline-expression-wrapping" />
         <error line="49" column="51" source="standard:trailing-comma-on-declaration-site" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/sessions/backend/StrengthSession.kt">
+    <file name="src/main/kotlin/app/theone/android/workout/sessions/backend/StrengthSession.kt">
         <error line="9" column="31" source="standard:trailing-comma-on-declaration-site" />
         <error line="14" column="46" source="standard:trailing-comma-on-declaration-site" />
         <error line="22" column="53" source="standard:trailing-comma-on-declaration-site" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/sessions/backend/StrengthViewModel.kt">
+    <file name="src/main/kotlin/app/theone/android/workout/sessions/backend/StrengthViewModel.kt">
         <error line="18" column="72" source="standard:trailing-comma-on-declaration-site" />
         <error line="20" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="26" column="54" source="standard:multiline-expression-wrapping" />
@@ -528,7 +528,7 @@
         <error line="118" column="91" source="standard:trailing-comma-on-call-site" />
         <error line="120" column="22" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/templates/frontend/TemplateBuilderContent.kt">
+    <file name="src/main/kotlin/app/theone/android/workout/templates/frontend/TemplateBuilderContent.kt">
         <error line="30" column="5" source="standard:function-naming" />
         <error line="40" column="23" source="standard:trailing-comma-on-declaration-site" />
         <error line="44" column="24" source="standard:multiline-expression-wrapping" />
@@ -546,7 +546,7 @@
         <error line="139" column="50" source="standard:trailing-comma-on-call-site" />
         <error line="147" column="24" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/frontend/WorkoutHomeContent.kt">
+    <file name="src/main/kotlin/app/theone/android/workout/frontend/WorkoutHomeContent.kt">
         <error line="38" column="5" source="standard:function-naming" />
         <error line="44" column="39" source="standard:trailing-comma-on-declaration-site" />
         <error line="48" column="24" source="standard:multiline-expression-wrapping" />
@@ -575,7 +575,7 @@
         <error line="174" column="18" source="standard:trailing-comma-on-call-site" />
         <error line="186" column="13" source="standard:function-naming" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/frontend/WorkoutScreen.kt">
+    <file name="src/main/kotlin/app/theone/android/workout/frontend/WorkoutScreen.kt">
         <error line="31" column="5" source="standard:function-naming" />
         <error line="33" column="44" source="standard:multiline-expression-wrapping" />
         <error line="34" column="19" source="standard:multiline-expression-wrapping" />
@@ -647,12 +647,12 @@
         <error line="136" column="14" source="standard:trailing-comma-on-call-site" />
         <error line="165" column="14" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/templates/backend/WorkoutTemplate.kt">
+    <file name="src/main/kotlin/app/theone/android/workout/templates/backend/WorkoutTemplate.kt">
         <error line="5" column="31" source="standard:trailing-comma-on-declaration-site" />
         <error line="10" column="46" source="standard:trailing-comma-on-declaration-site" />
         <error line="18" column="53" source="standard:trailing-comma-on-declaration-site" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/templates/backend/FirestoreWorkoutTemplateRepository.kt">
+    <file name="src/main/kotlin/app/theone/android/workout/templates/backend/FirestoreWorkoutTemplateRepository.kt">
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="15" column="59" source="standard:multiline-expression-wrapping" />
         <error line="15" column="59" source="standard:function-signature" />
@@ -662,20 +662,20 @@
         <error line="47" column="61" source="standard:function-signature" />
         <error line="47" column="94" source="standard:function-signature" />
     </file>
-    <file name="src/main/java/app/theone/android/workout/templates/backend/WorkoutTemplateViewModel.kt">
+    <file name="src/main/kotlin/app/theone/android/workout/templates/backend/WorkoutTemplateViewModel.kt">
         <error line="13" column="84" source="standard:trailing-comma-on-declaration-site" />
         <error line="15" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="19" column="55" source="standard:multiline-expression-wrapping" />
     </file>
-    <file name="src/test/java/app/theone/android/ExampleUnitTest.kt">
+    <file name="src/test/kotlin/app/theone/android/ExampleUnitTest.kt">
         <error line="1" column="1" source="standard:final-newline" />
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="5" column="1" source="standard:no-wildcard-imports" />
     </file>
-    <file name="src/test/java/app/theone/android/diary/goals/backend/GoalViewModelTest.kt">
+    <file name="src/test/kotlin/app/theone/android/diary/goals/backend/GoalViewModelTest.kt">
         <error line="13" column="1" source="standard:no-empty-first-line-in-class-body" />
     </file>
-    <file name="src/test/java/app/theone/android/workout/sessions/backend/StrengthViewModelTest.kt">
+    <file name="src/test/kotlin/app/theone/android/workout/sessions/backend/StrengthViewModelTest.kt">
         <error line="13" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="14" column="29" source="standard:multiline-expression-wrapping" />
         <error line="16" column="46" source="standard:trailing-comma-on-call-site" />
@@ -684,7 +684,7 @@
         <error line="53" column="130" source="standard:trailing-comma-on-call-site" />
         <error line="54" column="14" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/test/java/app/theone/android/workout/templates/backend/WorkoutTemplateViewModelTest.kt">
+    <file name="src/test/kotlin/app/theone/android/workout/templates/backend/WorkoutTemplateViewModelTest.kt">
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="31" column="130" source="standard:trailing-comma-on-call-site" />
         <error line="32" column="14" source="standard:trailing-comma-on-call-site" />
