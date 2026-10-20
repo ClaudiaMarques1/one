@@ -73,13 +73,13 @@ rules.
 
 ## CI
 
-`.github/workflows/unit-tests.yml` runs `./gradlew test` on PRs and pushes to `develop`/`master`.
+`.github/workflows/unit-tests.yml` runs `test`, `lint`, `assembleDebug` jobs on PRs and `develop`/`master` pushes.
 
 ## On-Demand Docs
 
 Not `@`-imported (0 tokens until read) - open the one that matches the task:
 
-- `.claude/rules/test-execution.md` — which check each change type needs; known build failures.
+- `.claude/rules/test-execution.md` — checks per change type, ticket workflow + PR review gate; known build failures.
 - `.claude/rules/security.md` — project checklist to run alongside `/security-review`.
 - `.claude/rules/self-healing.md` — where a correction goes, and the format for a new rule.
 - `.claude/ci-cd/ci-cd-rules.md` — CI triggers, job, placeholder config, local equivalents.
