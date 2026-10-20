@@ -32,14 +32,15 @@ picker. Not 1e / 2a / 2c.
 
 ## Checklist (one commit each)
 
-- [ ] Data + ViewModels: models, rest state, previous sets, done toggling + fill-from-previous, add set
+- [x] Data + ViewModels: models, rest state, previous sets, done toggling + fill-from-previous, add set
       copies last, remove set, finish modes, rest per exercise, template `moveDraftExercise`,
-      home helpers. Tests.
+      home helpers. Tests. (Landed as 3 commits `4470148`, `d114f49`, `38ef8b8` - not bundled with 1c.)
 - [ ] 1a Home + 1b start sheet (+ delete confirm)
 - [ ] 1c Active workout (+ rest bar, rest sheet, finish dialog, discard confirm, haptic, long-press remove set)
 - [ ] 1d Template builder (+ reorderable dependency)
 - [ ] 2b Exercise picker (search across all categories, counts on the rail, selection tray)
-- [ ] `./gradlew assembleDebug test lint`, install on emulator for the user's review, then PR
+- [ ] `./gradlew assembleDebug test lint`, install on emulator for the user's review, then mark
+      draft PR #42 ready (`gh pr ready 42`)
 
 ## Follow-up: profile drawer + settings (own branch/PR, after this one)
 
@@ -48,38 +49,29 @@ profile picture, user name, **Account Details** and **Settings**. Settings holds
 ends", stored per user in Firestore (`users/{uid}/settings`, via a SettingsRepository; existing rule
 covers it). No design yet - plain M3 with existing tokens. Then wire the rest timer to the setting.
 
-## Status at end of 2026-10-11 (resume here)
+## Status at 2026-10-20 (resume here)
 
-Everything below is **uncommitted** on `feat/workout-redesign` (on disk, not lost by shutdown). Nothing built
-or tested yet.
+Data + ViewModel layer committed and pushed on `feat/workout-redesign`; draft PR #42 open against
+`develop`. Branch has `develop` merged in (`cf4ee82`, PR #41): sources now live under
+`app/src/*/kotlin/`, not `java/`. `./gradlew assembleDebug test lint` all pass (140 tests) - the old
+`ActiveWorkoutContent`/`WorkoutScreen` wiring does compile against the new ViewModel.
 
-Written:
-- `sessions/backend/ActiveWorkout.kt` - in-progress workout model kept apart from Firestore models
-  (`ActiveSet` holds typed text + done; `ActiveExercise` has instanceId, restSeconds, previousSets;
-  `RestState`; `FinishMode`), plus pure helpers: parse/format kg+reps, toggleSetDone (fills empty
-  fields from previous), withAddedSet, set counts, setsToSave / toSessionExercises / toTemplateExercises,
-  rest remaining / elapsedFraction / adjusted(-30/+30).
+Done since 2026-10-11: the two `ActiveWorkoutTest` expectations fixed (70_000, 130_000); ktlint
+line-length fix in `StrengthViewModel.duplicateExercise`.
+
+Written (see commits for detail):
+- `sessions/backend/ActiveWorkout.kt` - in-progress workout model kept apart from Firestore models.
   Decision: no `done`/`instanceId` on StrengthSet/StrengthExercise, so Firestore models stay unchanged.
 - `templates/backend/WorkoutTemplate.kt` - `DEFAULT_REST_SECONDS = 90`, `TemplateExercise.restSeconds`.
-- `sessions/backend/StrengthViewModel.kt` - rewritten: keyed by instanceId; clock param; restState in
-  SavedStateHandle; toggleSetDone starts rest; adjustRest/endRest; setRestSeconds; hasUnfinishedSets;
-  finishSession(mode). (Old saveSession/updateSet/addSet(index) are gone.)
+- `sessions/backend/StrengthViewModel.kt` - keyed by instanceId; old saveSession/updateSet/addSet(index) gone.
 - `templates/backend/WorkoutTemplateViewModel.kt` - `moveDraftExercise(from, to)`.
-- `workout/backend/WorkoutStats.kt` - sessionsThisWeek, lastDoneByTemplate, recentSessions, setCount, volumeKg.
-- Tests: `ActiveWorkoutTest`, rewritten `StrengthViewModelTest`, `WorkoutStatsTest`.
+- `workout/backend/WorkoutStats.kt` - home-screen helpers.
 
-## Next step (tomorrow)
+## Next step
 
-1. Fix two wrong expectations in `ActiveWorkoutTest` "minus 30 ... plus 30" test:
-   `adjusted(-30, nowMillis = 10_000)` -> endsAt **70_000** (not 50_000);
-   `adjusted(30, nowMillis = 90_000)` -> endsAt **130_000** (not 120_000).
-2. Add a `moveDraftExercise` test to `WorkoutTemplateViewModelTest`.
-3. Build 1c active workout UI against the new ViewModel (the old `ActiveWorkoutContent` and
-   `WorkoutScreen` wiring won't compile until then) - data + 1c go in **one commit**.
-   UI labels (rest "2:00"/"Off", elapsed mm:ss, Previous "60 kg × 8"/"BW × 12", set summaries
-   "3 × 10 · 35 kg", home meta) belong in frontend label files with tests.
-4. Then 1a+1b, 1d (+ `sh.calvin.reorderable` in the version catalog), 2b - a commit each.
-5. `./gradlew assembleDebug test lint`, install on the emulator for the user, then PR.
-
-Also parked: `feature/cmarques/37-testing-environment` has commit `5eaf34d` (lint workflow + docs),
-**not pushed**; the android-conventions / pr-review skill updates are still to do (see that plan).
+1. Add a `moveDraftExercise` test to `WorkoutTemplateViewModelTest`.
+2. Build 1c active workout UI against the new ViewModel. UI labels (rest "2:00"/"Off", elapsed mm:ss,
+   Previous "60 kg × 8"/"BW × 12", set summaries "3 × 10 · 35 kg", home meta) belong in frontend label
+   files with tests.
+3. Then 1a+1b, 1d (+ `sh.calvin.reorderable` in the version catalog), 2b - a commit each.
+4. `./gradlew assembleDebug test lint`, install on the emulator for the user, then `gh pr ready 42`.
