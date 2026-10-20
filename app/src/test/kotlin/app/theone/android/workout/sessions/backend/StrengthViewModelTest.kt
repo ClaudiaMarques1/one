@@ -8,6 +8,7 @@ import app.theone.android.workout.templates.backend.WorkoutTemplate
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -19,102 +20,151 @@ class StrengthViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val repository = FakeStrengthRepository()
+    private var now = 1_000_000L
 
     // Lazy: the ViewModel must be built after MainDispatcherRule has replaced Dispatchers.Main.
-    private val viewModel by lazy { StrengthViewModel(repository = repository, savedStateHandle = SavedStateHandle()) }
+    private val viewModel by lazy {
+        StrengthViewModel(repository = repository, savedStateHandle = SavedStateHandle(), clock = { now })
+    }
+
+    private val pushDay = WorkoutTemplate(
+        id = "t1",
+        name = "Push Day",
+        exercises = listOf(
+            TemplateExercise("Bench press", listOf(TemplateSet(8, 60.0), TemplateSet(6, 62.5)), restSeconds = 120),
+            TemplateExercise("Lateral raise", listOf(TemplateSet(12, 8.0)), restSeconds = 0)
+        )
+    )
+
+    private fun bench() = viewModel.currentExercises.value.first { it.name == "Bench press" }
 
     @Test
-    fun `startSessionFromTemplate populates active session state from the template`() {
-        val template = WorkoutTemplate(
-            id = "t1",
-            name = "Push Day",
-            exercises = listOf(TemplateExercise(name = "Bench Press", sets = listOf(TemplateSet(reps = 8, weightKg = 60.0))))
-        )
-
-        viewModel.startSessionFromTemplate(template)
+    fun `startSessionFromTemplate sets up empty sets with previous values and rest times`() {
+        viewModel.startSessionFromTemplate(pushDay)
 
         assertEquals("Push Day", viewModel.activeTemplateName.value)
-        assertEquals(1, viewModel.currentExercises.value.size)
-        assertEquals("Bench Press", viewModel.currentExercises.value[0].name)
-        assertEquals(listOf(StrengthSet(reps = 8, weightKg = 60.0)), viewModel.currentExercises.value[0].sets)
-        assertTrue(viewModel.sessionStartTimeMillis.value != null)
+        assertEquals(now, viewModel.sessionStartTimeMillis.value)
+        assertEquals(listOf(ActiveSet(), ActiveSet()), bench().sets)
+        assertEquals(StrengthSet(8, 60.0), bench().previous(0))
+        assertEquals(120, bench().restSeconds)
+        assertNull(viewModel.restState.value)
     }
 
     @Test
-    fun `discardSession clears active session state`() {
-        viewModel.startSessionFromTemplate(WorkoutTemplate(id = "t1", name = "Push Day"))
+    fun `discardSession clears the session and any rest`() {
+        viewModel.startSessionFromTemplate(pushDay)
+        viewModel.toggleSetDone(bench().instanceId, 0)
 
         viewModel.discardSession()
 
         assertEquals("", viewModel.activeTemplateName.value)
         assertTrue(viewModel.currentExercises.value.isEmpty())
         assertNull(viewModel.sessionStartTimeMillis.value)
+        assertNull(viewModel.restState.value)
     }
 
     @Test
-    fun `setExercises preserves logged sets for names that already exist`() {
-        viewModel.startSessionFromTemplate(
-            WorkoutTemplate(
-                id = "t1",
-                name = "Push Day",
-                exercises = listOf(TemplateExercise(name = "Bench Press", sets = listOf(TemplateSet(reps = 8, weightKg = 60.0))))
-            )
-        )
+    fun `typing updates only that set's text`() {
+        viewModel.startSessionFromTemplate(pushDay)
+        val id = bench().instanceId
 
-        viewModel.setExercises(listOf("Bench Press", "Lateral Raise"))
+        viewModel.updateSetReps(id, 1, "7")
+        viewModel.updateSetWeight(id, 1, "62,5")
+
+        assertEquals(ActiveSet(repsText = "7", weightText = "62,5"), bench().sets[1])
+        assertEquals(ActiveSet(), bench().sets[0])
+    }
+
+    @Test
+    fun `ticking a set fills it from previous and starts that exercise's rest`() {
+        viewModel.startSessionFromTemplate(pushDay)
+
+        viewModel.toggleSetDone(bench().instanceId, 0)
+
+        assertEquals(ActiveSet("8", "60", done = true), bench().sets[0])
+        assertEquals(RestState("Bench press", 120, now + 120_000), viewModel.restState.value)
+    }
+
+    @Test
+    fun `a new tick replaces the running rest, rest Off starts none, unticking keeps it`() {
+        viewModel.startSessionFromTemplate(pushDay)
+        viewModel.toggleSetDone(bench().instanceId, 0)
+        now += 10_000
+        viewModel.toggleSetDone(bench().instanceId, 1)
+        assertEquals(now + 120_000, viewModel.restState.value?.endsAtMillis)
+
+        val raise = viewModel.currentExercises.value.first { it.name == "Lateral raise" }
+        viewModel.toggleSetDone(raise.instanceId, 0)
+        assertEquals("Bench press", viewModel.restState.value?.exerciseName)
+
+        viewModel.toggleSetDone(bench().instanceId, 1)
+        assertEquals("Bench press", viewModel.restState.value?.exerciseName)
+    }
+
+    @Test
+    fun `rest can be adjusted and ended`() {
+        viewModel.startSessionFromTemplate(pushDay)
+        viewModel.toggleSetDone(bench().instanceId, 0)
+
+        viewModel.adjustRest(30)
+        assertEquals(RestState("Bench press", 150, now + 150_000), viewModel.restState.value)
+
+        viewModel.endRest()
+        assertNull(viewModel.restState.value)
+    }
+
+    @Test
+    fun `setRestSeconds is per exercise instance`() {
+        viewModel.startSessionFromTemplate(pushDay)
+        viewModel.duplicateExercise(bench().instanceId)
+        val (original, copy) = viewModel.currentExercises.value.filter { it.name == "Bench press" }
+
+        viewModel.setRestSeconds(copy.instanceId, 30)
+
+        val after = viewModel.currentExercises.value.filter { it.name == "Bench press" }
+        assertEquals(listOf(original.instanceId to 120, copy.instanceId to 30), after.map { it.instanceId to it.restSeconds })
+    }
+
+    @Test
+    fun `duplicateExercise inserts an empty copy right after the original`() {
+        viewModel.startSessionFromTemplate(pushDay)
+
+        viewModel.duplicateExercise(bench().instanceId)
 
         val exercises = viewModel.currentExercises.value
-        assertEquals(listOf(StrengthSet(reps = 8, weightKg = 60.0)), exercises.first { it.name == "Bench Press" }.sets)
-        assertTrue(exercises.first { it.name == "Lateral Raise" }.sets.isEmpty())
+        assertEquals(listOf("Bench press", "Bench press", "Lateral raise"), exercises.map { it.name })
+        assertTrue(exercises[1].sets.isEmpty())
+        assertEquals(exercises[0].previousSets, exercises[1].previousSets)
     }
 
     @Test
-    fun `addSet appends a set to the given exercise`() {
-        viewModel.setExercises(listOf("Bench Press"))
+    fun `addSet copies the last set, removeSet and removeExercise drop by key`() {
+        viewModel.startSessionFromTemplate(pushDay)
+        val id = bench().instanceId
+        viewModel.updateSetReps(id, 1, "6")
+        viewModel.updateSetWeight(id, 1, "62.5")
 
-        viewModel.addSet(0, StrengthSet(reps = 10, weightKg = 40.0))
+        viewModel.addSet(id)
+        assertEquals(ActiveSet("6", "62.5"), bench().sets[2])
 
-        assertEquals(listOf(StrengthSet(reps = 10, weightKg = 40.0)), viewModel.currentExercises.value[0].sets)
+        viewModel.removeSet(id, 0)
+        assertEquals(2, bench().sets.size)
+
+        viewModel.removeExercise(id)
+        assertEquals(listOf("Lateral raise"), viewModel.currentExercises.value.map { it.name })
     }
 
     @Test
-    fun `updateSet replaces the set at the given index`() {
-        viewModel.setExercises(listOf("Bench Press"))
-        viewModel.addSet(0, StrengthSet(reps = 10, weightKg = 40.0))
+    fun `setExercises keeps picked exercises in place, appends new ones and drops unpicked`() {
+        viewModel.startSessionFromTemplate(pushDay)
+        viewModel.updateSetReps(bench().instanceId, 0, "9")
 
-        viewModel.updateSet(0, 0, StrengthSet(reps = 12, weightKg = 42.5))
+        viewModel.setExercises(listOf("Bench press", "Squat"))
 
-        assertEquals(StrengthSet(reps = 12, weightKg = 42.5), viewModel.currentExercises.value[0].sets[0])
-    }
-
-    @Test
-    fun `removeSet removes the set at the given index`() {
-        viewModel.setExercises(listOf("Bench Press"))
-        viewModel.addSet(0, StrengthSet(reps = 10, weightKg = 40.0))
-        viewModel.addSet(0, StrengthSet(reps = 8, weightKg = 45.0))
-
-        viewModel.removeSet(0, 0)
-
-        assertEquals(listOf(StrengthSet(reps = 8, weightKg = 45.0)), viewModel.currentExercises.value[0].sets)
-    }
-
-    @Test
-    fun `removeExercise removes at index`() {
-        viewModel.setExercises(listOf("Bench Press", "Squat"))
-
-        viewModel.removeExercise(0)
-
-        assertEquals(listOf("Squat"), viewModel.currentExercises.value.map { it.name })
-    }
-
-    @Test
-    fun `duplicateExercise inserts a copy right after the original`() {
-        viewModel.setExercises(listOf("Bench Press", "Squat"))
-
-        viewModel.duplicateExercise(0)
-
-        val names = viewModel.currentExercises.value.map { it.name }
-        assertEquals(listOf("Bench Press", "Bench Press", "Squat"), names)
+        val exercises = viewModel.currentExercises.value
+        assertEquals(listOf("Bench press", "Squat"), exercises.map { it.name })
+        assertEquals("9", exercises[0].sets[0].repsText)
+        assertTrue(exercises[1].sets.isEmpty())
     }
 
     @Test
@@ -127,42 +177,60 @@ class StrengthViewModelTest {
     }
 
     @Test
-    fun `saveSession from a template saves today's session, carries sets back, and clears state`() {
-        viewModel.startSessionFromTemplate(
-            WorkoutTemplate(id = "t1", name = "Push Day", exercises = listOf(TemplateExercise(name = "Bench Press")))
-        )
-        viewModel.addSet(0, StrengthSet(reps = 8, weightKg = 60.0))
+    fun `finishing with done sets only saves today's done sets and carries them back to the template`() {
+        viewModel.startSessionFromTemplate(pushDay)
+        viewModel.toggleSetDone(bench().instanceId, 0)
+        assertTrue(viewModel.hasUnfinishedSets())
 
-        viewModel.saveSession()
+        viewModel.finishSession(FinishMode.DONE_SETS_ONLY)
 
         val saved = repository.stored.single()
         assertEquals(LocalDate.now().toString(), saved.date)
         assertEquals("Push Day", saved.templateName)
-        assertEquals(listOf(StrengthSet(reps = 8, weightKg = 60.0)), saved.exercises.single().sets)
+        assertEquals(listOf(StrengthExercise("Bench press", listOf(StrengthSet(8, 60.0)))), saved.exercises)
         val (templateId, carried) = repository.templateUpdates.single()
         assertEquals("t1", templateId)
-        assertEquals(listOf(TemplateExercise(name = "Bench Press", sets = listOf(TemplateSet(reps = 8, weightKg = 60.0)))), carried)
-        assertTrue(viewModel.currentExercises.value.isEmpty())
+        assertEquals(
+            listOf(
+                TemplateExercise("Bench press", listOf(TemplateSet(8, 60.0)), restSeconds = 120),
+                TemplateExercise("Lateral raise", listOf(TemplateSet(12, 8.0)), restSeconds = 0)
+            ),
+            carried
+        )
         assertEquals("", viewModel.activeTemplateName.value)
-        assertNull(viewModel.sessionStartTimeMillis.value)
     }
 
     @Test
-    fun `saveSession without a template saves the session and updates no template`() {
+    fun `finishing with all sets keeps unticked ones too`() {
+        viewModel.startSessionFromTemplate(pushDay)
+        viewModel.toggleSetDone(bench().instanceId, 0)
+
+        viewModel.finishSession(FinishMode.ALL_SETS)
+
+        assertEquals(listOf(2, 1), repository.stored.single().exercises.map { it.sets.size })
+    }
+
+    @Test
+    fun `finishing without a template saves the session and updates no template`() {
         viewModel.setExercises(listOf("Squat"))
-        viewModel.addSet(0, StrengthSet(reps = 5, weightKg = 100.0))
+        val id = viewModel.currentExercises.value.single().instanceId
+        viewModel.addSet(id)
+        viewModel.updateSetReps(id, 0, "5")
+        viewModel.updateSetWeight(id, 0, "100")
+        viewModel.toggleSetDone(id, 0)
+        assertFalse(viewModel.hasUnfinishedSets())
 
-        viewModel.saveSession()
+        viewModel.finishSession(FinishMode.DONE_SETS_ONLY)
 
-        assertEquals("Squat", repository.stored.single().exercises.single().name)
+        assertEquals(StrengthSet(5, 100.0), repository.stored.single().exercises.single().sets.single())
         assertTrue(repository.templateUpdates.isEmpty())
     }
 
     @Test
-    fun `saveSession does nothing when no exercises are logged`() {
-        viewModel.startSessionFromTemplate(WorkoutTemplate(id = "t1", name = "Push Day"))
+    fun `finishing does nothing when no set would be saved`() {
+        viewModel.startSessionFromTemplate(pushDay)
 
-        viewModel.saveSession()
+        viewModel.finishSession(FinishMode.DONE_SETS_ONLY)
 
         assertTrue(repository.stored.isEmpty())
         assertEquals("Push Day", viewModel.activeTemplateName.value)
@@ -171,16 +239,14 @@ class StrengthViewModelTest {
     @Test
     fun `a failed save surfaces in workoutError and keeps the session`() {
         repository.failNext = IllegalStateException("offline")
-        viewModel.startSessionFromTemplate(
-            WorkoutTemplate(id = "t1", name = "Push Day", exercises = listOf(TemplateExercise(name = "Bench Press")))
-        )
+        viewModel.startSessionFromTemplate(pushDay)
+        viewModel.toggleSetDone(bench().instanceId, 0)
 
-        viewModel.saveSession()
+        viewModel.finishSession(FinishMode.DONE_SETS_ONLY)
 
         assertEquals("offline", viewModel.workoutError.value)
         assertTrue(repository.stored.isEmpty())
         assertEquals("Push Day", viewModel.activeTemplateName.value)
-        assertEquals(listOf("Bench Press"), viewModel.currentExercises.value.map { it.name })
         viewModel.clearWorkoutError()
         assertNull(viewModel.workoutError.value)
     }

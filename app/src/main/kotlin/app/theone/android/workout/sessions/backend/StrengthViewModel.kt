@@ -3,8 +3,6 @@ package app.theone.android.workout.sessions.backend
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.theone.android.workout.templates.backend.TemplateExercise
-import app.theone.android.workout.templates.backend.TemplateSet
 import app.theone.android.workout.templates.backend.WorkoutTemplate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,7 +14,8 @@ import java.time.LocalDate
 
 class StrengthViewModel(
     private val repository: StrengthRepository = FirestoreStrengthRepository(),
-    private val savedStateHandle: SavedStateHandle = SavedStateHandle()
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
+    private val clock: () -> Long = System::currentTimeMillis
 ) : ViewModel() {
     private val _workoutError = MutableStateFlow<String?>(null)
     val workoutError: StateFlow<String?> = _workoutError
@@ -29,9 +28,9 @@ class StrengthViewModel(
         _workoutError.value = null
     }
 
-    // Backed by SavedStateHandle (not plain MutableStateFlow) so an in-progress session
-    // survives process death - see StrengthSet/StrengthExercise's Serializable conformance.
-    val currentExercises: StateFlow<List<StrengthExercise>> =
+    // Backed by SavedStateHandle (not plain MutableStateFlow) so an in-progress session survives
+    // process death - see ActiveWorkout.kt's Serializable models.
+    val currentExercises: StateFlow<List<ActiveExercise>> =
         savedStateHandle.getStateFlow(KEY_CURRENT_EXERCISES, emptyList())
 
     private val activeTemplateId: StateFlow<String> =
@@ -42,89 +41,143 @@ class StrengthViewModel(
     val sessionStartTimeMillis: StateFlow<Long?> =
         savedStateHandle.getStateFlow(KEY_SESSION_START_TIME, null)
 
+    /** The running rest timer, or null. Wall-clock based, so it keeps counting across rotation. */
+    val restState: StateFlow<RestState?> = savedStateHandle.getStateFlow(KEY_REST, null)
+
     fun startSessionFromTemplate(template: WorkoutTemplate) {
         savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = template.id
         savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = template.name
-        savedStateHandle[KEY_SESSION_START_TIME] = System.currentTimeMillis()
-        savedStateHandle[KEY_CURRENT_EXERCISES] = template.exercises.map { exercise ->
-            StrengthExercise(
-                name = exercise.name,
-                sets = exercise.sets.map { StrengthSet(it.reps, it.weightKg) }
-            )
-        }
+        savedStateHandle[KEY_SESSION_START_TIME] = clock()
+        savedStateHandle[KEY_CURRENT_EXERCISES] = template.toActiveExercises()
+        savedStateHandle[KEY_REST] = null
     }
 
     fun discardSession() {
-        savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = ""
-        savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = ""
-        savedStateHandle[KEY_SESSION_START_TIME] = null
-        savedStateHandle[KEY_CURRENT_EXERCISES] = emptyList<StrengthExercise>()
+        clearSession()
     }
 
+    /**
+     * The exercise picker's result: exercises still selected stay (with their sets, in place,
+     * duplicates included), newly picked names are appended, deselected ones are removed.
+     */
     fun setExercises(names: List<String>) {
-        val existingByName = currentExercises.value.associateBy { it.name }
-        savedStateHandle[KEY_CURRENT_EXERCISES] =
-            names.map { name -> existingByName[name] ?: StrengthExercise(name = name) }
+        val kept = currentExercises.value.filter { it.name in names }
+        val keptNames = kept.map { it.name }.toSet()
+        updateExercises { kept + names.filterNot { it in keptNames }.map { ActiveExercise(name = it) } }
     }
 
-    fun addSet(exerciseIndex: Int, set: StrengthSet) {
-        savedStateHandle[KEY_CURRENT_EXERCISES] = currentExercises.value.toMutableList().also { list ->
-            val exercise = list[exerciseIndex]
-            list[exerciseIndex] = exercise.copy(sets = exercise.sets + set)
-        }
+    fun updateSetReps(instanceId: String, setIndex: Int, text: String) {
+        updateSet(instanceId, setIndex) { it.copy(repsText = text) }
     }
 
-    fun updateSet(exerciseIndex: Int, setIndex: Int, set: StrengthSet) {
-        savedStateHandle[KEY_CURRENT_EXERCISES] = currentExercises.value.toMutableList().also { list ->
-            val exercise = list[exerciseIndex]
-            list[exerciseIndex] = exercise.copy(
-                sets = exercise.sets.toMutableList().apply { this[setIndex] = set }
+    fun updateSetWeight(instanceId: String, setIndex: Int, text: String) {
+        updateSet(instanceId, setIndex) { it.copy(weightText = text) }
+    }
+
+    /** Ticking a set; marking it done starts that exercise's rest (unless Off), replacing any running rest. */
+    fun toggleSetDone(instanceId: String, setIndex: Int) {
+        val exercise = currentExercises.value.find { it.instanceId == instanceId } ?: return
+        val toggled = exercise.toggleSetDone(setIndex)
+        updateExercise(instanceId) { toggled }
+        val nowDone = toggled.sets.getOrNull(setIndex)?.done == true
+        if (nowDone && exercise.restSeconds > 0) {
+            savedStateHandle[KEY_REST] = RestState(
+                exerciseName = exercise.name,
+                totalSeconds = exercise.restSeconds,
+                endsAtMillis = clock() + exercise.restSeconds * 1000L
             )
         }
     }
 
-    fun removeSet(exerciseIndex: Int, setIndex: Int) {
-        savedStateHandle[KEY_CURRENT_EXERCISES] = currentExercises.value.toMutableList().also { list ->
-            val exercise = list[exerciseIndex]
-            list[exerciseIndex] = exercise.copy(sets = exercise.sets.toMutableList().apply { removeAt(setIndex) })
+    fun addSet(instanceId: String) {
+        updateExercise(instanceId) { it.withAddedSet() }
+    }
+
+    fun removeSet(instanceId: String, setIndex: Int) {
+        updateExercise(instanceId) { exercise ->
+            exercise.copy(sets = exercise.sets.filterIndexed { index, _ -> index != setIndex })
         }
     }
 
-    fun removeExercise(index: Int) {
-        savedStateHandle[KEY_CURRENT_EXERCISES] = currentExercises.value.toMutableList().apply { removeAt(index) }
+    fun removeExercise(instanceId: String) {
+        updateExercises { list -> list.filterNot { it.instanceId == instanceId } }
     }
 
-    fun duplicateExercise(index: Int) {
-        savedStateHandle[KEY_CURRENT_EXERCISES] = currentExercises.value.toMutableList().apply {
-            add(index + 1, StrengthExercise(name = this[index].name))
+    /** Inserts a copy right below, with no sets, the same rest time and the same previous values. */
+    fun duplicateExercise(instanceId: String) {
+        updateExercises { list ->
+            val index = list.indexOfFirst { it.instanceId == instanceId }
+            if (index < 0) return@updateExercises list
+            val original = list[index]
+            list.toMutableList().apply {
+                add(
+                    index + 1,
+                    ActiveExercise(
+                        name = original.name,
+                        previousSets = original.previousSets,
+                        restSeconds = original.restSeconds,
+                    ),
+                )
+            }
         }
     }
 
-    fun saveSession() {
+    fun setRestSeconds(instanceId: String, seconds: Int) {
+        updateExercise(instanceId) { it.copy(restSeconds = seconds) }
+    }
+
+    /** The rest bar's -30 / +30. */
+    fun adjustRest(deltaSeconds: Int) {
+        savedStateHandle[KEY_REST] = restState.value?.adjusted(deltaSeconds, clock())
+    }
+
+    /** Skip, or the timer reaching 0. */
+    fun endRest() {
+        savedStateHandle[KEY_REST] = null
+    }
+
+    /** Finish needs a choice from the user when some sets aren't ticked. */
+    fun hasUnfinishedSets(): Boolean = currentExercises.value.hasUnfinishedSets()
+
+    fun finishSession(mode: FinishMode) {
         val exercises = currentExercises.value
-        if (exercises.isEmpty()) return
+        val sessionExercises = exercises.toSessionExercises(mode)
+        if (sessionExercises.isEmpty()) return
         val templateId = activeTemplateId.value
         val templateName = activeTemplateName.value
         viewModelScope.launch {
             runCatching {
                 repository.addSessionAndUpdateTemplate(
-                    session = StrengthSession(date = LocalDate.now().toString(), templateName = templateName, exercises = exercises),
+                    session = StrengthSession(date = LocalDate.now().toString(), templateName = templateName, exercises = sessionExercises),
                     templateId = templateId.ifEmpty { null },
-                    templateExercises = exercises.takeIf { templateId.isNotEmpty() }?.map { exercise ->
-                        TemplateExercise(
-                            name = exercise.name,
-                            sets = exercise.sets.map { TemplateSet(it.reps, it.weightKg) }
-                        )
-                    }
+                    templateExercises = exercises.toTemplateExercises(mode).takeIf { templateId.isNotEmpty() }
                 )
             }.onFailure { _workoutError.value = it.message }
-                .onSuccess {
-                    savedStateHandle[KEY_CURRENT_EXERCISES] = emptyList<StrengthExercise>()
-                    savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = ""
-                    savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = ""
-                    savedStateHandle[KEY_SESSION_START_TIME] = null
-                }
+                .onSuccess { clearSession() }
         }
+    }
+
+    private fun clearSession() {
+        savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = ""
+        savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = ""
+        savedStateHandle[KEY_SESSION_START_TIME] = null
+        savedStateHandle[KEY_CURRENT_EXERCISES] = emptyList<ActiveExercise>()
+        savedStateHandle[KEY_REST] = null
+    }
+
+    private fun updateSet(instanceId: String, setIndex: Int, change: (ActiveSet) -> ActiveSet) {
+        updateExercise(instanceId) { exercise ->
+            val set = exercise.sets.getOrNull(setIndex) ?: return@updateExercise exercise
+            exercise.copy(sets = exercise.sets.toMutableList().also { it[setIndex] = change(set) })
+        }
+    }
+
+    private fun updateExercise(instanceId: String, change: (ActiveExercise) -> ActiveExercise) {
+        updateExercises { list -> list.map { if (it.instanceId == instanceId) change(it) else it } }
+    }
+
+    private fun updateExercises(change: (List<ActiveExercise>) -> List<ActiveExercise>) {
+        savedStateHandle[KEY_CURRENT_EXERCISES] = change(currentExercises.value)
     }
 
     private companion object {
@@ -132,5 +185,6 @@ class StrengthViewModel(
         const val KEY_ACTIVE_TEMPLATE_ID = "activeTemplateId"
         const val KEY_ACTIVE_TEMPLATE_NAME = "activeTemplateName"
         const val KEY_SESSION_START_TIME = "sessionStartTimeMillis"
+        const val KEY_REST = "restState"
     }
 }
