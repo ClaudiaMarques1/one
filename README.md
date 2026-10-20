@@ -9,15 +9,21 @@ Firestore) as the backend, in a single-module, feature-package architecture.
 
 ## CI/CD
 
-No CI pipeline is configured yet (there is no `.github/workflows/`). Quality gates run locally:
+GitHub Actions (`.github/workflows/unit-tests.yml`) runs three jobs on every PR and on pushes to
+`develop`/`master`: `test` (unit tests), `lint` (Android Lint + ktlint) and `build` (`assembleDebug`).
+The same checks run locally:
 
 ```bash
 ./gradlew assembleDebug          # build debug APK
 ./gradlew installDebug           # build + install on a connected device/emulator
 ./gradlew test                   # JVM unit tests
-./gradlew lint                   # static analysis
+./gradlew lint                   # static analysis (Android Lint + ktlint)
 ./gradlew connectedAndroidTest   # instrumented tests (needs a device/emulator)
+scripts/emulator.sh              # boot the Pixel_7 AVD if needed, install + open the app
 ```
+
+Each change is tracked as an issue with a checklist of automated and manual checks; see
+`.claude/rules/test-execution.md`.
 
 ---
 
@@ -453,4 +459,5 @@ is built first; the others follow the same Firestore-backed pattern.
   that aggressively kill background work.
 - ViewModels are tested against in-memory fake repositories; the Firestore implementations
   themselves (queries, the session+template transaction) aren't unit-tested.
-- No CI pipeline; `./gradlew test lint` must be run locally before opening a PR.
+- CI has no device: instrumented tests (`connectedAndroidTest`) and on-screen checks stay manual,
+  on the emulator.
