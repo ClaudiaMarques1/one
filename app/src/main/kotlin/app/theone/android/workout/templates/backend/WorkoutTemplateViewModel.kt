@@ -53,6 +53,13 @@ class WorkoutTemplateViewModel(
         _draftExercises.value = _draftExercises.value.toMutableList().apply { removeAt(index) }
     }
 
+    /** Drag-to-reorder in the builder: moves the exercise at [from] to [to]. */
+    fun moveDraftExercise(from: Int, to: Int) {
+        val list = _draftExercises.value
+        if (from !in list.indices || to !in list.indices || from == to) return
+        _draftExercises.value = list.toMutableList().apply { add(to, removeAt(from)) }
+    }
+
     fun startEditingTemplate(template: WorkoutTemplate) {
         _editingTemplate.value = template
         _draftName.value = template.name
