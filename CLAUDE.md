@@ -20,7 +20,7 @@ needs a JDK to launch: if `JAVA_HOME` is unset, use Android Studio's `jbr` (see 
 ## Architecture Overview
 
 Single `:app` module. **Feature-package** layering, not layer-based — there is no `domain/` and
-no `di/`. Each top-level package under `app/src/main/java/app/theone/android/` owns its own
+no `di/`. Each top-level package under `app/src/main/kotlin/app/theone/android/` owns its own
 screens, ViewModel(s), repository, and Firestore models:
 
 ```

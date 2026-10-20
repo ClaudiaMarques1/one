@@ -26,7 +26,7 @@ No CI pipeline is configured yet (there is no `.github/workflows/`). Quality gat
 ```bash
 .
 ├── app/                                          # the only Gradle module
-│   ├── src/main/java/app/theone/android/
+│   ├── src/main/kotlin/app/theone/android/
 │   │   ├── auth/                                 # backend/ AuthViewModel, GoogleAuthClient; frontend/ sign-in screen
 │   │   ├── calendar/                             # backend/ ViewModel + date keys; frontend/ screen + labels
 │   │   ├── dashboard/                            # frontend/ Home/overview screen
