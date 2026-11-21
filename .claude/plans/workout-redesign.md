@@ -35,7 +35,7 @@ picker. Not 1e / 2a / 2c.
 - [x] Data + ViewModels: models, rest state, previous sets, done toggling + fill-from-previous, add set
       copies last, remove set, finish modes, rest per exercise, template `moveDraftExercise`,
       home helpers. Tests. (Landed as 3 commits `4470148`, `d114f49`, `38ef8b8` - not bundled with 1c.)
-- [ ] 1a Home + 1b start sheet (+ delete confirm)
+- [x] 1a Home + 1b start sheet (+ delete confirm)
 - [x] 1c Active workout (+ rest bar, rest sheet, finish dialog, discard confirm, haptic, long-press remove set)
 - [ ] 1d Template builder (+ reorderable dependency)
 - [ ] 2b Exercise picker (search across all categories, counts on the rail, selection tray)
@@ -75,9 +75,11 @@ Written (see commits for detail):
 
 ## Next step
 
-1. Push, confirm CI with `gh pr checks 42`.
-2. 1a Home + 1b start sheet (+ delete confirm). Set summaries ("3 × 10 · 35 kg", "4 sets · 8, 8, 6, 6
-   reps · 60–62.5 kg", "bodyweight", "No sets yet") and home meta go in frontend label files with tests;
-   the 1d builder reuses the summary.
+1. ~~Push, confirm CI~~ - 1c green on PR #42 (2026-11-21). Re-check `gh pr checks 42` after each push.
+2. ~~1a Home + 1b start sheet~~ - done: `WorkoutHomeContent` (no inner Scaffold - OneNavHost's padding
+   covers insets), `StartWorkoutSheet`, `WorkoutHomeLabels` + `templates/frontend/TemplateLabels.setSummary`
+   (1d reuses it), delete confirm. Strings are literals like the other redesigned screens; the unused
+   `workout_*` string resources were removed. Start sheet says "last done Thursday" only within a week,
+   else "last done 8 Oct".
 3. 1d (+ `sh.calvin.reorderable` in the version catalog), then 2b - a commit each.
 4. `/verify` (Gradle checks, tick Automated, emulator), user runs the Manual steps, then `gh pr ready 42`.
