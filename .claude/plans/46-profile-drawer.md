@@ -9,6 +9,10 @@ Handover: `C:\Users\claud\Downloads\OneApp-designs\Home\design_handoff_home\` (`
 
 - **Settings are local on the device** (no internet dependency): `androidx.datastore:datastore-preferences`
   via the version catalog. Not Firestore - the #11 card said Firestore before the handover.
+- **Rest vibration (user, after testing on the Huawei phone):** Compose `LongPress` haptics were too faint /
+  muted on EMUI, so `workout/sessions/backend/RestVibrator.kt` drives the Vibrator service (`VIBRATE`
+  permission, normal): 60ms tick at 3, 2, 1 seconds left, 400ms buzz at zero. Emulator has no vibrator -
+  manual step 6 is on a physical phone (`ANDROID_SERIAL=<serial> scripts/emulator.sh`).
 - **Light only in #46.** The Theme row (Light / Dark / System) and every dark variant, including Home's
   2a-2d, move to the dark-mode card (idea #3, "Settings: dark / light mode toggle (+ dark mode for every
   section)"), done straight after. Its card body lists both handovers and the code changes.
