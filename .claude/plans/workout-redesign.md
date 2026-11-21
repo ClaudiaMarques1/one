@@ -39,7 +39,7 @@ picker. Not 1e / 2a / 2c.
 - [x] 1c Active workout (+ rest bar, rest sheet, finish dialog, discard confirm, haptic, long-press remove set)
 - [x] 1d Template builder (+ reorderable dependency)
 - [x] 2b Exercise picker (search across all categories, counts on the rail, selection tray)
-- [ ] `./gradlew assembleDebug test lint`, install on emulator for the user's review, then mark
+- [x] `./gradlew assembleDebug test lint`, install on emulator for the user's review, then mark
       draft PR #42 ready (`gh pr ready 42`)
 
 ## Follow-up: profile drawer + settings (own branch/PR, after this one)
@@ -51,8 +51,13 @@ covers it). No design yet - plain M3 with existing tokens. Then wire the rest ti
 
 ## Status at 2026-11-21 (resume here)
 
-Data + ViewModel layer and **1c active workout UI** committed on `feat/workout-redesign`; draft PR #42
-open against `develop`. Sources live under `app/src/*/kotlin/` (PR #41); `develop` merged at `e190b02`.
+**All five screens built and verified.** `/verify` at `69e344e`: test (169), lint, assembleDebug pass;
+all 14 Manual steps ticked by the user on the emulator. PR #42 marked ready and #43 moved to In Review -
+waiting on the user's GitHub review; merge only on their explicit "merge". Next after merge: the
+profile drawer + settings follow-up (idea #11) on its own branch.
+
+Data + ViewModel layer and all five screens committed on `feat/workout-redesign`; PR #42 against
+`develop`. Sources live under `app/src/*/kotlin/` (PR #41); `develop` merged at `e190b02`.
 #43 now has its `## Checks` section (14 numbered Manual steps covering all five screens).
 
 1c landed the branch compiling again (it had failed in CI since `030bbdd` - stale local incremental
@@ -90,4 +95,6 @@ Written (see commits for detail):
    labels in `ExercisePickerLabels.kt` (+ test). Fixed on the way: `onConfirm` returned catalog order,
    which would have undone a 1d reorder whenever exercises were added - it now returns selection order
    (existing exercises first, in their order). Back clears an active search first.
-5. `/verify` (Gradle checks, tick Automated, emulator), user runs the Manual steps, then `gh pr ready 42`.
+5. ~~`/verify`, Manual steps, `gh pr ready 42`~~ - done 2026-11-21. README Workout section rewritten for
+   the redesign (its "animated GIF demos" claim was already wrong - GIFs are idea #1).
+6. User reviews PR #42 on GitHub; merge on their go-ahead.
