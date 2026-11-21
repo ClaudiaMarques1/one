@@ -16,6 +16,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.theone.android.exercise.backend.Exercise
 import app.theone.android.exercise.frontend.ExercisePickerDialog
+import app.theone.android.settings.backend.SettingsViewModel
+import app.theone.android.settings.frontend.settingsViewModel
 import app.theone.android.ui.ErrorBanner
 import app.theone.android.workout.backend.lastDoneByTemplate
 import app.theone.android.workout.sessions.backend.StrengthViewModel
@@ -34,7 +36,8 @@ fun WorkoutScreen(
         factory = viewModelFactory {
             initializer { StrengthViewModel(savedStateHandle = createSavedStateHandle()) }
         }
-    )
+    ),
+    settingsViewModel: SettingsViewModel = settingsViewModel()
 ) {
     val templates by templateViewModel.templates.collectAsState()
     val sessions by strengthViewModel.sessions.collectAsState()
@@ -46,6 +49,7 @@ fun WorkoutScreen(
     val sessionStartTimeMillis by strengthViewModel.sessionStartTimeMillis.collectAsState()
     val currentExercises by strengthViewModel.currentExercises.collectAsState()
     val restState by strengthViewModel.restState.collectAsState()
+    val vibrateOnRestEnd by settingsViewModel.vibrateOnRestEnd.collectAsState()
     val workoutError by strengthViewModel.workoutError.collectAsState()
     val templateError by templateViewModel.templateError.collectAsState()
 
@@ -62,6 +66,7 @@ fun WorkoutScreen(
                     startTimeMillis = sessionStartTimeMillis,
                     exercises = currentExercises,
                     restState = restState,
+                    vibrateOnRestEnd = vibrateOnRestEnd,
                     onRepsChange = strengthViewModel::updateSetReps,
                     onWeightChange = strengthViewModel::updateSetWeight,
                     onToggleSetDone = strengthViewModel::toggleSetDone,

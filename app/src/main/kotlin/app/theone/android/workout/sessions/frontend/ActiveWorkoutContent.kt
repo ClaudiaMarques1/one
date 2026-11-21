@@ -123,6 +123,7 @@ fun ActiveWorkoutContent(
     startTimeMillis: Long?,
     exercises: List<ActiveExercise>,
     restState: RestState?,
+    vibrateOnRestEnd: Boolean,
     onRepsChange: (instanceId: String, setIndex: Int, text: String) -> Unit,
     onWeightChange: (instanceId: String, setIndex: Int, text: String) -> Unit,
     onToggleSetDone: (instanceId: String, setIndex: Int) -> Unit,
@@ -191,6 +192,7 @@ fun ActiveWorkoutContent(
             if (restState != null) {
                 RestBar(
                     rest = restState,
+                    vibrate = vibrateOnRestEnd,
                     onAdjust = onAdjustRest,
                     onEnd = onEndRest,
                     modifier = Modifier
@@ -586,18 +588,19 @@ private fun AddExerciseButton(onClick: () -> Unit) {
     }
 }
 
-/** Floating rest countdown. Ticks on whole seconds from the wall clock; reaching 0 vibrates and ends the rest. */
+/** Floating rest countdown. Ticks on whole seconds from the wall clock; reaching 0 ends the rest, vibrating if [vibrate]. */
 @Composable
-private fun RestBar(rest: RestState, onAdjust: (Int) -> Unit, onEnd: () -> Unit, modifier: Modifier = Modifier) {
+private fun RestBar(rest: RestState, vibrate: Boolean, onAdjust: (Int) -> Unit, onEnd: () -> Unit, modifier: Modifier = Modifier) {
     val haptic = LocalHapticFeedback.current
     val currentOnEnd by rememberUpdatedState(onEnd)
+    val currentVibrate by rememberUpdatedState(vibrate)
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(rest) {
         while (true) {
             now = System.currentTimeMillis()
             if (rest.remainingSeconds(now) <= 0) {
                 // No buzz when coming back long after the rest ran out.
-                if (now - rest.endsAtMillis < 2000) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                if (currentVibrate && now - rest.endsAtMillis < 2000) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 currentOnEnd()
                 break
             }
@@ -749,6 +752,7 @@ private fun ActiveWorkoutContentPreview() {
                 ActiveExercise(name = "Push-up", sets = listOf(ActiveSet()), restSeconds = 0, instanceId = "b")
             ),
             restState = RestState("Bench Press", 90, System.currentTimeMillis() + 84_000),
+            vibrateOnRestEnd = true,
             onRepsChange = { _, _, _ -> },
             onWeightChange = { _, _, _ -> },
             onToggleSetDone = { _, _ -> },
