@@ -1,7 +1,7 @@
 # Plan: Goals - habit reminder time picker (design option 1a)
 
 Branch: `feat/goals-time-picker` (from `develop` at `9470b04`, after #38). No issue number yet.
-Handover: `C:\Users\claud\Downloads\OneApp-designs\Diary\design_handoff_goals_time_picker\`
+Handover: `~/Downloads/OneApp-designs/Diary/design_handoff_goals_time_picker/`
 (`README.md` is the spec; `Goals Time Picker.dc.html` option 1a is the interactive reference). Outside
 the repo - read it with `/add-dir`.
 
