@@ -1,51 +1,70 @@
 package app.theone.android.dashboard.frontend
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Book
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.outlined.Book
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.theone.android.R
+import app.theone.android.auth.backend.UserProfile
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.backend.DiaryViewModel
+import app.theone.android.ui.ProfileAvatar
 import app.theone.android.ui.formatDisplayDate
-import app.theone.android.ui.theme.OneTheme
+import app.theone.android.ui.profileInitials
+import app.theone.android.ui.theme.NeutralIconTile
+import app.theone.android.ui.theme.NeutralTheme
+import app.theone.android.ui.theme.WarmCardBorder
+import app.theone.android.ui.theme.WarmOnSurface
+import app.theone.android.ui.theme.WarmSecondaryText
+import app.theone.android.ui.theme.WarmSurface
+
+// 1a in the home handoff. The avatar opens the profile drawer, which OneNavHost owns.
 
 @Composable
-fun DashboardScreen(onSignOut: () -> Unit, diaryViewModel: DiaryViewModel = viewModel()) {
+fun DashboardScreen(profile: UserProfile?, onAvatarClick: () -> Unit, diaryViewModel: DiaryViewModel = viewModel()) {
     val entries by diaryViewModel.entries.collectAsState()
 
     DashboardScreenContent(
+        profile = profile,
         diaryEntryCount = entries.size,
         latestDiaryEntry = entries.firstOrNull(),
-        onSignOut = onSignOut
+        onAvatarClick = onAvatarClick
     )
 }
 
@@ -55,12 +74,14 @@ private data class DashboardCardData(
     val summary: String
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val CardShape = RoundedCornerShape(20.dp)
+
 @Composable
 private fun DashboardScreenContent(
+    profile: UserProfile?,
     diaryEntryCount: Int,
     latestDiaryEntry: DiaryEntry?,
-    onSignOut: () -> Unit
+    onAvatarClick: () -> Unit
 ) {
     val comingSoon = stringResource(R.string.dashboard_coming_soon)
     val diarySummary = if (diaryEntryCount == 0) {
@@ -71,25 +92,52 @@ private fun DashboardScreenContent(
     }
 
     val cards = listOf(
-        DashboardCardData(stringResource(R.string.dashboard_card_diary), Icons.Filled.Book, diarySummary),
-        DashboardCardData(stringResource(R.string.dashboard_card_workout), Icons.Filled.FitnessCenter, comingSoon),
-        DashboardCardData(stringResource(R.string.dashboard_card_meals), Icons.Filled.Restaurant, comingSoon),
-        DashboardCardData(stringResource(R.string.dashboard_card_calendar), Icons.Filled.CalendarMonth, comingSoon)
+        DashboardCardData(stringResource(R.string.dashboard_card_diary), Icons.Outlined.Book, diarySummary),
+        DashboardCardData(stringResource(R.string.dashboard_card_workout), Icons.Outlined.FitnessCenter, comingSoon),
+        DashboardCardData(stringResource(R.string.dashboard_card_meals), Icons.Outlined.Restaurant, comingSoon),
+        DashboardCardData(stringResource(R.string.dashboard_card_calendar), Icons.Outlined.CalendarMonth, comingSoon)
     )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.dashboard_overview_title)) },
-                actions = { TextButton(onClick = onSignOut) { Text(stringResource(R.string.dashboard_sign_out)) } }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(WarmSurface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val openProfile = stringResource(R.string.dashboard_open_profile)
+            // 40dp avatar in a 48dp touch target.
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .clickable(onClickLabel = openProfile, role = Role.Button, onClick = onAvatarClick),
+                contentAlignment = Alignment.Center
+            ) {
+                ProfileAvatar(
+                    photoUrl = profile?.photoUrl,
+                    initials = profileInitials(profile?.name.orEmpty(), profile?.email.orEmpty()),
+                    size = 40.dp,
+                    initialsSize = 15.sp
+                )
+            }
+            Text(
+                stringResource(R.string.dashboard_overview_title),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = WarmOnSurface
             )
         }
-    ) { padding ->
+
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(cards) { card -> DashboardCard(card) }
@@ -99,19 +147,28 @@ private fun DashboardScreenContent(
 
 @Composable
 private fun DashboardCard(card: DashboardCardData) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(CardShape)
+            .background(Color.White)
+            .border(1.dp, WarmCardBorder, CardShape)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                .size(44.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(NeutralIconTile),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(card.icon, contentDescription = null)
-            Column {
-                Text(card.title, style = MaterialTheme.typography.titleMedium)
-                Text(card.summary, style = MaterialTheme.typography.bodyMedium)
-            }
+            Icon(card.icon, contentDescription = null, tint = WarmOnSurface, modifier = Modifier.size(24.dp))
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(card.title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = WarmOnSurface)
+            Text(card.summary, fontSize = 14.sp, color = WarmSecondaryText, modifier = Modifier.padding(top = 2.dp))
         }
     }
 }
@@ -119,11 +176,12 @@ private fun DashboardCard(card: DashboardCardData) {
 @Preview(showBackground = true)
 @Composable
 private fun DashboardScreenPreview() {
-    OneTheme {
+    NeutralTheme {
         DashboardScreenContent(
+            profile = UserProfile(name = "Claudia Marques", email = "claudia@example.com"),
             diaryEntryCount = 2,
             latestDiaryEntry = DiaryEntry(id = "1", date = "2026-09-12", mood = "💪"),
-            onSignOut = {}
+            onAvatarClick = {}
         )
     }
 }
@@ -131,7 +189,7 @@ private fun DashboardScreenPreview() {
 @Preview(showBackground = true, name = "Empty")
 @Composable
 private fun DashboardScreenEmptyPreview() {
-    OneTheme {
-        DashboardScreenContent(diaryEntryCount = 0, latestDiaryEntry = null, onSignOut = {})
+    NeutralTheme {
+        DashboardScreenContent(profile = null, diaryEntryCount = 0, latestDiaryEntry = null, onAvatarClick = {})
     }
 }

@@ -21,7 +21,7 @@
     <string name="dashboard_card_calendar">Calendar</string>
     <string name="dashboard_coming_soon">Coming soon</string>
     <string name="dashboard_overview_title">Overview</string>
-    <string name="dashboard_sign_out">Sign out</string>
+    <string name="dashboard_open_profile">Open profile</string>
     <plurals name="dashboard_entry_count">
         <item quantity="one">%d entry</item>
         <item quantity="other">%d entries</item>
