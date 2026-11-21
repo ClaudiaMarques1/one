@@ -65,6 +65,42 @@ class WorkoutTemplateViewModelTest {
     }
 
     @Test
+    fun `moveDraftExercise moves an exercise and keeps its sets`() {
+        viewModel.startEditingTemplate(
+            WorkoutTemplate(
+                id = "t1",
+                name = "Push Day",
+                exercises = listOf(
+                    TemplateExercise(name = "Bench Press", sets = listOf(TemplateSet(reps = 8, weightKg = 60.0))),
+                    TemplateExercise(name = "Squat"),
+                    TemplateExercise(name = "Row")
+                )
+            )
+        )
+
+        viewModel.moveDraftExercise(from = 0, to = 2)
+
+        val exercises = viewModel.draftExercises.value
+        assertEquals(listOf("Squat", "Row", "Bench Press"), exercises.map { it.name })
+        assertEquals(listOf(TemplateSet(reps = 8, weightKg = 60.0)), exercises.last().sets)
+
+        viewModel.moveDraftExercise(from = 2, to = 0)
+
+        assertEquals(listOf("Bench Press", "Squat", "Row"), viewModel.draftExercises.value.map { it.name })
+    }
+
+    @Test
+    fun `moveDraftExercise ignores out-of-range and same-position moves`() {
+        viewModel.setDraftExercises(listOf("Bench Press", "Squat"))
+
+        viewModel.moveDraftExercise(from = 0, to = 5)
+        viewModel.moveDraftExercise(from = -1, to = 0)
+        viewModel.moveDraftExercise(from = 1, to = 1)
+
+        assertEquals(listOf("Bench Press", "Squat"), viewModel.draftExercises.value.map { it.name })
+    }
+
+    @Test
     fun `startEditingTemplate populates editingTemplate name description and exercises`() {
         val template = WorkoutTemplate(
             id = "t1",

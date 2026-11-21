@@ -207,13 +207,18 @@ Runtime permissions declared in `app/src/main/AndroidManifest.xml`:
 
 ### Workout - Strength Training
 
-- Build reusable **templates** (name, optional description, exercise list) through a categorized
-  exercise picker - browse by body part, search, thumbnails, animated GIF demos
-- Tap a template to start a session (confirmed against a numbered exercise list first); log sets per
-  exercise with freely add/edit/removable rows, a live session-duration timer, and a per-exercise
-  rest timer (60s/90s/2:00 via a clock icon, auto-starting on "Done", adjustable +/-30s)
-- Swipe an exercise card left to delete or right to copy; add extra exercises mid-session
-- The active session is held in a `SavedStateHandle`, so it survives process death
+- **Home** - workouts this week, template cards (exercise and set counts, last done, Start) and the
+  three most recent sessions with set count and volume
+- Build reusable **templates** (name, optional description, exercise list) with drag-to-reorder
+  (`sh.calvin.reorderable`), picking exercises from a body-part rail with selection counts, a search
+  across all categories, thumbnails and a tray of picks
+- **Start** opens a sheet with each exercise's last-time summary; the active workout shows a Previous
+  column, kg/reps fields, a tick per set (empty fields fill from Previous), elapsed time and progress
+- Ticking a set starts that exercise's rest timer (Off to 3:00, chosen per exercise and remembered on
+  the template) in a floating bar with -30/+30/Skip and a vibration when it ends
+- Exercise menu to duplicate or remove, long-press a set to remove it, add exercises mid-session;
+  Finish with unticked sets asks whether to save only the done sets or all of them
+- The active session is held in a `SavedStateHandle`, so it survives rotation and process death
 - Finishing a session writes the session to history **and** carries the performed reps/weight back
   onto the template in a single Firestore **transaction**
   (`FirestoreStrengthRepository.addSessionAndUpdateTemplate`), so a partial failure applies neither write

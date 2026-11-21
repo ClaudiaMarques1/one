@@ -27,12 +27,4 @@
         <item quantity="other">%d entries</item>
     </plurals>
 
-    <!-- workout/WorkoutHomeContent.kt -->
-    <string name="workout_templates_title">Workout Templates</string>
-    <string name="workout_new_template">New template</string>
-    <string name="workout_no_templates">No templates yet — create one to plan a workout you can reuse.</string>
-    <string name="workout_last_workouts">Last workouts</string>
-    <string name="workout_template_options">Template options</string>
-    <string name="workout_edit">Edit</string>
-    <string name="workout_delete">Delete</string>
 </resources>
