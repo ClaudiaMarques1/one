@@ -290,43 +290,6 @@
         <error line="32" column="74" source="standard:trailing-comma-on-call-site" />
         <error line="33" column="22" source="standard:trailing-comma-on-call-site" />
     </file>
-    <file name="src/main/kotlin/app/theone/android/exercise/frontend/ExercisePickerDialog.kt">
-        <error line="48" column="5" source="standard:function-naming" />
-        <error line="51" column="40" source="standard:trailing-comma-on-declaration-site" />
-        <error line="70" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="86" column="92" source="standard:trailing-comma-on-call-site" />
-        <error line="94" column="89" source="standard:trailing-comma-on-call-site" />
-        <error line="99" column="36" source="standard:multiline-expression-wrapping" />
-        <error line="101" column="44" source="standard:trailing-comma-on-call-site" />
-        <error line="107" column="14" source="standard:trailing-comma-on-call-site" />
-        <error line="111" column="32" source="standard:multiline-expression-wrapping" />
-        <error line="114" column="56" source="standard:trailing-comma-on-call-site" />
-        <error line="120" column="32" source="standard:multiline-expression-wrapping" />
-        <error line="122" column="42" source="standard:trailing-comma-on-call-site" />
-        <error line="127" column="61" source="standard:trailing-comma-on-call-site" />
-        <error line="136" column="40" source="standard:multiline-expression-wrapping" />
-        <error line="138" column="48" source="standard:trailing-comma-on-call-site" />
-        <error line="147" column="38" source="standard:trailing-comma-on-call-site" />
-        <error line="159" column="13" source="standard:function-naming" />
-        <error line="159" column="26" source="standard:function-signature" />
-        <error line="159" column="52" source="standard:function-signature" />
-        <error line="159" column="79" source="standard:function-signature" />
-        <error line="159" column="105" source="standard:function-signature" />
-        <error line="161" column="20" source="standard:multiline-expression-wrapping" />
-        <error line="163" column="29" source="standard:trailing-comma-on-call-site" />
-        <error line="168" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="172" column="66" source="standard:trailing-comma-on-call-site" />
-        <error line="178" column="29" source="standard:multiline-expression-wrapping" />
-        <error line="182" column="22" source="standard:trailing-comma-on-call-site" />
-        <error line="193" column="13" source="standard:function-naming" />
-        <error line="193" column="31" source="standard:function-signature" />
-        <error line="193" column="51" source="standard:function-signature" />
-        <error line="193" column="70" source="standard:function-signature" />
-        <error line="193" column="90" source="standard:function-signature" />
-        <error line="195" column="20" source="standard:multiline-expression-wrapping" />
-        <error line="200" column="60" source="standard:trailing-comma-on-call-site" />
-        <error line="205" column="44" source="standard:trailing-comma-on-call-site" />
-    </file>
     <file name="src/main/kotlin/app/theone/android/meals/frontend/MealsScreen.kt">
         <error line="16" column="5" source="standard:function-naming" />
         <error line="21" column="63" source="standard:trailing-comma-on-call-site" />
