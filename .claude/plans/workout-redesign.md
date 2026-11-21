@@ -37,7 +37,7 @@ picker. Not 1e / 2a / 2c.
       home helpers. Tests. (Landed as 3 commits `4470148`, `d114f49`, `38ef8b8` - not bundled with 1c.)
 - [x] 1a Home + 1b start sheet (+ delete confirm)
 - [x] 1c Active workout (+ rest bar, rest sheet, finish dialog, discard confirm, haptic, long-press remove set)
-- [ ] 1d Template builder (+ reorderable dependency)
+- [x] 1d Template builder (+ reorderable dependency)
 - [ ] 2b Exercise picker (search across all categories, counts on the rail, selection tray)
 - [ ] `./gradlew assembleDebug test lint`, install on emulator for the user's review, then mark
       draft PR #42 ready (`gh pr ready 42`)
@@ -81,5 +81,10 @@ Written (see commits for detail):
    (1d reuses it), delete confirm. Strings are literals like the other redesigned screens; the unused
    `workout_*` string resources were removed. Start sheet says "last done Thursday" only within a week,
    else "last done 8 Oct".
-3. 1d (+ `sh.calvin.reorderable` in the version catalog), then 2b - a commit each.
-4. `/verify` (Gradle checks, tick Automated, emulator), user runs the Manual steps, then `gh pr ready 42`.
+3. ~~1d~~ - done: `sh.calvin.reorderable` 2.4.3 (catalog `reorderable`; 2.4.x matches Compose BOM 2024.12).
+   Uses the non-lazy `ReorderableColumn` inside the scrolling body - in 2.4.3 its content lambda is
+   `ReorderableScope` (call `Modifier.draggableHandle()` directly; there is no `ReorderableItem` for it).
+   Move applies on settle via `moveDraftExercise`. Row keys are name + occurrence, since templates can
+   hold the same exercise twice. New token `WarmHandle`.
+4. 2b exercise picker - one commit.
+5. `/verify` (Gradle checks, tick Automated, emulator), user runs the Manual steps, then `gh pr ready 42`.
