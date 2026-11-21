@@ -1,6 +1,6 @@
 # Ideas backlog
 
-Source: the user's running list at `C:\Users\claud\Downloads\ideas.txt` (outside the repo, numbered
+Source: the user's running list at `~/Downloads/ideas.txt` (outside the repo, numbered
 `N - idea`). Each idea is a draft card in the **Ideas** column of project board "one"
 (https://github.com/users/ClaudiaMarques1/projects/1).
 

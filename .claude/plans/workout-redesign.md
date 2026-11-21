@@ -1,7 +1,7 @@
 # Plan: Workout section redesign
 
 Branch: `feat/workout-redesign` (from `develop` at `49d9b79`). Issue #43 (In Progress on project board "one").
-Handover: `C:\Users\claud\Downloads\OneApp-designs\Workouts\design_handoff_workout\` (`README.md` is the
+Handover: `~/Downloads/OneApp-designs/Workouts/design_handoff_workout/` (`README.md` is the
 spec; `Workout Redesign.dc.html` is the interactive reference). Outside the repo - `/add-dir` it.
 Build **1a** home, **1b** start sheet, **1c** active workout, **1d** template builder, **2b** exercise
 picker. Not 1e / 2a / 2c.

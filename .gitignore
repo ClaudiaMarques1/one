@@ -7,6 +7,8 @@
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
+# Android Studio App Quality Insights - per-developer Firebase project/app ids
+/.idea/appInsightsSettings.xml
 .DS_Store
 /build
 /captures

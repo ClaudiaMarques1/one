@@ -2,7 +2,7 @@
 
 Branch: `feature/cmarques/46-profile-drawer` (from `develop` at `4beb5f1`, after PR #42 merged).
 Issue #46 (idea #11), card In Progress on board "one".
-Handover: `C:\Users\claud\Downloads\OneApp-designs\Home\design_handoff_home\` (`README.md` spec,
+Handover: `~/Downloads/OneApp-designs/Home/design_handoff_home/` (`README.md` spec,
 `Home Redesign.dc.html` reference). Build **1a-1d light** only.
 
 ## Decisions (user, 2026-11-21)
