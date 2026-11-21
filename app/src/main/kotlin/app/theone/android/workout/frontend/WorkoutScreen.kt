@@ -87,6 +87,7 @@ fun WorkoutScreen(
                     onDescriptionChange = { templateViewModel.updateDraftDescription(it) },
                     onAddExercisesClick = { showPicker = true },
                     onRemoveExercise = { templateViewModel.removeDraftExercise(it) },
+                    onMoveExercise = templateViewModel::moveDraftExercise,
                     onCancel = {
                         templateViewModel.clearDraft()
                         isBuildingTemplate = false

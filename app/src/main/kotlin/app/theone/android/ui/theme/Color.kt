@@ -35,6 +35,7 @@ val WarmBodyText = Color(0xFF3B3733)
 val WarmHint = Color(0xFF8A837C)
 val WarmField = Color(0xFFF4F1EE)
 val WarmDisabledFill = Color(0xFFE6E0E9)
+val WarmHandle = Color(0xFFB5AEA7)
 
 // Workout section tokens (design handoff: workout redesign). The accent fill is WorkoutAccent.
 val WorkoutInk = Color(0xFF0D5BA6)
