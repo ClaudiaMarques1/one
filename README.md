@@ -203,7 +203,11 @@ Runtime permissions declared in `app/src/main/AndroidManifest.xml`:
 ### Home
 
 - Dashboard overview with a live Diary summary (entry count + latest mood) and placeholder cards for
-  the other sections, plus sign-out
+  the other sections, in neutral black/grey/white
+- The profile picture (account photo, or initials) opens a **profile drawer** with **Account details**
+  (name, email, sign-in method, and Sign out) and **Settings**
+- **Settings** are stored locally on the device with DataStore, so they work offline and need no
+  network: "Vibrate when rest ends" (on by default) controls the workout rest-timer buzz
 
 ### Workout - Strength Training
 
@@ -448,7 +452,7 @@ Current version: **0.1.0** (`versionCode 1`).
 
 ## Status
 
-Auth, the navigation shell, Home dashboard, Calendar, and Workout's Strength Training (templates ->
+Auth, the navigation shell, Home (with the profile drawer and Settings), Calendar, and Workout's Strength Training (templates ->
 session -> history) are functional end-to-end with Firestore. Diary's Journal and Goals/Habits, with
 reminder notifications, are also functional. Meals is still a placeholder.
 
