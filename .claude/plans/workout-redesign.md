@@ -38,7 +38,7 @@ picker. Not 1e / 2a / 2c.
 - [x] 1a Home + 1b start sheet (+ delete confirm)
 - [x] 1c Active workout (+ rest bar, rest sheet, finish dialog, discard confirm, haptic, long-press remove set)
 - [x] 1d Template builder (+ reorderable dependency)
-- [ ] 2b Exercise picker (search across all categories, counts on the rail, selection tray)
+- [x] 2b Exercise picker (search across all categories, counts on the rail, selection tray)
 - [ ] `./gradlew assembleDebug test lint`, install on emulator for the user's review, then mark
       draft PR #42 ready (`gh pr ready 42`)
 
@@ -86,5 +86,8 @@ Written (see commits for detail):
    `ReorderableScope` (call `Modifier.draggableHandle()` directly; there is no `ReorderableItem` for it).
    Move applies on settle via `moveDraftExercise`. Row keys are name + occurrence, since templates can
    hold the same exercise twice. New token `WarmHandle`.
-4. 2b exercise picker - one commit.
+4. ~~2b~~ - done: filtering/counts/selection order in `exercise/backend/ExerciseSearch.kt` (+ test),
+   labels in `ExercisePickerLabels.kt` (+ test). Fixed on the way: `onConfirm` returned catalog order,
+   which would have undone a 1d reorder whenever exercises were added - it now returns selection order
+   (existing exercises first, in their order). Back clears an active search first.
 5. `/verify` (Gradle checks, tick Automated, emulator), user runs the Manual steps, then `gh pr ready 42`.
