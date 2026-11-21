@@ -480,7 +480,10 @@ be copied, modified, redistributed or published without written permission - see
 
 ## Third-party content
 
-- **Exercise data and GIFs** - `app/src/main/assets/exercises.json` (exercise names, instructions and
-  GIF references) comes from ExerciseDB. It is used here for personal,
-  non-commercial use only, and remains the property of its owners. Before any commercial use, rights
-  will be requested from ExerciseDB.
+- **Exercise data** - `app/src/main/assets/exercises.json` comes from
+  [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset), MIT License
+  (c) Hasan Emir Yildirim. The full notice is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- **Exercise GIFs** - not included in this repository (`exercises.json` only holds their paths). The
+  media is (c) Gym visual - https://gymvisual.com/ - and is not covered by the MIT License. This app
+  is personal and non-commercial; showing the GIFs in the app, and any commercial use, will only
+  happen with permission from Gym visual and with the "(c) Gym visual" attribution.

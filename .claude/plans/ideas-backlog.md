@@ -10,7 +10,7 @@ is picked up, convert the card to an issue, move it to Todo / In Progress, and g
 
 | # | Card | Notes |
 |---|---|---|
-| 1 | Workout: play the exercise GIF when tapping its name during a workout | `exercises.json` already has `gifUrl` for all 1,324 exercises; needs a GIF-capable image loader (new dependency) |
+| 1 | Workout: play the exercise GIF when tapping its name during a workout | `exercises.json` already has `gifUrl` for all 1,324 exercises; needs a GIF-capable image loader (new dependency). The GIFs are © Gym visual (not MIT like the data) - get Gym visual's permission first, show the "© Gym visual" credit, keep 180x180 (THIRD_PARTY_NOTICES.md) |
 | 2 | Journal: optional cycle tracking to factor into workouts | Inclusive gender option; main goal is menstrual-cycle tracking |
 | 3 | Settings: dark / light mode toggle | Fits in the settings from #11 |
 | 4 | Workout: turn on Do Not Disturb during a workout | Needs notification-policy access granted by the user |
