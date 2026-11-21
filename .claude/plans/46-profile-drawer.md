@@ -53,9 +53,13 @@ Handover: `C:\Users\claud\Downloads\OneApp-designs\Home\design_handoff_home\` (`
 - [x] 1c Account details (Sign out moved)
 - [x] 1d Settings (vibrate) + rest bar respects it
 - [x] Docs: architecture.md (DataStore singleton, settings/ package), CLAUDE.md tree, README
-- [ ] `/verify`, Manual steps, PR to `develop` (`Closes #46`)
+- [x] `/verify`, Manual steps, PR to `develop` (`Closes #46`)
 
 ## Status at 2026-11-21 (resume here)
+
+**Verified - PR #47 ready, card In Review; waiting on the user's GitHub review, merge only on "merge".**
+`/verify` at `b23dd97`: 181 tests, lint, assembleDebug, emulator; `/security-review` + security.md: no findings.
+All 8 Manual steps ticked by the user (step 6 vibration on the physical phone, after the RestVibrator fix).
 
 All of 1a-1d built and committed; `:app:compileDebugKotlin --rerun test lint assembleDebug` pass; installed
 on the emulator (Account details checked by screenshot: matches 1c, Google photo shows). Draft PR open.
@@ -65,6 +69,6 @@ The always-loaded docs stay at 219 lines (CLAUDE.md intro reflowed to pay for th
 
 ## Next step
 
-1. User runs the 8 Manual steps on #46 (emulator has the build).
-2. `/verify`, then PR ready + card In Review.
+1. ~~Manual steps, `/verify`, PR ready + In Review~~ - done 2026-11-21.
+2. User reviews PR #47; merge on their go-ahead, then card -> Done.
 3. After merge: dark mode (idea #3 card - already lists both handovers and the code changes).
