@@ -51,6 +51,7 @@ fun WorkoutScreen(
     val activeTemplateName by strengthViewModel.activeTemplateName.collectAsState()
     val sessionStartTimeMillis by strengthViewModel.sessionStartTimeMillis.collectAsState()
     val currentExercises by strengthViewModel.currentExercises.collectAsState()
+    val restState by strengthViewModel.restState.collectAsState()
     val workoutError by strengthViewModel.workoutError.collectAsState()
     val templateError by templateViewModel.templateError.collectAsState()
 
@@ -66,14 +67,20 @@ fun WorkoutScreen(
                     templateName = activeTemplateName,
                     startTimeMillis = sessionStartTimeMillis,
                     exercises = currentExercises,
-                    onAddSet = { index, set -> strengthViewModel.addSet(index, set) },
-                    onUpdateSet = { exerciseIndex, setIndex, set -> strengthViewModel.updateSet(exerciseIndex, setIndex, set) },
-                    onRemoveSet = { exerciseIndex, setIndex -> strengthViewModel.removeSet(exerciseIndex, setIndex) },
-                    onRemoveExercise = { strengthViewModel.removeExercise(it) },
-                    onDuplicateExercise = { strengthViewModel.duplicateExercise(it) },
+                    restState = restState,
+                    onRepsChange = strengthViewModel::updateSetReps,
+                    onWeightChange = strengthViewModel::updateSetWeight,
+                    onToggleSetDone = strengthViewModel::toggleSetDone,
+                    onAddSet = strengthViewModel::addSet,
+                    onRemoveSet = strengthViewModel::removeSet,
+                    onDuplicateExercise = strengthViewModel::duplicateExercise,
+                    onRemoveExercise = strengthViewModel::removeExercise,
+                    onSetRestSeconds = strengthViewModel::setRestSeconds,
+                    onAdjustRest = strengthViewModel::adjustRest,
+                    onEndRest = strengthViewModel::endRest,
                     onAddExerciseClick = { showActiveWorkoutPicker = true },
-                    onFinish = { strengthViewModel.saveSession() },
-                    onCancel = { strengthViewModel.discardSession() }
+                    onFinish = strengthViewModel::finishSession,
+                    onDiscard = strengthViewModel::discardSession
                 )
             }
             isBuildingTemplate -> {

@@ -16,8 +16,6 @@ val WorkoutAccent = Color(0xFF1E88E5)
 val MealsAccent = Color(0xFF43A047)
 val DiaryAccent = Color(0xFF8E24AA)
 
-val SwipeDeleteBackground = Color(0xFFD32F2F)
-
 // Diary section tokens (design handoffs: diary journal, goals time picker).
 val DiaryInk = Color(0xFF6A1B86)
 val DiaryDeepInk = Color(0xFF4A1260)
@@ -33,6 +31,19 @@ val WarmMutedIcon = Color(0xFF9A938C)
 val WarmButtonOutline = Color(0xFFCFC6BE)
 val WarmCardBorder = Color(0xFFEAE4DE)
 val WarmDivider = Color(0xFFF0EBE6)
+val WarmBodyText = Color(0xFF3B3733)
+val WarmHint = Color(0xFF8A837C)
+val WarmField = Color(0xFFF4F1EE)
+val WarmDisabledFill = Color(0xFFE6E0E9)
+
+// Workout section tokens (design handoff: workout redesign). The accent fill is WorkoutAccent.
+val WorkoutInk = Color(0xFF0D5BA6)
+val WorkoutDeep = Color(0xFF0A3F75)
+val WorkoutContainer = Color(0xFFD2E7FA)
+val WorkoutSoft = Color(0xFFEEF5FD)
+val WorkoutRestProgress = Color(0xFF64B5F6)
+val WorkoutRestSecondary = Color(0xFFBBDDF9)
+val WorkoutDashedOutline = Color(0xFF9EC3E8)
 
 // Part-of-day labels on habit reminder times (background, text).
 val MorningLabelBackground = Color(0xFFFFF1D6)
