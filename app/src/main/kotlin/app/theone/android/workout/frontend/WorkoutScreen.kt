@@ -1,13 +1,7 @@
 package app.theone.android.workout.frontend
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,7 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -24,6 +17,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import app.theone.android.exercise.backend.Exercise
 import app.theone.android.exercise.frontend.ExercisePickerDialog
 import app.theone.android.ui.ErrorBanner
+import app.theone.android.workout.backend.lastDoneByTemplate
 import app.theone.android.workout.sessions.backend.StrengthViewModel
 import app.theone.android.workout.sessions.frontend.ActiveWorkoutContent
 import app.theone.android.workout.templates.backend.WorkoutTemplate
@@ -108,7 +102,7 @@ fun WorkoutScreen(
                     templates = templates,
                     sessions = sessions,
                     onCreateTemplateClick = { isBuildingTemplate = true },
-                    onTemplateClick = { pendingStartTemplate = it },
+                    onStartClick = { pendingStartTemplate = it },
                     onEditTemplate = {
                         templateViewModel.startEditingTemplate(it)
                         isBuildingTemplate = true
@@ -151,31 +145,19 @@ fun WorkoutScreen(
     }
 
     pendingStartTemplate?.let { template ->
-        AlertDialog(
-            onDismissRequest = { pendingStartTemplate = null },
-            title = { Text("Start workout?") },
-            text = {
-                Column {
-                    template.exercises.forEachIndexed { index, exercise ->
-                        Text("${index + 1}. ${exercise.name}")
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Would you like to start your workout: ${template.name}?")
-                }
+        StartWorkoutSheet(
+            template = template,
+            lastDone = lastDoneByTemplate(sessions)[template.name],
+            onStart = {
+                strengthViewModel.startSessionFromTemplate(template)
+                pendingStartTemplate = null
             },
-            confirmButton = {
-                TextButton(onClick = {
-                    strengthViewModel.startSessionFromTemplate(template)
-                    pendingStartTemplate = null
-                }) {
-                    Text("Yes")
-                }
+            onEditFirst = {
+                templateViewModel.startEditingTemplate(template)
+                isBuildingTemplate = true
+                pendingStartTemplate = null
             },
-            dismissButton = {
-                TextButton(onClick = { pendingStartTemplate = null }) {
-                    Text("No")
-                }
-            }
+            onDismiss = { pendingStartTemplate = null }
         )
     }
 }
