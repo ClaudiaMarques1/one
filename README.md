@@ -470,3 +470,20 @@ is built first; the others follow the same Firestore-backed pattern.
   themselves (queries, the session+template transaction) aren't unit-tested.
 - CI has no device: instrumented tests (`connectedAndroidTest`) and on-screen checks stay manual,
   on the emulator.
+
+---
+
+## License
+
+Copyright (c) 2026 Claudia Marques. All rights reserved. The code is public to view, but it may not
+be copied, modified, redistributed or published without written permission - see [LICENSE](LICENSE).
+
+## Third-party content
+
+- **Exercise data** - `app/src/main/assets/exercises.json` comes from
+  [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset), MIT License
+  (c) Hasan Emir Yildirim. The full notice is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- **Exercise GIFs** - not included in this repository (`exercises.json` only holds their paths). The
+  media is (c) Gym visual - https://gymvisual.com/ - and is not covered by the MIT License. This app
+  is personal and non-commercial; showing the GIFs in the app, and any commercial use, will only
+  happen with permission from Gym visual and with the "(c) Gym visual" attribution.
