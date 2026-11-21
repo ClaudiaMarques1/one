@@ -12,12 +12,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
-
     private val googleAuthClient = GoogleAuthClient(application)
 
     val currentUser: StateFlow<FirebaseUser?> = callbackFlow {
@@ -29,6 +29,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         started = SharingStarted.Eagerly,
         initialValue = FirebaseModule.auth.currentUser
     )
+
+    /** [currentUser] as plain values for the profile screens; null when signed out. */
+    val profile: StateFlow<UserProfile?> = currentUser
+        .map { it?.toUserProfile() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, FirebaseModule.auth.currentUser?.toUserProfile())
 
     private val _authError = MutableStateFlow<String?>(null)
     val authError: StateFlow<String?> = _authError

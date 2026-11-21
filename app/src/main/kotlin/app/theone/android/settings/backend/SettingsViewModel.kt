@@ -1,0 +1,32 @@
+package app.theone.android.settings.backend
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+// The repository needs a Context, so there's no default argument - screens build this through a
+// viewModelFactory with the application context (`settingsViewModel()` in settings/frontend).
+class SettingsViewModel(private val repository: SettingsRepository) : ViewModel() {
+    private val _settingsError = MutableStateFlow<String?>(null)
+    val settingsError: StateFlow<String?> = _settingsError
+
+    val vibrateOnRestEnd: StateFlow<Boolean> = repository.observeVibrateOnRestEnd()
+        .catch { e -> _settingsError.value = e.message }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_VIBRATE_ON_REST_END)
+
+    fun setVibrateOnRestEnd(enabled: Boolean) {
+        viewModelScope.launch {
+            runCatching { repository.setVibrateOnRestEnd(enabled) }
+                .onFailure { _settingsError.value = it.message }
+        }
+    }
+
+    fun clearSettingsError() {
+        _settingsError.value = null
+    }
+}
