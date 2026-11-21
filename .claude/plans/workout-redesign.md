@@ -36,7 +36,7 @@ picker. Not 1e / 2a / 2c.
       copies last, remove set, finish modes, rest per exercise, template `moveDraftExercise`,
       home helpers. Tests. (Landed as 3 commits `4470148`, `d114f49`, `38ef8b8` - not bundled with 1c.)
 - [ ] 1a Home + 1b start sheet (+ delete confirm)
-- [ ] 1c Active workout (+ rest bar, rest sheet, finish dialog, discard confirm, haptic, long-press remove set)
+- [x] 1c Active workout (+ rest bar, rest sheet, finish dialog, discard confirm, haptic, long-press remove set)
 - [ ] 1d Template builder (+ reorderable dependency)
 - [ ] 2b Exercise picker (search across all categories, counts on the rail, selection tray)
 - [ ] `./gradlew assembleDebug test lint`, install on emulator for the user's review, then mark
@@ -49,19 +49,14 @@ profile picture, user name, **Account Details** and **Settings**. Settings holds
 ends", stored per user in Firestore (`users/{uid}/settings`, via a SettingsRepository; existing rule
 covers it). No design yet - plain M3 with existing tokens. Then wire the rest timer to the setting.
 
-## Status at 2026-10-20 (resume here)
+## Status at 2026-11-21 (resume here)
 
-Data + ViewModel layer committed and pushed on `feat/workout-redesign`; draft PR #42 open against
-`develop`. Branch has `develop` merged in (`cf4ee82`, PR #41): sources now live under
-`app/src/*/kotlin/`, not `java/`. Also merged: `develop` at `e190b02` (PR #45 verification workflow).
+Data + ViewModel layer and **1c active workout UI** committed on `feat/workout-redesign`; draft PR #42
+open against `develop`. Sources live under `app/src/*/kotlin/` (PR #41); `develop` merged at `e190b02`.
+#43 now has its `## Checks` section (14 numbered Manual steps covering all five screens).
 
-**Branch does not compile** (found 2026-10-20): `WorkoutScreen.kt:68-73` still wires the old
-`ActiveWorkoutContent` to removed `StrengthViewModel` APIs - as the original plan said. Earlier local
-"all pass" results were stale incremental output (see `test-execution.md` known failures); CI on PR #42
-has failed since `030bbdd`. Building 1c against the new ViewModel fixes it.
-
-Done since 2026-10-11: the two `ActiveWorkoutTest` expectations fixed (70_000, 130_000); ktlint
-line-length fix in `StrengthViewModel.duplicateExercise`.
+1c landed the branch compiling again (it had failed in CI since `030bbdd` - stale local incremental
+output had hidden it). Verified with `compileDebugKotlin --rerun` then `test lint assembleDebug`.
 
 Written (see commits for detail):
 - `sessions/backend/ActiveWorkout.kt` - in-progress workout model kept apart from Firestore models.
@@ -70,13 +65,19 @@ Written (see commits for detail):
 - `sessions/backend/StrengthViewModel.kt` - keyed by instanceId; old saveSession/updateSet/addSet(index) gone.
 - `templates/backend/WorkoutTemplateViewModel.kt` - `moveDraftExercise(from, to)`.
 - `workout/backend/WorkoutStats.kt` - home-screen helpers.
+- `sessions/frontend/ActiveWorkoutContent.kt` - 1c: header (elapsed, progress, Finish), exercise cards
+  (rest chip, overflow Duplicate/Remove, set grid, long-press Remove set), floating rest bar (ticks on
+  the wall clock, haptic at 0 unless returning >2s late), rest sheet, finish + discard dialogs. Swipe
+  shortcuts dropped (menu is primary per spec), so `SwipeDeleteBackground` was removed.
+- `sessions/frontend/ActiveWorkoutLabels.kt` (+ test) - elapsed, rest, Previous, progress labels.
+- `ui/theme/Color.kt` - `Workout*` tokens and the extra warm neutrals (`WarmBodyText`, `WarmHint`,
+  `WarmField`, `WarmDisabledFill`) from the handoff.
 
 ## Next step
 
-1. ~~Add a `moveDraftExercise` test~~ - done (2 tests; runs once the branch compiles).
-2. Give #43 a `## Checks` section (it predates the template), then build 1c active workout UI against
-   the new ViewModel - this makes the branch compile again; confirm with `gh pr checks 42`. UI labels (rest "2:00"/"Off", elapsed mm:ss,
-   Previous "60 kg × 8"/"BW × 12", set summaries "3 × 10 · 35 kg", home meta) belong in frontend label
-   files with tests.
-3. Then 1a+1b, 1d (+ `sh.calvin.reorderable` in the version catalog), 2b - a commit each.
-4. `./gradlew assembleDebug test lint`, install on the emulator for the user, then `gh pr ready 42`.
+1. Push, confirm CI with `gh pr checks 42`.
+2. 1a Home + 1b start sheet (+ delete confirm). Set summaries ("3 × 10 · 35 kg", "4 sets · 8, 8, 6, 6
+   reps · 60–62.5 kg", "bodyweight", "No sets yet") and home meta go in frontend label files with tests;
+   the 1d builder reuses the summary.
+3. 1d (+ `sh.calvin.reorderable` in the version catalog), then 2b - a commit each.
+4. `/verify` (Gradle checks, tick Automated, emulator), user runs the Manual steps, then `gh pr ready 42`.
