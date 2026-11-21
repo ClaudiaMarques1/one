@@ -36,6 +36,15 @@ val WarmHint = Color(0xFF8A837C)
 val WarmField = Color(0xFFF4F1EE)
 val WarmDisabledFill = Color(0xFFE6E0E9)
 val WarmHandle = Color(0xFFB5AEA7)
+val WarmPressedRow = Color(0xFFF3EDE7)
+
+// Home and its sub-screens (design handoff: home) - neutral only, no section accent.
+val NeutralIconTile = Color(0xFFEFEDEA)
+val NeutralAvatar = Color(0xFF2B2926)
+val NeutralNavBar = Color(0xFFF2F0ED)
+val NeutralSelected = Color(0xFFE2DFDB)
+val NeutralSwitchOff = Color(0xFF79747E)
+val SignOutPressed = Color(0xFFFCEEEE)
 
 // Workout section tokens (design handoff: workout redesign). The accent fill is WorkoutAccent.
 val WorkoutInk = Color(0xFF0D5BA6)

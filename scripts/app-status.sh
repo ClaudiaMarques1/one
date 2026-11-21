@@ -26,7 +26,8 @@ echo "Installed:  yes (updated $updated)"
 pid="$("$adb" shell pidof "$APP_ID" | tr -d '\r' || true)"
 if [ -n "$pid" ]; then echo "Running:    yes (pid $pid)"; else echo "Running:    no"; fi
 
-top="$("$adb" shell dumpsys activity activities | sed -n 's/.*topResumedActivity=ActivityRecord{[^ ]* [^ ]* \([^ ]*\).*/\1/p' | head -1 | tr -d '\r')"
+# Android 11+ reports topResumedActivity=...; Android 10 (e.g. EMUI phones) only mResumedActivity: ...
+top="$("$adb" shell dumpsys activity activities | sed -n 's/.*\(topResumedActivity=\|mResumedActivity: \)ActivityRecord{[^ ]* [^ ]* \([^ ]*\).*/\2/p' | head -1 | tr -d '\r')"
 echo "Foreground: ${top:-unknown}"
 case "$top" in
   "$APP_ID"/*) ;;

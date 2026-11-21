@@ -6,7 +6,7 @@ new ones — cite the reference, don't restate it.
 ## Layering
 
 Each feature package (`auth/ calendar/ dashboard/ diary/ exercise/ meals/ navigation/
-notifications/ workout/`) owns its own `Screen` composable(s), `ViewModel`, `Repository`, and
+notifications/ settings/ workout/`) owns its own `Screen` composable(s), `ViewModel`, `Repository`, and
 Firestore model classes. Features must not import each other's repositories. Cross-feature reuse
 goes in `ui/`. Inside a feature: overview in `<feature>/frontend/` (+`backend/`), each part in
 `<feature>/<part>/{backend,frontend}/` - displayed = frontend, functional/button-driven (VMs, models, repos) = backend.
@@ -19,10 +19,10 @@ Reference: `diary/` (`frontend/DiaryScreen.kt` tab bar; `journal/`, `goals/`); t
 
 ## Data Access
 
-Only repositories touch `data/FirebaseModule.kt` (the sole singleton — `object FirebaseModule`
-with `auth`/`firestore` as `by lazy` vals). ViewModels and composables never call Firestore or
-`FirebaseModule` directly — verified: no `*Screen.kt` file or anything under `ui/` imports a
-Firebase class.
+Only repositories touch `data/FirebaseModule.kt` (the sole Firebase singleton — `object FirebaseModule`
+with `auth`/`firestore` as `by lazy` vals; local settings: `settings/backend/DataStoreSettingsRepository.kt`).
+ViewModels and composables never call Firestore or `FirebaseModule` directly — no `*Screen.kt` or `ui/`
+file imports a Firebase class (screens get the signed-in user as `auth/backend/UserProfile`).
 
 - **Reads**: `callbackFlow` + `.addSnapshotListener` + `awaitClose`.
   Reference: `workout/sessions/backend/FirestoreStrengthRepository.kt:15-37`.

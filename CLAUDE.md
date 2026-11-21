@@ -19,20 +19,20 @@ needs a JDK to launch: if `JAVA_HOME` is unset, use Android Studio's `jbr` (see 
 
 ## Architecture Overview
 
-Single `:app` module. **Feature-package** layering, not layer-based — there is no `domain/` and
-no `di/`. Each top-level package under `app/src/main/kotlin/app/theone/android/` owns its own
-screens, ViewModel(s), repository, and Firestore models:
+Single `:app` module. **Feature-package** layering, not layer-based — no `domain/`, no `di/`. Each top-level
+package under `app/src/main/kotlin/app/theone/android/` owns its screens, ViewModel(s), repository and models:
 
 ```
-auth/            backend/ AuthViewModel, GoogleAuthClient; frontend/ SignInScreen
+auth/            backend/ AuthViewModel (+ UserProfile), GoogleAuthClient; frontend/ SignIn + Account details
 calendar/        backend/ ViewModel + date keys; frontend/ screen + date labels (workout/diary by date)
-dashboard/       frontend/ Home/overview screen
-data/            FirebaseModule — the app's only shared singleton
+dashboard/       frontend/ Home/overview screen + profile drawer (Home and its sub-screens use NeutralTheme)
+data/            FirebaseModule — the app's only Firebase singleton
 diary/           frontend/ overview (tabs); journal/ + goals/, each backend/ (VMs, repos) + frontend/ (UI)
 exercise/        backend/ catalog model + asset loader; frontend/ category picker dialog
 meals/           frontend/ Meals screen (placeholder)
 navigation/      Bottom nav destinations (per-section accent colors) and NavHost - flat, app plumbing
 notifications/   Reminder channel, worker + scheduler - flat: WorkManager stores the worker class name
+settings/        backend/ local DataStore settings repo + ViewModel (no network); frontend/ Settings screen
 ui/              Compose theme (ui/theme/) and shared UI
 workout/         frontend/ overview + home list; templates/ + sessions/, each backend/ + frontend/
 ```

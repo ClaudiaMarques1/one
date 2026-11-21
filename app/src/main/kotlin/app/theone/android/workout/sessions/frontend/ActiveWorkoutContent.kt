@@ -64,8 +64,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -99,11 +98,13 @@ import app.theone.android.workout.sessions.backend.ActiveExercise
 import app.theone.android.workout.sessions.backend.ActiveSet
 import app.theone.android.workout.sessions.backend.FinishMode
 import app.theone.android.workout.sessions.backend.RestState
+import app.theone.android.workout.sessions.backend.RestVibrator
 import app.theone.android.workout.sessions.backend.StrengthSet
 import app.theone.android.workout.sessions.backend.doneSetCount
 import app.theone.android.workout.sessions.backend.elapsedFraction
 import app.theone.android.workout.sessions.backend.formatWeightInput
 import app.theone.android.workout.sessions.backend.hasUnfinishedSets
+import app.theone.android.workout.sessions.backend.isRestCountdownTick
 import app.theone.android.workout.sessions.backend.remainingSeconds
 import app.theone.android.workout.sessions.backend.restOptionsSeconds
 import app.theone.android.workout.sessions.backend.totalSetCount
@@ -123,6 +124,7 @@ fun ActiveWorkoutContent(
     startTimeMillis: Long?,
     exercises: List<ActiveExercise>,
     restState: RestState?,
+    vibrateOnRestEnd: Boolean,
     onRepsChange: (instanceId: String, setIndex: Int, text: String) -> Unit,
     onWeightChange: (instanceId: String, setIndex: Int, text: String) -> Unit,
     onToggleSetDone: (instanceId: String, setIndex: Int) -> Unit,
@@ -191,6 +193,7 @@ fun ActiveWorkoutContent(
             if (restState != null) {
                 RestBar(
                     rest = restState,
+                    vibrate = vibrateOnRestEnd,
                     onAdjust = onAdjustRest,
                     onEnd = onEndRest,
                     modifier = Modifier
@@ -586,21 +589,30 @@ private fun AddExerciseButton(onClick: () -> Unit) {
     }
 }
 
-/** Floating rest countdown. Ticks on whole seconds from the wall clock; reaching 0 vibrates and ends the rest. */
+/**
+ * Floating rest countdown. Ticks on whole seconds from the wall clock. If [vibrate]: a quick tick at
+ * 3, 2 and 1 seconds left, and a longer buzz when it reaches 0 and ends the rest.
+ */
 @Composable
-private fun RestBar(rest: RestState, onAdjust: (Int) -> Unit, onEnd: () -> Unit, modifier: Modifier = Modifier) {
-    val haptic = LocalHapticFeedback.current
+private fun RestBar(rest: RestState, vibrate: Boolean, onAdjust: (Int) -> Unit, onEnd: () -> Unit, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val vibrator = remember(context) { RestVibrator(context) }
     val currentOnEnd by rememberUpdatedState(onEnd)
+    val currentVibrate by rememberUpdatedState(vibrate)
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(rest) {
+        var lastTick: Int? = null
         while (true) {
             now = System.currentTimeMillis()
-            if (rest.remainingSeconds(now) <= 0) {
+            val remaining = rest.remainingSeconds(now)
+            if (remaining <= 0) {
                 // No buzz when coming back long after the rest ran out.
-                if (now - rest.endsAtMillis < 2000) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                if (currentVibrate && now - rest.endsAtMillis < 2000) vibrator.end()
                 currentOnEnd()
                 break
             }
+            if (currentVibrate && isRestCountdownTick(remaining) && remaining != lastTick) vibrator.tick()
+            lastTick = remaining
             delay((rest.endsAtMillis - now).mod(1000L).takeIf { it > 0 } ?: 1000L)
         }
     }
@@ -749,6 +761,7 @@ private fun ActiveWorkoutContentPreview() {
                 ActiveExercise(name = "Push-up", sets = listOf(ActiveSet()), restSeconds = 0, instanceId = "b")
             ),
             restState = RestState("Bench Press", 90, System.currentTimeMillis() + 84_000),
+            vibrateOnRestEnd = true,
             onRepsChange = { _, _, _ -> },
             onWeightChange = { _, _, _ -> },
             onToggleSetDone = { _, _ -> },

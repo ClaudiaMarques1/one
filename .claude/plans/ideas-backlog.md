@@ -22,5 +22,9 @@ is picked up, convert the card to an issue, move it to Todo / In Progress, and g
 | 10 | Wear OS: show heart rate and step count in the app | Depends on 8 |
 | 11 | Profile drawer with settings (vibrate when rest ends) | Already the planned follow-up in `workout-redesign.md` |
 | 12 | Meals: log meals with calories | Meals screen is a placeholder today |
+| 13 | New Languages to be added | Added on the board, not in `ideas.txt`. The redesigned screens use literal strings (only sign-in and the dashboard use `strings.xml`), so translation means moving strings into resources first |
+| 14 | Feature: have a guest option for those who want to use the workout feature | Added on the board, not in `ideas.txt`. Once-off use, data not kept. Firebase anonymous auth fits the existing per-uid rules; wiping the guest's data on exit needs a plan |
+| 15 | Create Course templates | Added on the board, not in `ideas.txt`. Ready-made routines (treadmill/rowing/cycling intervals, stretching) - timed intervals, not sets x reps, so closer to the README's planned Cardio / Warmup session types |
 
-Last added: **#12** (2026-10-20).
+Last added: **#15** (2026-11-21). #13-15 were created on the board directly - the next new number in
+`ideas.txt` is 16.
