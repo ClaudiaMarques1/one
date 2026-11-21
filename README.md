@@ -470,3 +470,17 @@ is built first; the others follow the same Firestore-backed pattern.
   themselves (queries, the session+template transaction) aren't unit-tested.
 - CI has no device: instrumented tests (`connectedAndroidTest`) and on-screen checks stay manual,
   on the emulator.
+
+---
+
+## License
+
+Copyright (c) 2026 Claudia Marques. All rights reserved. The code is public to view, but it may not
+be copied, modified, redistributed or published without written permission - see [LICENSE](LICENSE).
+
+## Third-party content
+
+- **Exercise data and GIFs** - `app/src/main/assets/exercises.json` (exercise names, instructions and
+  GIF references) comes from ExerciseDB. It is used here for personal,
+  non-commercial use only, and remains the property of its owners. Before any commercial use, rights
+  will be requested from ExerciseDB.
