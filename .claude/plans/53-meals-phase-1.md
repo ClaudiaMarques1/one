@@ -27,6 +27,10 @@ Meal settings: the README points to `Home Redesign.dc.html` 1d, which was never 
   shape as Workout reading the vibrate setting).
 - **Training day:** a strength session logged for that date (`StrengthRepository`, as Calendar does)
   until workout scheduling exists. Banner copy without a time: `Leg day · targets raised for training`.
+- **Day navigation (requested in testing):** < / > arrows on the header move `MealsViewModel`'s selected
+  date; title reads Today / Tomorrow / Yesterday / weekday and tapping it returns to today.
+- **Settings keyboard bug (emulator video):** the Settings scroll column had no `imePadding()`, so with
+  edge-to-edge the number pad covered the rest-day fields. Fixed by padding the scroll area for the IME.
 - **Removing a meal:** not in the mock; long-press a meal row -> menu with `Remove` (destructive).
   Without it a mistaken add can't be undone.
 - **Accent:** `SectionAccent.Meals` light becomes `#2E7D32` (handover accent fill; was `#43A047`).
