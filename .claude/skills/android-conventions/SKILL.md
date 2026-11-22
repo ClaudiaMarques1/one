@@ -82,15 +82,18 @@ sequential `.await()` calls for what's logically one atomic operation.
 Three-step registration (see `.claude/rules/architecture.md`):
 
 ```kotlin
+// 0. ui/theme/Color.kt - add the section accent with its light and dark value
+//    enum class SectionAccent { ...; Foo(Color(0xFF00ACC1), Color(0xFF<dark>)) }
+
 // 1. navigation/Destination.kt — add a data object
-data object Foo : Destination("foo", "Foo", Icons.Filled.SomeIcon, Color(0xFF00ACC1))
+data object Foo : Destination("foo", "Foo", Icons.Outlined.SomeIcon, Icons.Filled.SomeIcon, SectionAccent.Foo)
 
 // 2. navigation/Destination.kt — add it to the list
 val bottomNavDestinations = listOf(Destination.Home, /* ... */, Destination.Foo)
 
 // 3. navigation/OneNavHost.kt — add a composable entry inside NavHost
 composable(Destination.Foo.route) {
-    SectionTheme(Destination.Foo.accentColor!!) { FooScreen() }
+    SectionTheme(SectionAccent.Foo) { FooScreen() }
 }
 ```
 

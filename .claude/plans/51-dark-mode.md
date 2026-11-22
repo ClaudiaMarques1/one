@@ -54,11 +54,12 @@ Type: backend + front-facing (see `rules/test-execution.md`).
       (soreness stays "Diary purple", the handoff default; the dark README reds are the Warm red option)
 - [x] Goals time picker (1a): white fills -> `CardSurface`
 - [x] Workout (1a-1d, 2b, 3a) + exercise picker: `onPrimary`, `CardSurface`, new `OnWorkoutDeep` (rest bar)
-- [ ] Meals placeholder: check it reads fine in dark
-- [ ] `/verify`, PR to `develop` with `Closes #51`
+- [x] Meals placeholder: checked in dark
+- [x] Calendar legend: "Both" removed (Meals joins the grid); Goals list padded 16/16/24
+- [x] `/verify` (all Checks ticked, Manual by the user); screenshots in `docs/screenshots/51-dark-mode/` + on the issue
+- [ ] PR to `develop` with `Closes #51` - user review
 
 ## Next step
 
-Dark values come from the design file's own `__dkHex` conversion (run it with node on a light hex).
-Remaining: check Meals, the composer, active workout + rest bar, template builder and Goals on the
-emulator in dark; then `/verify` and the PR.
+PR open for review; merge only on the user's explicit go-ahead. Open question for later: give the
+sign-in screen (MonochromeTheme) a dark version.
