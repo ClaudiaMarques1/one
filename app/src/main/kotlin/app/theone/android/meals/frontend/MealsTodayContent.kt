@@ -25,6 +25,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -91,7 +93,11 @@ fun MealsTodayContent(
     onAddToSlot: (MealSlot) -> Unit,
     onToggleEaten: (PlannedMeal, Boolean) -> Unit,
     onRemoveMeal: (PlannedMeal) -> Unit,
-    onTapGlass: (Int) -> Unit
+    onTapGlass: (Int) -> Unit,
+    todayKey: String = day.date,
+    onPreviousDay: () -> Unit = {},
+    onNextDay: () -> Unit = {},
+    onToday: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier
@@ -100,7 +106,7 @@ fun MealsTodayContent(
         contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item { TodayHeader(day.date) }
+        item { DayHeader(day.date, todayKey, onPreviousDay, onNextDay, onToday) }
         day.workoutName?.let { workout -> item { TrainingBanner(workout) } }
         item { SummaryCard(day) }
         items(day.slots, key = { it.slot.name }) { slot ->
@@ -115,16 +121,49 @@ fun MealsTodayContent(
     }
 }
 
+/**
+ * "Today" (or Tomorrow / Yesterday / the weekday) with the date, and arrows to move a day at a time -
+ * plan ahead, or look back and fix a past day. Tapping the title on another day jumps back to today.
+ */
 @Composable
-private fun TodayHeader(dateKey: String) {
-    Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-        Text("Today", fontSize = 28.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp, color = WarmOnSurface)
-        Text(
-            todayDateLabel(LocalDate.parse(dateKey)),
-            fontSize = 14.sp,
-            color = WarmSecondaryText,
-            modifier = Modifier.padding(top = 2.dp)
-        )
+private fun DayHeader(
+    dateKey: String,
+    todayKey: String,
+    onPreviousDay: () -> Unit,
+    onNextDay: () -> Unit,
+    onToday: () -> Unit
+) {
+    val date = LocalDate.parse(dateKey)
+    val isToday = dateKey == todayKey
+    Row(
+        modifier = Modifier.padding(start = 8.dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(enabled = !isToday, onClickLabel = "Back to today", onClick = onToday)
+        ) {
+            Text(
+                dayTitle(date, LocalDate.parse(todayKey)),
+                fontSize = 28.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = (-0.3).sp,
+                color = WarmOnSurface
+            )
+            Text(
+                dayDateLabel(date, LocalDate.parse(todayKey)),
+                fontSize = 14.sp,
+                color = WarmSecondaryText,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+        }
+        IconButton(onClick = onPreviousDay, modifier = Modifier.size(44.dp)) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous day", tint = WarmIcon)
+        }
+        IconButton(onClick = onNextDay, modifier = Modifier.size(44.dp)) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next day", tint = WarmIcon)
+        }
     }
 }
 

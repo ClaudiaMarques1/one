@@ -11,9 +11,22 @@ import java.util.Locale
 
 private val Grouping: NumberFormat = NumberFormat.getIntegerInstance(Locale.UK)
 
-/** The Today header's date: "Thursday, 19 Nov". */
-internal fun todayDateLabel(date: LocalDate, locale: Locale = Locale.getDefault()): String =
-    date.format(DateTimeFormatter.ofPattern("EEEE, d MMM", locale))
+/** The header title for [date]: "Today", "Tomorrow", "Yesterday", or the weekday ("Friday"). */
+internal fun dayTitle(date: LocalDate, today: LocalDate, locale: Locale = Locale.getDefault()): String = when (date) {
+    today -> "Today"
+    today.plusDays(1) -> "Tomorrow"
+    today.minusDays(1) -> "Yesterday"
+    else -> date.format(DateTimeFormatter.ofPattern("EEEE", locale))
+}
+
+/**
+ * The line under [dayTitle]: "Thursday, 19 Nov" under Today / Tomorrow / Yesterday, but just "24 Nov"
+ * further out, where the title is already the weekday.
+ */
+internal fun dayDateLabel(date: LocalDate, today: LocalDate, locale: Locale = Locale.getDefault()): String {
+    val nearby = date in today.minusDays(1)..today.plusDays(1)
+    return date.format(DateTimeFormatter.ofPattern(if (nearby) "EEEE, d MMM" else "d MMM", locale))
+}
 
 /** "2,500". */
 internal fun formatKcal(kcal: Int): String = Grouping.format(kcal)

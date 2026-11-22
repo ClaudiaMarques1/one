@@ -41,7 +41,11 @@ fun MealsScreen(viewModel: MealsViewModel = mealsViewModel()) {
             onAddToSlot = { addingTo = it },
             onToggleEaten = viewModel::setEaten,
             onRemoveMeal = viewModel::removeMeal,
-            onTapGlass = viewModel::tapWaterGlass
+            onTapGlass = viewModel::tapWaterGlass,
+            todayKey = viewModel.todayKey,
+            onPreviousDay = viewModel::showPreviousDay,
+            onNextDay = viewModel::showNextDay,
+            onToday = viewModel::showToday
         )
         ErrorBanner(
             message = mealsError,

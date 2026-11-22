@@ -164,6 +164,29 @@ class MealsViewModelTest {
     }
 
     @Test
+    fun `the arrows move a day at a time, and new meals land on the day shown`() = runTest {
+        val meals = FakeMealsRepository(
+            listOf(PlannedMeal(id = "y1", date = "2026-11-18", slot = MealSlot.DINNER.name, name = "Chilli", kcal = 520))
+        )
+        val viewModel = viewModel(meals = meals)
+        collect(viewModel)
+
+        viewModel.showNextDay()
+        assertEquals("2026-11-20", viewModel.day.value.date)
+        viewModel.addNewMeal(MealSlot.BREAKFAST, "Oats", 380, 18, 52, 11, saveToFavourites = false)
+        assertEquals("2026-11-20", meals.storedMeals.last().date)
+
+        viewModel.showPreviousDay()
+        viewModel.showPreviousDay()
+        assertEquals("2026-11-18", viewModel.day.value.date)
+        assertEquals(520, viewModel.day.value.planned.kcal)
+
+        viewModel.showToday()
+        assertEquals(todayKey, viewModel.day.value.date)
+        assertEquals(0, viewModel.day.value.planned.kcal)
+    }
+
+    @Test
     fun `a failed write surfaces mealsError`() = runTest {
         val meals = FakeMealsRepository().apply { failNext = IllegalStateException("offline") }
         val viewModel = viewModel(meals = meals)

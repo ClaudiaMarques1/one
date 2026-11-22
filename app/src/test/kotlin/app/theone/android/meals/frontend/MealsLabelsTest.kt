@@ -14,8 +14,23 @@ class MealsLabelsTest {
     }
 
     @Test
+    fun `day title names nearby days, then the weekday`() {
+        val today = LocalDate.of(2026, 11, 19)
+        assertEquals("Today", dayTitle(today, today))
+        assertEquals("Tomorrow", dayTitle(today.plusDays(1), today))
+        assertEquals("Yesterday", dayTitle(today.minusDays(1), today))
+        assertEquals("Saturday", dayTitle(today.plusDays(2), today, Locale.UK))
+    }
+
+    @Test
     fun `today header date`() {
-        assertEquals("Thursday, 19 Nov", todayDateLabel(LocalDate.of(2026, 11, 19), Locale.UK))
+        val today = LocalDate.of(2026, 11, 19)
+        // Weekday + date only under Today / Tomorrow / Yesterday; further out the title is the weekday.
+        assertEquals("Thursday, 19 Nov", dayDateLabel(today, today, Locale.UK))
+        assertEquals("Friday, 20 Nov", dayDateLabel(today.plusDays(1), today, Locale.UK))
+        assertEquals("Wednesday, 18 Nov", dayDateLabel(today.minusDays(1), today, Locale.UK))
+        assertEquals("21 Nov", dayDateLabel(today.plusDays(2), today, Locale.UK))
+        assertEquals("17 Nov", dayDateLabel(today.minusDays(2), today, Locale.UK))
     }
 
     @Test

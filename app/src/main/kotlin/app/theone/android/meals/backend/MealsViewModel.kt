@@ -25,13 +25,29 @@ class MealsViewModel(
     // Training day = a workout logged for the date, read the same way Calendar does, until workout
     // scheduling exists.
     private val strengthRepository: StrengthRepository = FirestoreStrengthRepository(),
-    today: LocalDate = LocalDate.now()
+    private val today: LocalDate = LocalDate.now()
 ) : ViewModel() {
     private val _mealsError = MutableStateFlow<String?>(null)
     val mealsError: StateFlow<String?> = _mealsError
 
-    // Phase 1 shows today only; phase 2's week strip will move this.
+    // The day on screen: the arrows move it, so tomorrow can be planned and past days reviewed.
+    // Phase 2's week strip will select it too.
     private val date = MutableStateFlow(today.toString())
+
+    /** Today's key, so the screen can label the day ("Today", "Tomorrow", ...). */
+    val todayKey: String = today.toString()
+
+    fun showPreviousDay() = shiftDay(-1)
+
+    fun showNextDay() = shiftDay(1)
+
+    fun showToday() {
+        date.value = todayKey
+    }
+
+    private fun shiftDay(delta: Long) {
+        date.value = LocalDate.parse(date.value).plusDays(delta).toString()
+    }
 
     val day: StateFlow<MealsDay> = date.flatMapLatest { dateKey ->
         combine(
