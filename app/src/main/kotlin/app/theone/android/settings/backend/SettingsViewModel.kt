@@ -26,6 +26,17 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
         }
     }
 
+    val themeMode: StateFlow<ThemeMode> = repository.observeThemeMode()
+        .catch { e -> _settingsError.value = e.message }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_THEME_MODE)
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch {
+            runCatching { repository.setThemeMode(mode) }
+                .onFailure { _settingsError.value = it.message }
+        }
+    }
+
     fun clearSettingsError() {
         _settingsError.value = null
     }
