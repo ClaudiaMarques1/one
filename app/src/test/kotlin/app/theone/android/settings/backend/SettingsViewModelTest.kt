@@ -1,5 +1,7 @@
 package app.theone.android.settings.backend
 
+import app.theone.android.meals.backend.MealSettings
+import app.theone.android.meals.backend.MealSlot
 import app.theone.android.testing.MainDispatcherRule
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -56,6 +58,22 @@ class SettingsViewModelTest {
 
         viewModel.clearSettingsError()
         assertNull(viewModel.settingsError.value)
+    }
+
+    @Test
+    fun `mealSettings default to the handoff values and store changes`() = runTest {
+        val repository = FakeSettingsRepository()
+        val viewModel = SettingsViewModel(repository)
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.mealSettings.collect {} }
+
+        assertEquals(MealSettings(), viewModel.mealSettings.value)
+        assertEquals(2500, viewModel.mealSettings.value.trainingTargets.kcal)
+
+        val changed = MealSettings(enabledSlots = MealSlot.entries.toSet(), waterGlasses = 12)
+        viewModel.setMealSettings(changed)
+
+        assertEquals(changed, repository.storedMealSettings)
+        assertEquals(changed, viewModel.mealSettings.value)
     }
 
     @Test

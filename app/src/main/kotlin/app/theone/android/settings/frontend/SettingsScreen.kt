@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,6 +47,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import app.theone.android.meals.backend.MealSettings
 import app.theone.android.settings.backend.DataStoreSettingsRepository
 import app.theone.android.settings.backend.SettingsViewModel
 import app.theone.android.settings.backend.ThemeMode
@@ -79,6 +81,7 @@ fun settingsViewModel(): SettingsViewModel = viewModel(
 fun SettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = settingsViewModel()) {
     val themeMode by viewModel.themeMode.collectAsState()
     val vibrateOnRestEnd by viewModel.vibrateOnRestEnd.collectAsState()
+    val mealSettings by viewModel.mealSettings.collectAsState()
     val settingsError by viewModel.settingsError.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -87,7 +90,9 @@ fun SettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = settingsVi
             onThemeModeChange = viewModel::setThemeMode,
             vibrateOnRestEnd = vibrateOnRestEnd,
             onVibrateOnRestEndChange = viewModel::setVibrateOnRestEnd,
-            onBack = onBack
+            onBack = onBack,
+            mealSettings = mealSettings,
+            onMealSettingsChange = viewModel::setMealSettings
         )
         ErrorBanner(
             message = settingsError,
@@ -105,7 +110,9 @@ private fun SettingsScreenContent(
     onThemeModeChange: (ThemeMode) -> Unit,
     vibrateOnRestEnd: Boolean,
     onVibrateOnRestEndChange: (Boolean) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    mealSettings: MealSettings = MealSettings(),
+    onMealSettingsChange: (MealSettings) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -116,6 +123,9 @@ private fun SettingsScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                // Edge-to-edge doesn't resize the window for the keyboard: shrink the scroll area
+                // instead, so a focused field (e.g. rest-day targets) scrolls above the number pad.
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -153,6 +163,8 @@ private fun SettingsScreenContent(
                     )
                 )
             }
+            SectionLabel("Meals", top = 12.dp)
+            MealSettingsSection(settings = mealSettings, onChange = onMealSettingsChange)
         }
     }
 }
