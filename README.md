@@ -207,7 +207,9 @@ Runtime permissions declared in `app/src/main/AndroidManifest.xml`:
 - The profile picture (account photo, or initials) opens a **profile drawer** with **Account details**
   (name, email, sign-in method, and Sign out) and **Settings**
 - **Settings** are stored locally on the device with DataStore, so they work offline and need no
-  network: "Vibrate when rest ends" (on by default) controls the workout rest-timer buzz
+  network. Appearance (Theme) and General (Week starts on - Monday / Sunday, used by every week the
+  app shows) sit at the top; below them a screen per section: Calendar, Workout ("Vibrate when rest
+  ends", on by default), Meals (slots, targets, water) and Diary
 
 ### Workout - Strength Training
 
@@ -458,8 +460,9 @@ reminder notifications, are also functional. Meals has two tabs.
 Food Diary plans the week: a weekly timeline with a Rest day switch, a Week plan (copy days or the
 whole week, clear a day), Add meal (favourites, your recipes or a new meal), water, and a shopping list
 built from planned recipes. Recipes holds the recipes you write (Search Recipe is still to come).
-Training / rest-day targets and slot times are in Settings. The whole app has a
+Training / rest-day targets and slot times are in Settings -> Meals. The whole app has a
 dark mode: Settings -> Appearance -> Theme (Light / Dark / System, default System).
+Settings -> General -> Week starts on sets the first day of every week (Calendar, Meals, Diary, Workout).
 
 Workout is planned to split into four independent session types - Warmup/Stretch, Strength Training,
 Cardio, and Warmdown - each logged separately, since not every day covers all four. Strength Training
