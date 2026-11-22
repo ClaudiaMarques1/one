@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -122,6 +123,9 @@ private fun SettingsScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                // Edge-to-edge doesn't resize the window for the keyboard: shrink the scroll area
+                // instead, so a focused field (e.g. rest-day targets) scrolls above the number pad.
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
