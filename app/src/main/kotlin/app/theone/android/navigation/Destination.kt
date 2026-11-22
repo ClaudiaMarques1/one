@@ -3,6 +3,7 @@ package app.theone.android.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CalendarViewWeek
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -44,6 +45,9 @@ sealed class Destination(
     data object Account : Destination("account", "Account details", Icons.Filled.Person)
 
     data object Settings : Destination("settings", "Settings", Icons.Filled.Settings)
+
+    // Meals' Week plan (1d), opened from the weekly view's header; outside the bottom nav.
+    data object MealsWeek : Destination("meals/week", "Week plan", Icons.Filled.CalendarViewWeek, accent = SectionAccent.Meals)
 }
 
 val bottomNavDestinations = listOf(

@@ -1,5 +1,6 @@
 package app.theone.android.meals.frontend
 
+import app.theone.android.meals.backend.DayState
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -84,4 +85,21 @@ internal fun restDaySubtitle(rest: Boolean, workoutLogged: Boolean, kcal: String
     workoutLogged -> "Workout logged · training-day targets · $kcal kcal"
     rest -> "Rest-day targets · $kcal kcal"
     else -> "Training-day targets · $kcal kcal"
+}
+
+/** Week plan range: "15 - 21 Nov", or "29 Nov - 5 Dec" across months (plain hyphen, repo style). */
+internal fun weekRangeLabel(first: LocalDate, last: LocalDate, locale: Locale = Locale.getDefault()): String {
+    val month = DateTimeFormatter.ofPattern("MMM", locale)
+    return if (first.month == last.month) {
+        "${first.dayOfMonth} - ${last.dayOfMonth} ${last.format(month)}"
+    } else {
+        "${first.dayOfMonth} ${first.format(month)} - ${last.dayOfMonth} ${last.format(month)}"
+    }
+}
+
+/** Week plan row summary: past = what was eaten, today = both, future = what's planned. */
+internal fun weekDaySummary(state: DayState, eatenKcal: Int, plannedKcal: Int, targetKcal: Int): String = when (state) {
+    DayState.PAST -> "${formatKcal(eatenKcal)} of ${formatKcal(targetKcal)} kcal"
+    DayState.TODAY -> "${formatKcal(eatenKcal)} eaten · ${formatKcal(plannedKcal)} planned"
+    DayState.FUTURE -> if (plannedKcal > 0) "${formatKcal(plannedKcal)} kcal planned" else "Nothing planned"
 }

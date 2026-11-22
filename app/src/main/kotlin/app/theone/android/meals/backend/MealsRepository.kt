@@ -13,6 +13,15 @@ interface MealsRepository {
     /** The dates in [from]..[to] (inclusive, "yyyy-MM-dd") that hold any meal - the week strip's dots. */
     fun observeMealDates(from: String, to: String): Flow<Set<String>>
 
+    /** Every meal in [from]..[to] (inclusive) - the Week plan's rows. */
+    fun observeMealsBetween(from: String, to: String): Flow<List<PlannedMeal>>
+
+    /** Stored Rest day switch choices in [from]..[to], by date. */
+    fun observeRestDayChoices(from: String, to: String): Flow<Map<String, Boolean>>
+
+    /** Deletes [ids] in one atomic write (Week plan's Clear day). */
+    suspend fun deleteMeals(ids: List<String>)
+
     /** Saved favourites, by name; empty when signed out. */
     fun observeFavourites(): Flow<List<FavouriteMeal>>
 
