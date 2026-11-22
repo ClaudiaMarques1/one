@@ -28,6 +28,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -36,6 +37,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -62,24 +64,67 @@ import app.theone.android.diary.journal.backend.clampSleepHours
 import app.theone.android.diary.journal.backend.cycleSorenessLevel
 import app.theone.android.diary.journal.backend.effectiveSoreness
 import app.theone.android.diary.journal.backend.sorenessCount
+import app.theone.android.ui.theme.CardSurface
+import app.theone.android.ui.theme.DiaryAccent
+import app.theone.android.ui.theme.DiaryColors
+import app.theone.android.ui.theme.DiaryDeepInk
+import app.theone.android.ui.theme.DiaryInk
+import app.theone.android.ui.theme.WarmBodyText
+import app.theone.android.ui.theme.WarmButtonOutline
+import app.theone.android.ui.theme.WarmDivider
+import app.theone.android.ui.theme.WarmField
+import app.theone.android.ui.theme.WarmHint
+import app.theone.android.ui.theme.WarmOnSurface
+import app.theone.android.ui.theme.WarmSecondaryText
+import app.theone.android.ui.theme.WarmSurface
 import java.time.LocalDate
 import kotlin.random.Random
 
-private val Accent = Color(0xFF8E24AA)
-private val AccentInk = Color(0xFF6A1B86)
-private val AccentDeepInk = Color(0xFF4A1260)
-private val AccentContainer = Color(0xFFF3E3F7)
-private val EnergyPartial = Color(0xFFC99AD6)
-private val EnergyPartialText = Color(0xFF3D0F50)
-private val OnSurface = Color(0xFF1D1B20)
-private val SecondaryText = Color(0xFF6B655F)
-private val BodyText = Color(0xFF3B3733)
-private val Hint = Color(0xFF8A837C)
-private val OutlineButton = Color(0xFFCFC6BE)
-private val OutlineSegmented = Color(0xFF79747E)
-private val Divider = Color(0xFFF0EBE6)
-private val IdleTile = Color(0xFFF4F1EE)
-private val LevelColors = listOf(Color(0xFFD9B3E4), Color(0xFFAD5BC4), Color(0xFF6A1B86)) // Mild, Sore, Very sore
+private val Accent: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryAccent
+private val AccentInk: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryInk
+private val AccentDeepInk: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryDeepInk
+private val AccentContainer: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryColors.Container
+private val EnergyPartial: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryColors.EnergyPartial
+private val EnergyPartialText: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryColors.EnergyPartialText
+private val OnSurface: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmOnSurface
+private val SecondaryText: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmSecondaryText
+private val BodyText: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmBodyText
+private val Hint: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmHint
+private val OutlineButton: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmButtonOutline
+private val OutlineSegmented: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryColors.OutlineSegmented
+private val Divider: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmDivider
+private val IdleTile: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmField
+private val LevelColors: List<Color>
+    @Composable @ReadOnlyComposable
+    get() = listOf(DiaryColors.SoreMild, DiaryColors.SoreSore, DiaryColors.SoreVery) // Mild, Sore, Very sore
 
 private val reflectionPrompts = listOf(
     "What was today's biggest win?",
@@ -110,7 +155,7 @@ fun DiaryEntryComposerDialog(
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            containerColor = Color(0xFFFFFBFE),
+            containerColor = WarmSurface,
             topBar = {
                 Column {
                     Row(
@@ -140,7 +185,14 @@ fun DiaryEntryComposerDialog(
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Accent)
                     ) {
-                        Text("Save entry", style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White))
+                        Text(
+                            "Save entry",
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
                     }
                 }
             }
@@ -226,7 +278,7 @@ private fun EnergySection(energy: Int, onSelect: (Int) -> Unit) {
                     else -> Divider
                 }
                 val textColor = when {
-                    n == energy -> Color.White
+                    n == energy -> MaterialTheme.colorScheme.onPrimary
                     n < energy -> EnergyPartialText
                     else -> SecondaryText
                 }
@@ -280,7 +332,7 @@ private fun SleepStepperButton(icon: ImageVector, contentDescription: String, on
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
-            .background(Color.White)
+            .background(CardSurface)
             .border(1.dp, OutlineButton, CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -381,7 +433,10 @@ private fun CountBadge(count: Int) {
             .padding(horizontal = 5.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(count.toString(), style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color.White))
+        Text(
+            count.toString(),
+            style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimary)
+        )
     }
 }
 
@@ -391,7 +446,7 @@ private fun SoreRow(label: String, levelIndex: Int, onCycle: () -> Unit, onRemov
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFFAF7F4)),
+            .background(DiaryColors.StepperFill),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(

@@ -26,6 +26,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,12 +53,24 @@ import app.theone.android.diary.journal.backend.DiaryViewModel
 import app.theone.android.diary.journal.frontend.DiaryEntryComposerDialog
 import app.theone.android.diary.journal.frontend.JournalContent
 import app.theone.android.ui.ErrorBanner
+import app.theone.android.ui.theme.DiaryAccent
+import app.theone.android.ui.theme.DiaryInk
+import app.theone.android.ui.theme.WarmCardBorder
+import app.theone.android.ui.theme.WarmIcon
 import kotlinx.coroutines.launch
 
-private val Accent = Color(0xFF8E24AA)
-private val AccentInk = Color(0xFF6A1B86)
-private val TabInactive = Color(0xFF49454F)
-private val TabDivider = Color(0xFFEAE4DE)
+private val Accent: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryAccent
+private val AccentInk: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryInk
+private val TabInactive: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmIcon
+private val TabDivider: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmCardBorder
 
 @Composable
 fun DiaryScreen(viewModel: DiaryViewModel = viewModel(), goalViewModel: GoalViewModel = viewModel()) {

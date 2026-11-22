@@ -47,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -63,6 +62,7 @@ import app.theone.android.diary.goals.backend.partOf
 import app.theone.android.diary.goals.backend.sortedByTime
 import app.theone.android.ui.EditDeleteMenu
 import app.theone.android.ui.dashedBorder
+import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.DiaryAccent
 import app.theone.android.ui.theme.DiaryDeepInk
 import app.theone.android.ui.theme.DiaryInk
@@ -254,7 +254,7 @@ fun GoalBuilderContent(
                 onClick = onSave,
                 enabled = canSave,
                 shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(containerColor = DiaryAccent, contentColor = Color.White),
+                colors = ButtonDefaults.buttonColors(containerColor = DiaryAccent, contentColor = MaterialTheme.colorScheme.onPrimary),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -285,8 +285,8 @@ private fun GoalNameField(name: String, onNameChange: (String) -> Unit) {
                 focusedBorderColor = DiaryAccent,
                 unfocusedBorderColor = WarmButtonOutline,
                 cursorColor = DiaryAccent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
+                focusedContainerColor = CardSurface,
+                unfocusedContainerColor = CardSurface
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -295,10 +295,11 @@ private fun GoalNameField(name: String, onNameChange: (String) -> Unit) {
 
 private val HabitCardShape = RoundedCornerShape(20.dp)
 
+@Composable
 private fun Modifier.habitCard(): Modifier =
     fillMaxWidth()
         .clip(HabitCardShape)
-        .background(Color.White)
+        .background(CardSurface)
         .border(1.dp, WarmCardBorder, HabitCardShape)
 
 @Composable
@@ -359,7 +360,7 @@ private fun ExpandedHabitCard(
             onClick = onAddTime,
             shape = RoundedCornerShape(50),
             border = BorderStroke(1.dp, WarmButtonOutline),
-            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = DiaryDeepInk),
+            colors = ButtonDefaults.outlinedButtonColors(containerColor = CardSurface, contentColor = DiaryDeepInk),
             contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
             modifier = Modifier.height(40.dp)
         ) {

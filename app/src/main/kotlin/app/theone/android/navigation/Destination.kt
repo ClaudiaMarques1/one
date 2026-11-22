@@ -13,12 +13,8 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Restaurant
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import app.theone.android.ui.theme.CalendarAccent
-import app.theone.android.ui.theme.DiaryAccent
-import app.theone.android.ui.theme.MealsAccent
-import app.theone.android.ui.theme.WorkoutAccent
+import app.theone.android.ui.theme.SectionAccent
 
 /** [icon] is the outlined nav icon, [selectedIcon] the filled one shown when the tab is selected. */
 sealed class Destination(
@@ -26,17 +22,23 @@ sealed class Destination(
     val label: String,
     val icon: ImageVector,
     val selectedIcon: ImageVector = icon,
-    val accentColor: Color? = null
+    val accent: SectionAccent? = null
 ) {
     data object Home : Destination("home", "Home", Icons.Outlined.Home, Icons.Filled.Home)
 
-    data object Calendar : Destination("calendar", "Calendar", Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth, CalendarAccent)
+    data object Calendar : Destination(
+        "calendar",
+        "Calendar",
+        Icons.Outlined.CalendarMonth,
+        Icons.Filled.CalendarMonth,
+        SectionAccent.Calendar
+    )
 
-    data object Workout : Destination("workout", "Workout", Icons.Outlined.FitnessCenter, Icons.Filled.FitnessCenter, WorkoutAccent)
+    data object Workout : Destination("workout", "Workout", Icons.Outlined.FitnessCenter, Icons.Filled.FitnessCenter, SectionAccent.Workout)
 
-    data object Meals : Destination("meals", "Meals", Icons.Outlined.Restaurant, Icons.Filled.Restaurant, MealsAccent)
+    data object Meals : Destination("meals", "Meals", Icons.Outlined.Restaurant, Icons.Filled.Restaurant, SectionAccent.Meals)
 
-    data object Diary : Destination("diary", "Diary", Icons.Outlined.Book, Icons.Filled.Book, DiaryAccent)
+    data object Diary : Destination("diary", "Diary", Icons.Outlined.Book, Icons.Filled.Book, SectionAccent.Diary)
 
     // Reached from the profile drawer on Home; not in the bottom nav, which is hidden on them.
     data object Account : Destination("account", "Account details", Icons.Filled.Person)

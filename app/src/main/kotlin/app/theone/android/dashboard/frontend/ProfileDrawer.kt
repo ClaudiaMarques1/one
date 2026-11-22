@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import app.theone.android.auth.backend.UserProfile
 import app.theone.android.ui.ProfileAvatar
 import app.theone.android.ui.profileInitials
+import app.theone.android.ui.theme.DrawerSurface
 import app.theone.android.ui.theme.NeutralTheme
 import app.theone.android.ui.theme.WarmCardBorder
 import app.theone.android.ui.theme.WarmIcon
@@ -46,7 +47,6 @@ import app.theone.android.ui.theme.WarmMutedIcon
 import app.theone.android.ui.theme.WarmOnSurface
 import app.theone.android.ui.theme.WarmPressedRow
 import app.theone.android.ui.theme.WarmSecondaryText
-import app.theone.android.ui.theme.WarmSurface
 
 // 1b in the home handoff: the sheet inside OneNavHost's ModalNavigationDrawer.
 
@@ -55,7 +55,7 @@ fun ProfileDrawerSheet(profile: UserProfile?, onAccountDetails: () -> Unit, onSe
     ModalDrawerSheet(
         modifier = Modifier.width(320.dp),
         drawerShape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp),
-        drawerContainerColor = WarmSurface,
+        drawerContainerColor = DrawerSurface,
         windowInsets = WindowInsets(0, 0, 0, 0)
     ) {
         Column(modifier = Modifier.padding(start = 12.dp, top = 56.dp, end = 12.dp, bottom = 24.dp)) {

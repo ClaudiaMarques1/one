@@ -72,6 +72,8 @@ import app.theone.android.calendar.backend.DayActivity
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.frontend.bodyPartLabels
 import app.theone.android.ui.ErrorBanner
+import app.theone.android.ui.theme.CalendarColors
+import app.theone.android.ui.theme.DiaryInk
 import app.theone.android.ui.theme.OneTheme
 import app.theone.android.workout.sessions.backend.StrengthExercise
 import app.theone.android.workout.sessions.backend.StrengthSession
@@ -510,10 +512,7 @@ private fun LegendRow() {
     ) {
         LegendItem(swatch = { Box(Modifier.size(12.dp).background(C.WorkoutTint, RoundedCornerShape(4.dp))) }, label = "Workout")
         LegendItem(swatch = { Box(Modifier.size(12.dp).background(C.DiaryTint, RoundedCornerShape(4.dp))) }, label = "Diary")
-        LegendItem(
-            swatch = { Box(Modifier.size(12.dp).diagonalSplitBackground(C.WorkoutTint, C.DiaryTint, 4.dp)) },
-            label = "Both"
-        )
+        // No "Both" swatch: Meals (green) joins the grid, so combinations aren't listed one by one.
         LegendItem(
             swatch = { Box(Modifier.size(12.dp).border(2.dp, C.AccentSolid, RoundedCornerShape(4.dp))) },
             label = "Today"
@@ -832,7 +831,7 @@ private fun WorkoutCard(session: StrengthSession, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White, RoundedCornerShape(16.dp))
+            .background(CalendarColors.Card, RoundedCornerShape(16.dp))
             .border(1.dp, C.CardBorder, RoundedCornerShape(16.dp))
     ) {
         Row(
@@ -900,7 +899,7 @@ private fun DiaryCard(diary: DiaryEntry) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White, RoundedCornerShape(16.dp))
+            .background(CalendarColors.Card, RoundedCornerShape(16.dp))
             .border(1.dp, C.CardBorder, RoundedCornerShape(16.dp))
     ) {
         Row(
@@ -928,7 +927,7 @@ private fun DiaryCard(diary: DiaryEntry) {
             StatTile(modifier = Modifier.weight(1f), label = "Energy") {
                 Text("${diary.energyLevel}/10", style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = C.OnSurface))
                 Spacer(modifier = Modifier.height(4.dp))
-                Box(modifier = Modifier.fillMaxWidth().height(4.dp).background(Color(0xFFE6DFD8), RoundedCornerShape(2.dp))) {
+                Box(modifier = Modifier.fillMaxWidth().height(4.dp).background(CalendarColors.ProgressTrack, RoundedCornerShape(2.dp))) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(fraction = (diary.energyLevel.coerceIn(0, 10)) / 10f)
@@ -990,7 +989,7 @@ private fun MealsRow(mealCount: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White, RoundedCornerShape(16.dp))
+            .background(CalendarColors.Card, RoundedCornerShape(16.dp))
             .border(1.dp, C.CardBorder, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -1031,7 +1030,7 @@ private fun EmptyStateButton(icon: ImageVector, label: String, onClick: () -> Un
         onClick = onClick,
         modifier = Modifier.height(40.dp),
         border = BorderStroke(1.dp, C.OutlineButton),
-        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = CalendarColors.Card),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
         Icon(icon, contentDescription = null, tint = C.OnSurface, modifier = Modifier.size(18.dp))

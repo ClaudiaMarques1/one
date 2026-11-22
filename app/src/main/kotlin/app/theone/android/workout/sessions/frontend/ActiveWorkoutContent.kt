@@ -52,6 +52,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -74,7 +75,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.theone.android.ui.dashedBorder
+import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.DeleteRed
+import app.theone.android.ui.theme.OnWorkoutDeep
 import app.theone.android.ui.theme.OneTheme
 import app.theone.android.ui.theme.WarmButtonOutline
 import app.theone.android.ui.theme.WarmCardBorder
@@ -115,8 +118,9 @@ import kotlinx.coroutines.delay
 
 private val CardShape = RoundedCornerShape(20.dp)
 private val TabularNumbers = "tnum"
-private val ColumnHeaderStyle =
-    TextStyle(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = WarmSecondaryText, letterSpacing = 0.4.sp)
+private val ColumnHeaderStyle: TextStyle
+    @Composable @ReadOnlyComposable
+    get() = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = WarmSecondaryText, letterSpacing = 0.4.sp)
 
 @Composable
 fun ActiveWorkoutContent(
@@ -286,7 +290,7 @@ private fun ActiveWorkoutHeader(
             contentPadding = PaddingValues(horizontal = 20.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 disabledContainerColor = WarmDisabledFill,
                 disabledContentColor = WarmMutedIcon
             )
@@ -327,7 +331,7 @@ private fun ExerciseCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(CardShape)
-            .background(Color.White)
+            .background(CardSurface)
             .border(1.dp, WarmCardBorder, CardShape)
             .padding(start = 8.dp, top = 14.dp, end = 8.dp, bottom = 8.dp)
     ) {
@@ -460,7 +464,7 @@ private fun SetRow(
     onRemove: () -> Unit
 ) {
     val rowColor by animateColorAsState(if (set.done) WorkoutSoft else Color.Transparent, tween(150), label = "setRow")
-    val fieldColor by animateColorAsState(if (set.done) Color.White else WarmField, tween(150), label = "setField")
+    val fieldColor by animateColorAsState(if (set.done) CardSurface else WarmField, tween(150), label = "setField")
     val tickColor by animateColorAsState(if (set.done) MaterialTheme.colorScheme.primary else WarmField, tween(150), label = "tick")
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -516,7 +520,7 @@ private fun SetRow(
                     Icon(
                         Icons.Filled.Check,
                         contentDescription = if (set.done) "Set done" else "Mark set done",
-                        tint = if (set.done) Color.White else WarmMutedIcon,
+                        tint = if (set.done) MaterialTheme.colorScheme.onPrimary else WarmMutedIcon,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -644,7 +648,7 @@ private fun RestBar(rest: RestState, vibrate: Boolean, onAdjust: (Int) -> Unit, 
                     style = TextStyle(
                         fontSize = 28.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White,
+                        color = OnWorkoutDeep,
                         fontFeatureSettings = TabularNumbers
                     )
                 )
@@ -655,7 +659,7 @@ private fun RestBar(rest: RestState, vibrate: Boolean, onAdjust: (Int) -> Unit, 
                 onClick = onEnd,
                 modifier = Modifier.height(40.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = WorkoutDeep)
+                colors = ButtonDefaults.buttonColors(containerColor = OnWorkoutDeep, contentColor = WorkoutDeep)
             ) {
                 Text("Skip", fontWeight = FontWeight.SemiBold)
             }
@@ -676,8 +680,8 @@ private fun RestAdjustButton(label: String, onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier.height(40.dp),
         contentPadding = PaddingValues(horizontal = 12.dp),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+        border = BorderStroke(1.dp, OnWorkoutDeep.copy(alpha = 0.35f)),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = OnWorkoutDeep)
     ) {
         Text(label, style = TextStyle(fontFeatureSettings = TabularNumbers))
     }
@@ -707,7 +711,7 @@ private fun RestSheet(exerciseName: String, selectedSeconds: Int, onSelect: (Int
                                     .weight(1f)
                                     .height(52.dp)
                                     .clip(shape)
-                                    .background(if (selected) WorkoutContainer else Color.White)
+                                    .background(if (selected) WorkoutContainer else CardSurface)
                                     .border(1.dp, if (selected) MaterialTheme.colorScheme.primary else WarmButtonOutline, shape)
                                     .clickable { onSelect(seconds) },
                                 contentAlignment = Alignment.Center

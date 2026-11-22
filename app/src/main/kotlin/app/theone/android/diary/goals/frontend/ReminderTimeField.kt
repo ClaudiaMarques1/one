@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import app.theone.android.diary.goals.backend.parseTime
 import app.theone.android.diary.goals.backend.quarterHourOptions
+import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.DiaryAccent
 import app.theone.android.ui.theme.DiaryDeepInk
 import app.theone.android.ui.theme.DiaryMenuSurface
@@ -153,7 +154,7 @@ internal fun ReminderTimeField(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .size(width = 132.dp, height = 48.dp)
-                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .background(CardSurface, RoundedCornerShape(12.dp))
                         .border(
                             width = if (active) 2.dp else 1.dp,
                             color = if (active) DiaryAccent else WarmButtonOutline,
