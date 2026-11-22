@@ -13,6 +13,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import app.theone.android.meals.backend.MealSettings
 import app.theone.android.meals.backend.MealSlot
 import app.theone.android.meals.backend.MealTargets
+import app.theone.android.meals.backend.WeekStart
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -44,7 +45,9 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
             enabledSlots = prefs[KEY_MEAL_SLOTS]?.mapNotNull(MealSlot::fromStored)?.toSet() ?: defaults.enabledSlots,
             trainingTargets = prefs.readTargets(TRAINING, defaults.trainingTargets),
             restTargets = prefs.readTargets(REST, defaults.restTargets),
-            waterGlasses = prefs[KEY_WATER_GLASSES] ?: defaults.waterGlasses
+            waterGlasses = prefs[KEY_WATER_GLASSES] ?: defaults.waterGlasses,
+            slotTimes = MealSlot.entries.associateWith { slot -> prefs[slotTimeKey(slot)] ?: defaults.timeOf(slot) },
+            weekStart = WeekStart.entries.firstOrNull { it.name == prefs[KEY_WEEK_START] } ?: defaults.weekStart
         )
     }
 
@@ -54,8 +57,12 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
             prefs.writeTargets(TRAINING, settings.trainingTargets)
             prefs.writeTargets(REST, settings.restTargets)
             prefs[KEY_WATER_GLASSES] = settings.waterGlasses
+            MealSlot.entries.forEach { slot -> prefs[slotTimeKey(slot)] = settings.timeOf(slot) }
+            prefs[KEY_WEEK_START] = settings.weekStart.name
         }
     }
+
+    private fun slotTimeKey(slot: MealSlot) = intPreferencesKey("slotTime_${slot.name}")
 
     private fun Preferences.readTargets(prefix: String, defaults: MealTargets) = MealTargets(
         kcal = this[intPreferencesKey("${prefix}Kcal")] ?: defaults.kcal,
@@ -76,6 +83,7 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         val KEY_THEME = stringPreferencesKey("theme")
         val KEY_MEAL_SLOTS = stringSetPreferencesKey("mealSlots")
         val KEY_WATER_GLASSES = intPreferencesKey("waterGlasses")
+        val KEY_WEEK_START = stringPreferencesKey("weekStart")
         const val TRAINING = "trainingTarget"
         const val REST = "restTarget"
     }

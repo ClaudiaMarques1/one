@@ -23,6 +23,25 @@ class MealsLabelsTest {
     }
 
     @Test
+    fun `timeline labels follow the handoff`() {
+        assertEquals("08:00", formatMinutes(8 * 60, is24Hour = true))
+        assertEquals("5:15 PM", formatMinutes(17 * 60 + 15, is24Hour = false, Locale.US))
+        assertEquals("1,060 eaten of 2,500 · 900 more planned", timelineSummary(1060, 2500, 900))
+        assertEquals("108 g left", gramsLeft(52, 160))
+        assertEquals("0 g left", gramsLeft(200, 160))
+        assertEquals("November", monthLabel(LocalDate.of(2026, 11, 19), Locale.UK))
+        assertEquals("Thu", shortWeekday(LocalDate.of(2026, 11, 19), Locale.UK))
+        assertEquals("Plan post-workout", planSlotLabel("Post-workout"))
+    }
+
+    @Test
+    fun `rest day subtitle explains a locked switch`() {
+        assertEquals("Workout logged · training-day targets · 2,500 kcal", restDaySubtitle(rest = false, workoutLogged = true, "2,500"))
+        assertEquals("Rest-day targets · 2,300 kcal", restDaySubtitle(rest = true, workoutLogged = false, "2,300"))
+        assertEquals("Training-day targets · 2,500 kcal", restDaySubtitle(rest = false, workoutLogged = false, "2,500"))
+    }
+
+    @Test
     fun `today header date`() {
         val today = LocalDate.of(2026, 11, 19)
         // Weekday + date only under Today / Tomorrow / Yesterday; further out the title is the weekday.

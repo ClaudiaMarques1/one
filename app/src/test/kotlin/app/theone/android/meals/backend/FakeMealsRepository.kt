@@ -30,6 +30,9 @@ class FakeMealsRepository(
     override fun observeMeals(date: String): Flow<List<PlannedMeal>> =
         mealsFlow.map { list -> list.filter { it.date == date }.sortedBy { it.createdAt } }
 
+    override fun observeMealDates(from: String, to: String): Flow<Set<String>> =
+        mealsFlow.map { list -> list.map { it.date }.filter { it in from..to }.toSet() }
+
     override fun observeFavourites(): Flow<List<FavouriteMeal>> = favouritesFlow.map { list -> list.sortedBy { it.name } }
 
     override fun observeWaterGlasses(date: String): Flow<Int> = waterFlow.map { it[date] ?: 0 }
@@ -55,6 +58,17 @@ class FakeMealsRepository(
     override suspend fun setWaterGlasses(date: String, glasses: Int) {
         throwIfFailing()
         waterFlow.value = waterFlow.value + (date to glasses)
+    }
+
+    private val restDays = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+
+    fun storedRestDayChoice(date: String): Boolean? = restDays.value[date]
+
+    override fun observeRestDayChoice(date: String): Flow<Boolean?> = restDays.map { it[date] }
+
+    override suspend fun setRestDayChoice(date: String, restDay: Boolean?) {
+        throwIfFailing()
+        restDays.value = if (restDay == null) restDays.value - date else restDays.value + (date to restDay)
     }
 
     private fun throwIfFailing() {

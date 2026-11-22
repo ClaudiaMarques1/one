@@ -29,28 +29,37 @@ data class SlotMeals(val slot: MealSlot, val meals: List<PlannedMeal>) {
 data class MealsDay(
     val date: String,
     val workoutName: String? = null,
+    /** When the workout was logged (minutes after midnight) - places it on the timeline. */
+    val workoutMinutes: Int? = null,
     val targets: MealTargets = DEFAULT_REST_TARGETS,
     val slots: List<SlotMeals> = emptyList(),
     val eaten: MacroTotals = MacroTotals(),
     val planned: MacroTotals = MacroTotals(),
     val waterGlasses: Int = 0,
-    val waterTargetGlasses: Int = DEFAULT_WATER_GLASSES
+    val waterTargetGlasses: Int = DEFAULT_WATER_GLASSES,
+    /** Training-day targets and workout slots: a logged workout, or the Rest day switch turned off. */
+    val isTrainingDay: Boolean = false
 ) {
-    val isTrainingDay: Boolean get() = workoutName != null
+    /** A logged workout fixes the day as training, so the Rest day switch is locked off. */
+    val restDaySwitchLocked: Boolean get() = workoutName != null
 }
 
 /**
- * Builds the day from raw data. A slot shows when it's switched on in Settings (optional slots only
- * on training days) - or whenever it already holds meals, so nothing logged is ever hidden.
+ * Builds the day from raw data. A logged workout always makes it a training day - it wins over any
+ * stored [restDayChoice]. Without a workout the day is rest, unless the Rest day switch was turned off
+ * (restDayChoice false) to plan a training day. A slot shows when it's switched on in Settings
+ * (optional slots only on training days) - or whenever it already holds meals, so nothing is hidden.
  */
 fun buildMealsDay(
     date: String,
     meals: List<PlannedMeal>,
     settings: MealSettings,
     workoutName: String?,
-    waterGlasses: Int
+    waterGlasses: Int,
+    workoutMinutes: Int? = null,
+    restDayChoice: Boolean? = null
 ): MealsDay {
-    val training = workoutName != null
+    val training = workoutName != null || restDayChoice == false
     val bySlot = meals.groupBy { MealSlot.fromStored(it.slot) ?: MealSlot.SNACKS }
     val slots = MealSlot.entries.mapNotNull { slot ->
         val slotMeals = bySlot[slot].orEmpty()
@@ -60,12 +69,14 @@ fun buildMealsDay(
     return MealsDay(
         date = date,
         workoutName = workoutName,
+        workoutMinutes = workoutMinutes.takeIf { workoutName != null },
         targets = if (training) settings.trainingTargets else settings.restTargets,
         slots = slots,
         eaten = meals.filter { it.eaten }.totals(),
         planned = meals.totals(),
         waterGlasses = waterGlasses,
-        waterTargetGlasses = settings.waterGlasses
+        waterTargetGlasses = settings.waterGlasses,
+        isTrainingDay = training
     )
 }
 

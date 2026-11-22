@@ -3,6 +3,7 @@ package app.theone.android.meals.frontend
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -54,4 +55,33 @@ internal fun parseAmount(text: String): Int? {
     val trimmed = text.trim()
     if (trimmed.isEmpty()) return 0
     return trimmed.toIntOrNull()?.takeIf { it >= 0 }
+}
+
+/** A slot or workout time: "08:00" in 24-hour locales, "8:00 AM" in 12-hour ones (pass DateFormat.is24HourFormat). */
+internal fun formatMinutes(minutes: Int, is24Hour: Boolean, locale: Locale = Locale.getDefault()): String =
+    LocalTime.of(minutes / 60, minutes % 60).format(DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a", locale))
+
+/** Under the big "kcal left" number: "1,060 eaten of 2,500 · 900 more planned". */
+internal fun timelineSummary(eatenKcal: Int, targetKcal: Int, morePlannedKcal: Int): String =
+    "${formatKcal(eatenKcal)} eaten of ${formatKcal(targetKcal)} · ${formatKcal(morePlannedKcal)} more planned"
+
+/** A macro tile: "108 g left" (never negative). */
+internal fun gramsLeft(eaten: Int, target: Int): String = "${(target - eaten).coerceAtLeast(0)} g left"
+
+/** The timeline header: "November". */
+internal fun monthLabel(date: LocalDate, locale: Locale = Locale.getDefault()): String =
+    date.format(DateTimeFormatter.ofPattern("LLLL", locale))
+
+/** Week strip weekday: "Sun". */
+internal fun shortWeekday(date: LocalDate, locale: Locale = Locale.getDefault()): String =
+    date.format(DateTimeFormatter.ofPattern("EEE", locale))
+
+/** An empty slot on the timeline: "Plan post-workout". */
+internal fun planSlotLabel(slotLabel: String): String = "Plan ${slotLabel.lowercase()}"
+
+/** Under the Rest day switch: "Workout logged · training-day targets · 2,500 kcal" when locked. */
+internal fun restDaySubtitle(rest: Boolean, workoutLogged: Boolean, kcal: String): String = when {
+    workoutLogged -> "Workout logged · training-day targets · $kcal kcal"
+    rest -> "Rest-day targets · $kcal kcal"
+    else -> "Training-day targets · $kcal kcal"
 }

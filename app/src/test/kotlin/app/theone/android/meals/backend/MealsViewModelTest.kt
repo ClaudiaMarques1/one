@@ -8,11 +8,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 class MealsViewModelTest {
     @get:Rule
@@ -25,11 +27,13 @@ class MealsViewModelTest {
         meals: FakeMealsRepository = FakeMealsRepository(),
         settings: FakeSettingsRepository = FakeSettingsRepository(),
         strength: FakeStrengthRepository = FakeStrengthRepository()
-    ) = MealsViewModel(settings, meals, strength, today)
+    ) = MealsViewModel(settings, meals, strength, today, ZoneOffset.UTC)
 
     private fun TestScope.collect(viewModel: MealsViewModel) {
         backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.day.collect {} }
         backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.favourites.collect {} }
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.week.collect {} }
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.mealSettings.collect {} }
     }
 
     @Test
@@ -184,6 +188,109 @@ class MealsViewModelTest {
         viewModel.showToday()
         assertEquals(todayKey, viewModel.day.value.date)
         assertEquals(0, viewModel.day.value.planned.kcal)
+    }
+
+    @Test
+    fun `the week holds the selected day, starts on the setting, and dots days with meals`() = runTest {
+        val meals = FakeMealsRepository(
+            listOf(
+                PlannedMeal(id = "a", date = "2026-11-16", slot = MealSlot.LUNCH.name, kcal = 500),
+                PlannedMeal(id = "b", date = "2026-11-19", slot = MealSlot.DINNER.name, kcal = 600),
+                PlannedMeal(id = "c", date = "2026-11-24", slot = MealSlot.DINNER.name, kcal = 700)
+            )
+        )
+        val settings = FakeSettingsRepository(mealSettings = MealSettings(weekStart = WeekStart.MONDAY))
+        val viewModel = viewModel(meals = meals, settings = settings)
+        collect(viewModel)
+
+        assertEquals("2026-11-16", viewModel.week.value.days.first())
+        assertEquals("2026-11-22", viewModel.week.value.days.last())
+        assertEquals(setOf("2026-11-16", "2026-11-19"), viewModel.week.value.mealDates)
+
+        settings.setMealSettings(MealSettings(weekStart = WeekStart.SUNDAY))
+        assertEquals("2026-11-15", viewModel.week.value.days.first())
+    }
+
+    @Test
+    fun `selecting a day and the week arrows move the shown day`() = runTest {
+        val viewModel = viewModel()
+        collect(viewModel)
+
+        viewModel.selectDate("2026-11-17")
+        assertEquals("2026-11-17", viewModel.day.value.date)
+
+        viewModel.showNextWeek()
+        assertEquals("2026-11-24", viewModel.day.value.date)
+        assertTrue("2026-11-24" in viewModel.week.value.days)
+
+        viewModel.showPreviousWeek()
+        viewModel.showPreviousWeek()
+        assertEquals("2026-11-10", viewModel.day.value.date)
+    }
+
+    @Test
+    fun `the workout row takes the time the session was logged`() = runTest {
+        val loggedAt = today.atTime(18, 5).toInstant(ZoneOffset.UTC).toEpochMilli()
+        val strength = FakeStrengthRepository(listOf(StrengthSession(date = todayKey, templateName = "Leg day", createdAt = loggedAt)))
+        val viewModel = viewModel(strength = strength)
+        collect(viewModel)
+
+        assertEquals(18 * 60 + 5, viewModel.day.value.workoutMinutes)
+    }
+
+    @Test
+    fun `a day with a logged workout is always training - the rest day switch is locked off`() = runTest {
+        val meals = FakeMealsRepository()
+        val strength = FakeStrengthRepository(listOf(StrengthSession(date = todayKey, templateName = "Leg day")))
+        val viewModel = viewModel(meals = meals, strength = strength)
+        collect(viewModel)
+
+        assertTrue(viewModel.day.value.isTrainingDay)
+        assertTrue(viewModel.day.value.restDaySwitchLocked)
+
+        viewModel.setRestDay(true) // ignored on a workout day
+
+        assertNull(meals.storedRestDayChoice(todayKey))
+        assertTrue(viewModel.day.value.isTrainingDay)
+        assertEquals(DEFAULT_TRAINING_TARGETS, viewModel.day.value.targets)
+    }
+
+    @Test
+    fun `logging a workout turns a day planned as rest into a training day`() = runTest {
+        val meals = FakeMealsRepository()
+        val strength = FakeStrengthRepository()
+        val viewModel = viewModel(meals = meals, strength = strength)
+        collect(viewModel)
+        assertFalse(viewModel.day.value.isTrainingDay) // no workout yet: rest, switch on
+
+        strength.addSession(StrengthSession(date = todayKey, templateName = "Leg day"))
+
+        assertTrue(viewModel.day.value.isTrainingDay) // switch off automatically
+        assertTrue(viewModel.day.value.restDaySwitchLocked)
+    }
+
+    @Test
+    fun `a day with no workout can be planned as a training day`() = runTest {
+        val meals = FakeMealsRepository()
+        val viewModel = viewModel(meals = meals)
+        collect(viewModel)
+        viewModel.showNextDay()
+        assertFalse(viewModel.day.value.isTrainingDay)
+
+        viewModel.setRestDay(false)
+
+        assertEquals(false, meals.storedRestDayChoice("2026-11-20"))
+        assertTrue(viewModel.day.value.isTrainingDay)
+        assertEquals(DEFAULT_TRAINING_TARGETS, viewModel.day.value.targets)
+        assertFalse(viewModel.day.value.restDaySwitchLocked)
+
+        viewModel.setRestDay(true) // back to rest: the default, so nothing is stored
+        assertNull(meals.storedRestDayChoice("2026-11-20"))
+        assertFalse(viewModel.day.value.isTrainingDay)
+
+        viewModel.setRestDay(false)
+        viewModel.showToday()
+        assertFalse(viewModel.day.value.isTrainingDay) // the choice is per date
     }
 
     @Test

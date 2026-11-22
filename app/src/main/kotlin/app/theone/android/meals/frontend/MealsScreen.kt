@@ -32,20 +32,27 @@ fun MealsScreen(viewModel: MealsViewModel = mealsViewModel()) {
     val day by viewModel.day.collectAsState()
     val favourites by viewModel.favourites.collectAsState()
     val mealsError by viewModel.mealsError.collectAsState()
+    val settings by viewModel.mealSettings.collectAsState()
+    val week by viewModel.week.collectAsState()
     // The slot the Add sheet is open for, or null when closed.
     var addingTo by rememberSaveable { mutableStateOf<MealSlot?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        MealsTodayContent(
+        // The weekly view (1b) is Meals' only view. The 1a checklist (MealsTodayContent) is parked:
+        // the Today view setting was removed on #56 and the screen is no longer shown.
+        MealsTimelineContent(
             day = day,
+            week = week,
+            settings = settings,
+            onSelectDate = viewModel::selectDate,
+            onPreviousWeek = viewModel::showPreviousWeek,
+            onNextWeek = viewModel::showNextWeek,
             onAddToSlot = { addingTo = it },
             onToggleEaten = viewModel::setEaten,
             onRemoveMeal = viewModel::removeMeal,
             onTapGlass = viewModel::tapWaterGlass,
-            todayKey = viewModel.todayKey,
-            onPreviousDay = viewModel::showPreviousDay,
-            onNextDay = viewModel::showNextDay,
-            onToday = viewModel::showToday
+            onRestDayChange = viewModel::setRestDay,
+            todayKey = viewModel.todayKey
         )
         ErrorBanner(
             message = mealsError,
