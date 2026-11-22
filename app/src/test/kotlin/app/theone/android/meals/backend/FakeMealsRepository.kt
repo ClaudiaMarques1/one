@@ -30,6 +30,9 @@ class FakeMealsRepository(
     override fun observeMeals(date: String): Flow<List<PlannedMeal>> =
         mealsFlow.map { list -> list.filter { it.date == date }.sortedBy { it.createdAt } }
 
+    override fun observeMealDates(from: String, to: String): Flow<Set<String>> =
+        mealsFlow.map { list -> list.map { it.date }.filter { it in from..to }.toSet() }
+
     override fun observeFavourites(): Flow<List<FavouriteMeal>> = favouritesFlow.map { list -> list.sortedBy { it.name } }
 
     override fun observeWaterGlasses(date: String): Flow<Int> = waterFlow.map { it[date] ?: 0 }

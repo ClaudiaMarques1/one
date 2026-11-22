@@ -39,6 +39,28 @@ class FirestoreMealsRepository : MealsRepository {
         awaitClose { registration.remove() }
     }
 
+    override fun observeMealDates(from: String, to: String): Flow<Set<String>> = callbackFlow {
+        val collection = meals()
+        if (collection == null) {
+            trySend(emptySet())
+            close()
+            return@callbackFlow
+        }
+        // A range on the one `date` field needs no composite index; ISO keys sort as text.
+        val registration = collection
+            .whereGreaterThanOrEqualTo("date", from)
+            .whereLessThanOrEqualTo("date", to)
+            .limit(300)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                trySend(snapshot?.documents?.mapNotNull { it.getString("date") }?.toSet() ?: emptySet())
+            }
+        awaitClose { registration.remove() }
+    }
+
     override fun observeFavourites(): Flow<List<FavouriteMeal>> = callbackFlow {
         val collection = favourites()
         if (collection == null) {

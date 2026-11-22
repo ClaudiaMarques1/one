@@ -10,6 +10,9 @@ interface MealsRepository {
     /** Meals planned for [date] ("yyyy-MM-dd"), oldest first; empty when signed out. */
     fun observeMeals(date: String): Flow<List<PlannedMeal>>
 
+    /** The dates in [from]..[to] (inclusive, "yyyy-MM-dd") that hold any meal - the week strip's dots. */
+    fun observeMealDates(from: String, to: String): Flow<Set<String>>
+
     /** Saved favourites, by name; empty when signed out. */
     fun observeFavourites(): Flow<List<FavouriteMeal>>
 

@@ -29,6 +29,8 @@ data class SlotMeals(val slot: MealSlot, val meals: List<PlannedMeal>) {
 data class MealsDay(
     val date: String,
     val workoutName: String? = null,
+    /** When the workout was logged (minutes after midnight) - places it on the timeline. */
+    val workoutMinutes: Int? = null,
     val targets: MealTargets = DEFAULT_REST_TARGETS,
     val slots: List<SlotMeals> = emptyList(),
     val eaten: MacroTotals = MacroTotals(),
@@ -48,7 +50,8 @@ fun buildMealsDay(
     meals: List<PlannedMeal>,
     settings: MealSettings,
     workoutName: String?,
-    waterGlasses: Int
+    waterGlasses: Int,
+    workoutMinutes: Int? = null
 ): MealsDay {
     val training = workoutName != null
     val bySlot = meals.groupBy { MealSlot.fromStored(it.slot) ?: MealSlot.SNACKS }
@@ -60,6 +63,7 @@ fun buildMealsDay(
     return MealsDay(
         date = date,
         workoutName = workoutName,
+        workoutMinutes = workoutMinutes.takeIf { training },
         targets = if (training) settings.trainingTargets else settings.restTargets,
         slots = slots,
         eaten = meals.filter { it.eaten }.totals(),

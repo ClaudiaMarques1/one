@@ -11,10 +11,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 // The settings repository needs a Context, so there's no default for it - the screen builds this
 // through a viewModelFactory (`mealsViewModel()` in meals/frontend), like settingsViewModel().
@@ -25,14 +29,39 @@ class MealsViewModel(
     // Training day = a workout logged for the date, read the same way Calendar does, until workout
     // scheduling exists.
     private val strengthRepository: StrengthRepository = FirestoreStrengthRepository(),
-    private val today: LocalDate = LocalDate.now()
+    private val today: LocalDate = LocalDate.now(),
+    // Turns a session's createdAt into a time of day for the timeline's workout row.
+    private val zone: ZoneId = ZoneId.systemDefault()
 ) : ViewModel() {
     private val _mealsError = MutableStateFlow<String?>(null)
     val mealsError: StateFlow<String?> = _mealsError
 
-    // The day on screen: the arrows move it, so tomorrow can be planned and past days reviewed.
-    // Phase 2's week strip will select it too.
+    // The day on screen, shared by both Today views: the checklist's day arrows and the timeline's
+    // week strip and week arrows all move it.
     private val date = MutableStateFlow(today.toString())
+
+    val mealSettings: StateFlow<MealSettings> = settingsRepository.observeMealSettings()
+        .catch { e -> _mealsError.value = e.message }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MealSettings())
+
+    /** The selected day's week (7 dates from the week-start setting) and which of them hold meals. */
+    val week: StateFlow<MealsWeek> = combine(date, mealSettings) { dateKey, settings ->
+        weekOf(LocalDate.parse(dateKey), settings.weekStart).map { it.toString() }
+    }
+        .distinctUntilChanged()
+        .flatMapLatest { days ->
+            repository.observeMealDates(days.first(), days.last()).map { dates -> MealsWeek(days, dates) }
+        }
+        .catch { e -> _mealsError.value = e.message }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MealsWeek())
+
+    fun selectDate(dateKey: String) {
+        date.value = dateKey
+    }
+
+    fun showPreviousWeek() = shiftDay(-7)
+
+    fun showNextWeek() = shiftDay(7)
 
     /** Today's key, so the screen can label the day ("Today", "Tomorrow", ...). */
     val todayKey: String = today.toString()
@@ -62,7 +91,11 @@ class MealsViewModel(
                 meals = meals,
                 settings = settings,
                 workoutName = workout?.templateName?.ifBlank { "Workout" },
-                waterGlasses = water
+                waterGlasses = water,
+                workoutMinutes = workout?.let {
+                    val time = Instant.ofEpochMilli(it.createdAt).atZone(zone).toLocalTime()
+                    time.hour * 60 + time.minute
+                }
             )
         }
     }
@@ -139,6 +172,14 @@ class MealsViewModel(
     fun tapWaterGlass(n: Int) {
         val current = day.value.waterGlasses
         val next = tapWaterGlass(current, n).coerceIn(0, MAX_WATER_GLASSES)
+        val dateKey = date.value
+        launchCatching { repository.setWaterGlasses(dateKey, next) }
+    }
+
+    /** Timeline water card: -1 / +1 glass, clamped to 0..[MAX_WATER_GLASSES]. */
+    fun stepWaterGlasses(delta: Int) {
+        val next = stepWater(day.value.waterGlasses, delta)
+        if (next == day.value.waterGlasses) return
         val dateKey = date.value
         launchCatching { repository.setWaterGlasses(dateKey, next) }
     }
