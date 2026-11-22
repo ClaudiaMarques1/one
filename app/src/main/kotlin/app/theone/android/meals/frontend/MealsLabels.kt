@@ -78,3 +78,10 @@ internal fun shortWeekday(date: LocalDate, locale: Locale = Locale.getDefault())
 
 /** An empty slot on the timeline: "Plan post-workout". */
 internal fun planSlotLabel(slotLabel: String): String = "Plan ${slotLabel.lowercase()}"
+
+/** Under the Rest day switch: "Workout logged · training-day targets · 2,500 kcal" when locked. */
+internal fun restDaySubtitle(rest: Boolean, workoutLogged: Boolean, kcal: String): String = when {
+    workoutLogged -> "Workout logged · training-day targets · $kcal kcal"
+    rest -> "Rest-day targets · $kcal kcal"
+    else -> "Training-day targets · $kcal kcal"
+}

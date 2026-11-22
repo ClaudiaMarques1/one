@@ -458,6 +458,8 @@ private fun MealsTimelinePreview() {
 @Composable
 private fun RestDayRow(day: MealsDay, onChange: (Boolean) -> Unit) {
     val rest = !day.isTrainingDay
+    // A logged workout locks the switch off: that day is always a training day.
+    val locked = day.restDaySwitchLocked
     val shape = RoundedCornerShape(20.dp)
     Row(
         modifier = Modifier
@@ -465,7 +467,7 @@ private fun RestDayRow(day: MealsDay, onChange: (Boolean) -> Unit) {
             .clip(shape)
             .background(CardSurface)
             .border(1.dp, WarmCardBorder, shape)
-            .toggleable(value = rest, role = Role.Switch, onValueChange = onChange)
+            .toggleable(value = rest, enabled = !locked, role = Role.Switch, onValueChange = onChange)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -474,7 +476,7 @@ private fun RestDayRow(day: MealsDay, onChange: (Boolean) -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text("Rest day", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = WarmOnSurface)
             Text(
-                "${if (rest) "Rest-day" else "Training-day"} targets · ${formatKcal(day.targets.kcal)} kcal",
+                restDaySubtitle(rest, locked, formatKcal(day.targets.kcal)),
                 fontSize = 13.sp,
                 color = WarmSecondaryText
             )
@@ -482,6 +484,7 @@ private fun RestDayRow(day: MealsDay, onChange: (Boolean) -> Unit) {
         Switch(
             checked = rest,
             onCheckedChange = null,
+            enabled = !locked,
             colors = SwitchDefaults.colors(
                 checkedTrackColor = MealsColors.Accent,
                 checkedBorderColor = MealsColors.Accent,

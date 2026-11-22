@@ -239,21 +239,34 @@ class MealsViewModelTest {
     }
 
     @Test
-    fun `the rest day switch overrides a logged workout, and switching back clears the choice`() = runTest {
+    fun `a day with a logged workout is always training - the rest day switch is locked off`() = runTest {
         val meals = FakeMealsRepository()
         val strength = FakeStrengthRepository(listOf(StrengthSession(date = todayKey, templateName = "Leg day")))
         val viewModel = viewModel(meals = meals, strength = strength)
         collect(viewModel)
+
         assertTrue(viewModel.day.value.isTrainingDay)
+        assertTrue(viewModel.day.value.restDaySwitchLocked)
 
-        viewModel.setRestDay(true)
-        assertEquals(true, meals.storedRestDayChoice(todayKey))
-        assertFalse(viewModel.day.value.isTrainingDay)
-        assertEquals(DEFAULT_REST_TARGETS, viewModel.day.value.targets)
+        viewModel.setRestDay(true) // ignored on a workout day
 
-        viewModel.setRestDay(false) // matches the logged workout again -> automatic
         assertNull(meals.storedRestDayChoice(todayKey))
         assertTrue(viewModel.day.value.isTrainingDay)
+        assertEquals(DEFAULT_TRAINING_TARGETS, viewModel.day.value.targets)
+    }
+
+    @Test
+    fun `logging a workout turns a day planned as rest into a training day`() = runTest {
+        val meals = FakeMealsRepository()
+        val strength = FakeStrengthRepository()
+        val viewModel = viewModel(meals = meals, strength = strength)
+        collect(viewModel)
+        assertFalse(viewModel.day.value.isTrainingDay) // no workout yet: rest, switch on
+
+        strength.addSession(StrengthSession(date = todayKey, templateName = "Leg day"))
+
+        assertTrue(viewModel.day.value.isTrainingDay) // switch off automatically
+        assertTrue(viewModel.day.value.restDaySwitchLocked)
     }
 
     @Test
@@ -269,6 +282,13 @@ class MealsViewModelTest {
         assertEquals(false, meals.storedRestDayChoice("2026-11-20"))
         assertTrue(viewModel.day.value.isTrainingDay)
         assertEquals(DEFAULT_TRAINING_TARGETS, viewModel.day.value.targets)
+        assertFalse(viewModel.day.value.restDaySwitchLocked)
+
+        viewModel.setRestDay(true) // back to rest: the default, so nothing is stored
+        assertNull(meals.storedRestDayChoice("2026-11-20"))
+        assertFalse(viewModel.day.value.isTrainingDay)
+
+        viewModel.setRestDay(false)
         viewModel.showToday()
         assertFalse(viewModel.day.value.isTrainingDay) // the choice is per date
     }

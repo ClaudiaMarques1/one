@@ -37,15 +37,18 @@ data class MealsDay(
     val planned: MacroTotals = MacroTotals(),
     val waterGlasses: Int = 0,
     val waterTargetGlasses: Int = DEFAULT_WATER_GLASSES,
-    /** Training-day targets and workout slots; from the Rest day switch, else from a logged workout. */
+    /** Training-day targets and workout slots: a logged workout, or the Rest day switch turned off. */
     val isTrainingDay: Boolean = false
-)
+) {
+    /** A logged workout fixes the day as training, so the Rest day switch is locked off. */
+    val restDaySwitchLocked: Boolean get() = workoutName != null
+}
 
 /**
- * Builds the day from raw data. The Rest day switch's [restDayChoice] wins; without one, a logged
- * workout makes it a training day. A slot shows when it's switched on in Settings (optional slots
- * only on training days) - or whenever it already holds meals, so nothing logged is ever hidden.
- * The workout itself stays on the timeline even on a day marked as rest - it still happened.
+ * Builds the day from raw data. A logged workout always makes it a training day - it wins over any
+ * stored [restDayChoice]. Without a workout the day is rest, unless the Rest day switch was turned off
+ * (restDayChoice false) to plan a training day. A slot shows when it's switched on in Settings
+ * (optional slots only on training days) - or whenever it already holds meals, so nothing is hidden.
  */
 fun buildMealsDay(
     date: String,
@@ -56,7 +59,7 @@ fun buildMealsDay(
     workoutMinutes: Int? = null,
     restDayChoice: Boolean? = null
 ): MealsDay {
-    val training = restDayChoice?.not() ?: (workoutName != null)
+    val training = workoutName != null || restDayChoice == false
     val bySlot = meals.groupBy { MealSlot.fromStored(it.slot) ?: MealSlot.SNACKS }
     val slots = MealSlot.entries.mapNotNull { slot ->
         val slotMeals = bySlot[slot].orEmpty()

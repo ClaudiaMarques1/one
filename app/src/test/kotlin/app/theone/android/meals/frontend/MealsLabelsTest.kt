@@ -35,6 +35,13 @@ class MealsLabelsTest {
     }
 
     @Test
+    fun `rest day subtitle explains a locked switch`() {
+        assertEquals("Workout logged · training-day targets · 2,500 kcal", restDaySubtitle(rest = false, workoutLogged = true, "2,500"))
+        assertEquals("Rest-day targets · 2,300 kcal", restDaySubtitle(rest = true, workoutLogged = false, "2,300"))
+        assertEquals("Training-day targets · 2,500 kcal", restDaySubtitle(rest = false, workoutLogged = false, "2,500"))
+    }
+
+    @Test
     fun `today header date`() {
         val today = LocalDate.of(2026, 11, 19)
         // Weekday + date only under Today / Tomorrow / Yesterday; further out the title is the weekday.

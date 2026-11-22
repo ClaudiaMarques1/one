@@ -179,13 +179,13 @@ class MealsViewModel(
     }
 
     /**
-     * The Rest day switch for the shown day. Matching the automatic answer (rest unless a workout is
-     * logged) clears the stored choice, so the day goes back to following the workouts.
+     * The Rest day switch for the shown day. Ignored on a day with a logged workout - that's always a
+     * training day. Otherwise "rest" is the default (no stored choice) and "not rest" plans a training day.
      */
     fun setRestDay(rest: Boolean) {
+        if (day.value.restDaySwitchLocked) return
         val dateKey = date.value
-        val automaticRest = day.value.workoutName == null
-        launchCatching { repository.setRestDayChoice(dateKey, if (rest == automaticRest) null else rest) }
+        launchCatching { repository.setRestDayChoice(dateKey, if (rest) null else false) }
     }
 
     private fun launchCatching(block: suspend () -> Unit) {

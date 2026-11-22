@@ -101,8 +101,8 @@ class MealsTimelineTest {
     }
 
     @Test
-    fun `a day marked as rest keeps its workout row but uses rest targets`() {
-        val rest = buildMealsDay(
+    fun `a logged workout wins over a stored rest choice`() {
+        val day = buildMealsDay(
             date,
             emptyList(),
             settings,
@@ -112,9 +112,20 @@ class MealsTimelineTest {
             restDayChoice = true
         )
 
+        assertTrue(day.isTrainingDay)
+        assertTrue(day.restDaySwitchLocked)
+        assertEquals(DEFAULT_TRAINING_TARGETS, day.targets)
+    }
+
+    @Test
+    fun `without a workout a day is rest unless planned as training`() {
+        val rest = buildMealsDay(date, emptyList(), settings, workoutName = null, waterGlasses = 0)
+        val planned = buildMealsDay(date, emptyList(), settings, workoutName = null, waterGlasses = 0, restDayChoice = false)
+
         assertFalse(rest.isTrainingDay)
-        assertEquals(DEFAULT_REST_TARGETS, rest.targets)
         assertFalse(rest.slots.any { it.slot.optional })
-        assertTrue(buildTimeline(rest, settings).any { it is TimelineRow.Workout })
+        assertTrue(planned.isTrainingDay)
+        assertFalse(planned.restDaySwitchLocked)
+        assertTrue(planned.slots.any { it.slot.optional })
     }
 }
