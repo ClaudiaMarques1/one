@@ -24,4 +24,14 @@ Type: front-facing (Settings screens, navigation). No storage change.
 
 ## Next step
 
-User runs the 6 Manual steps on #62; then PR `Closes #62`.
+User runs the updated Manual steps on #62 (incl. week start); then PR `Closes #62`.
+
+## Review changes (user, after the first round)
+
+- **Appearance** isn't a section: Theme sits on the Settings screen itself. Sections are the app's own:
+  **Calendar, Workout, Meals, Diary** (Calendar and Diary: "No settings yet").
+- **Week starts on** moved out of Meals to Settings -> General and is app-wide: `settings/backend/WeekStart.kt`,
+  `SettingsRepository.observeWeekStart/setWeekStart` (same DataStore key `weekStart`, so the old Meals choice
+  carries over), provided as `ui/LocalWeekStart` from `MainActivity`. Used by Calendar (month grid, week view),
+  Meals (week strip, Week plan, shopping list), Diary ("This week"/"Last week"), Workout (sessions this week -
+  was hard-coded Monday). `CalendarDateKeys.firstDayOfWeek()` (locale only) removed.
