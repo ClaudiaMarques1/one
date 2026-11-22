@@ -31,6 +31,7 @@ Meal settings: the README points to `Home Redesign.dc.html` 1d, which was never 
   date; title reads Today / Tomorrow / Yesterday / weekday and tapping it returns to today.
 - **Settings keyboard bug (emulator video):** the Settings scroll column had no `imePadding()`, so with
   edge-to-edge the number pad covered the rest-day fields. Fixed by padding the scroll area for the IME.
+- **Empty-slot copy:** `Add from favourites` until phase 4 adds Recipes (handoff copy is "... or recipes").
 - **Removing a meal:** not in the mock; long-press a meal row -> menu with `Remove` (destructive).
   Without it a mistaken add can't be undone.
 - **Accent:** `SectionAccent.Meals` light becomes `#2E7D32` (handover accent fill; was `#43A047`).
@@ -54,4 +55,4 @@ Meal settings: the README points to `Home Redesign.dc.html` 1d, which was never 
 ## Next step
 
 User runs the Manual steps on #53 (they write real Firestore data); then screenshots of a filled day,
-PR with `Closes #53`. Small follow-up: the empty-slot copy says "or recipes" - recipes arrive in phase 4.
+PR with `Closes #53`.
