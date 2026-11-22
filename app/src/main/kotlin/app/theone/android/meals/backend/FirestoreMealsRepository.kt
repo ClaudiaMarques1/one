@@ -2,6 +2,7 @@ package app.theone.android.meals.backend
 
 import app.theone.android.data.FirebaseModule
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -61,6 +62,63 @@ class FirestoreMealsRepository : MealsRepository {
                 trySend(snapshot?.documents?.mapNotNull { it.getString("date") }?.toSet() ?: emptySet())
             }
         awaitClose { registration.remove() }
+    }
+
+    override fun observeMealsBetween(from: String, to: String): Flow<List<PlannedMeal>> = callbackFlow {
+        val collection = meals()
+        if (collection == null) {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+        val registration = collection
+            .whereGreaterThanOrEqualTo("date", from)
+            .whereLessThanOrEqualTo("date", to)
+            .limit(300)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val list = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(PlannedMeal::class.java)?.copy(id = doc.id)
+                } ?: emptyList()
+                trySend(list.sortedBy { it.createdAt })
+            }
+        awaitClose { registration.remove() }
+    }
+
+    override fun observeRestDayChoices(from: String, to: String): Flow<Map<String, Boolean>> = callbackFlow {
+        val collection = mealDays()
+        if (collection == null) {
+            trySend(emptyMap())
+            close()
+            return@callbackFlow
+        }
+        // mealDays documents are keyed by date, so the range runs on the document id.
+        val registration = collection
+            .whereGreaterThanOrEqualTo(FieldPath.documentId(), from)
+            .whereLessThanOrEqualTo(FieldPath.documentId(), to)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                trySend(
+                    snapshot?.documents?.mapNotNull { doc ->
+                        doc.toObject(MealDayChoice::class.java)?.restDay?.let { doc.id to it }
+                    }?.toMap() ?: emptyMap()
+                )
+            }
+        awaitClose { registration.remove() }
+    }
+
+    override suspend fun deleteMeals(ids: List<String>) {
+        val collection = meals() ?: return
+        if (ids.isEmpty()) return
+        val batch = FirebaseModule.firestore.batch()
+        ids.filter { it.isNotEmpty() }.forEach { batch.delete(collection.document(it)) }
+        batch.commit().await()
     }
 
     override fun observeFavourites(): Flow<List<FavouriteMeal>> = callbackFlow {
