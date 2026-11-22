@@ -33,8 +33,10 @@ Type: backend + data + front-facing. Builds on #53 / #56 (`.claude/plans/53-…`
 - [x] `MealsWeekViewModel` (week, arrows, copy to tomorrow / date, clear day, copy week), tests
 - [x] Week screen: top bar, day card rows (date block, summary, chips, training, menu), legend, footer, dialogs
 - [x] Navigation: `Destination.MealsWeek`, `OneNavHost`, header icon in the weekly view
-- [ ] Dark check (Manual step 10); `/verify`, screenshots to `docs/screenshots/58-meals-phase-3/` + issue, PR `Closes #58`
+- [x] Dark check (Manual step 10); `/verify` (all 15 Checks ticked), screenshots in `docs/screenshots/58-meals-phase-3/` + issue
+- [ ] PR to `develop` with `Closes #58` - user review
 
 ## Next step
 
-User runs the 10 Manual steps on #58; then PR `Closes #58`.
+PR open for review; merge only on the user's go-ahead. Then phase 4 (Recipes + shopping list), whose
+recipe data source is still to decide (see the food lookup idea, `docs/ideas/food-nutrition-data-sources.md`).
