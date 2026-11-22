@@ -21,6 +21,17 @@ Every `.kt` / `.kts` change also needs `./gradlew lint` (runs ktlint against the
 CI (`.github/workflows/unit-tests.yml`) runs `test`, `lint` and `build` (`assembleDebug`) as separate
 jobs on every PR; device checks stay local.
 
+## Screenshots
+
+Every emulator screenshot taken while working a ticket goes into git under
+`docs/screenshots/<n>-<kebab>/` (descriptive file names + a short `README.md` index), committed with
+the ticket's work.
+
+**Why:** the user wants the visual record kept with the change, not left in a scratch folder.
+**How to apply:** before committing, check each image for personal data - emails, passwords, full
+names, tokens - and paint it over (PowerShell `System.Drawing` `FillRectangle` in the surface colour;
+no ImageMagick here) or leave that image out. Skip outdated shots that no longer match the code.
+
 ## Ticket lifecycle
 
 Project board "one" (https://github.com/users/ClaudiaMarques1/projects/1), columns
