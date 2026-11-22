@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.theone.android.meals.backend.MealSlot
 import app.theone.android.meals.backend.MealsViewModel
+import app.theone.android.meals.backend.TodayView
 import app.theone.android.settings.backend.DataStoreSettingsRepository
 import app.theone.android.ui.ErrorBanner
 
@@ -32,21 +33,39 @@ fun MealsScreen(viewModel: MealsViewModel = mealsViewModel()) {
     val day by viewModel.day.collectAsState()
     val favourites by viewModel.favourites.collectAsState()
     val mealsError by viewModel.mealsError.collectAsState()
+    val settings by viewModel.mealSettings.collectAsState()
+    val week by viewModel.week.collectAsState()
     // The slot the Add sheet is open for, or null when closed.
     var addingTo by rememberSaveable { mutableStateOf<MealSlot?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        MealsTodayContent(
-            day = day,
-            onAddToSlot = { addingTo = it },
-            onToggleEaten = viewModel::setEaten,
-            onRemoveMeal = viewModel::removeMeal,
-            onTapGlass = viewModel::tapWaterGlass,
-            todayKey = viewModel.todayKey,
-            onPreviousDay = viewModel::showPreviousDay,
-            onNextDay = viewModel::showNextDay,
-            onToday = viewModel::showToday
-        )
+        // Settings -> Meals -> Today view picks 1a or 1b; both show the ViewModel's selected day.
+        when (settings.todayView) {
+            TodayView.CHECKLIST -> MealsTodayContent(
+                day = day,
+                onAddToSlot = { addingTo = it },
+                onToggleEaten = viewModel::setEaten,
+                onRemoveMeal = viewModel::removeMeal,
+                onTapGlass = viewModel::tapWaterGlass,
+                todayKey = viewModel.todayKey,
+                onPreviousDay = viewModel::showPreviousDay,
+                onNextDay = viewModel::showNextDay,
+                onToday = viewModel::showToday
+            )
+            TodayView.TIMELINE -> MealsTimelineContent(
+                day = day,
+                week = week,
+                settings = settings,
+                onSelectDate = viewModel::selectDate,
+                onPreviousWeek = viewModel::showPreviousWeek,
+                onNextWeek = viewModel::showNextWeek,
+                onAddToSlot = { addingTo = it },
+                onToggleEaten = viewModel::setEaten,
+                onRemoveMeal = viewModel::removeMeal,
+                onStepWater = viewModel::stepWaterGlasses,
+                todayKey = viewModel.todayKey
+            )
+        }
         ErrorBanner(
             message = mealsError,
             onDismiss = viewModel::clearMealsError,
