@@ -20,8 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -51,8 +49,6 @@ import app.theone.android.meals.backend.OTHER_AISLE
 import app.theone.android.meals.backend.Recipe
 import app.theone.android.meals.backend.RecipeIngredient
 import app.theone.android.meals.backend.recipeFromDraft
-import app.theone.android.ui.theme.CardSurface
-import app.theone.android.ui.theme.DeleteRed
 import app.theone.android.ui.theme.MealsColors
 import app.theone.android.ui.theme.WarmButtonOutline
 import app.theone.android.ui.theme.WarmDivider
@@ -73,11 +69,12 @@ private fun RecipeIngredient.toDraft() = IngredientDraft(
 )
 
 /**
- * Meals -> Recipes -> Owned: create or edit a recipe (not in the handoff - #60). Calories and macros
+ * Meals -> Recipes -> Owned: create or edit a recipe (not in the handoff - #60; Delete is in the
+ * read-only view's menu). Calories and macros
  * are per portion; ingredient quantities are for the whole recipe, and feed the shopping list.
  */
 @Composable
-fun RecipeEditorDialog(recipe: Recipe?, onSave: (Recipe) -> Unit, onDelete: (Recipe) -> Unit, onDismiss: () -> Unit) {
+fun RecipeEditorDialog(recipe: Recipe?, onSave: (Recipe) -> Unit, onDismiss: () -> Unit) {
     var name by rememberSaveable { mutableStateOf(recipe?.name.orEmpty()) }
     var portions by rememberSaveable { mutableStateOf(recipe?.portions?.toString() ?: "1") }
     var cookMinutes by rememberSaveable { mutableStateOf(recipe?.cookMinutes?.takeIf { it > 0 }?.toString().orEmpty()) }
@@ -91,7 +88,6 @@ fun RecipeEditorDialog(recipe: Recipe?, onSave: (Recipe) -> Unit, onDelete: (Rec
             if (isEmpty()) add(IngredientDraft())
         }
     }
-    var confirmDelete by remember { mutableStateOf(false) }
 
     val qtyOk = ingredients.all { it.qty.isBlank() || it.qty.trim().toDoubleOrNull()?.let { q -> q >= 0 } == true }
     val draft = if (!qtyOk) {
@@ -188,30 +184,8 @@ fun RecipeEditorDialog(recipe: Recipe?, onSave: (Recipe) -> Unit, onDelete: (Rec
                     Icon(Icons.Filled.Add, contentDescription = null, tint = MealsColors.Accent, modifier = Modifier.size(20.dp))
                     Text("  Add ingredient", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = MealsColors.Accent)
                 }
-                if (recipe != null) {
-                    TextButton(onClick = { confirmDelete = true }, modifier = Modifier.padding(top = 8.dp)) {
-                        Icon(Icons.Outlined.Delete, contentDescription = null, tint = DeleteRed, modifier = Modifier.size(20.dp))
-                        Text("  Delete recipe", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DeleteRed)
-                    }
-                }
             }
         }
-    }
-
-    if (confirmDelete && recipe != null) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text("Delete this recipe?") },
-            text = { Text("Meals already planned from it stay, but they won't add to the shopping list any more.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmDelete = false
-                    onDelete(recipe)
-                }) { Text("Delete", color = DeleteRed, fontWeight = FontWeight.SemiBold) }
-            },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel", color = WarmOnSurface) } },
-            containerColor = CardSurface
-        )
     }
 }
 

@@ -54,6 +54,8 @@ fun MealsScreen(
     var tab by rememberSaveable { mutableIntStateOf(0) }
     // The slot the Add sheet is open for, or null when closed.
     var addingTo by rememberSaveable { mutableStateOf<MealSlot?>(null) }
+    // A recipe opens read-only first (its menu has Edit / Delete); the editor sits on top of it.
+    var viewing by rememberSaveable { mutableStateOf<String?>(null) }
     var editing by rememberSaveable { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -80,7 +82,7 @@ fun MealsScreen(
                     else -> RecipesContent(
                         recipes = recipes,
                         onNewRecipe = { editing = NEW_RECIPE },
-                        onOpenRecipe = { editing = it.id }
+                        onOpenRecipe = { viewing = it.id }
                     )
                 }
             }
@@ -112,9 +114,26 @@ fun MealsScreen(
         )
     }
 
+    viewing?.let { id ->
+        val recipe = recipes.firstOrNull { it.id == id }
+        // An id that no longer exists (deleted elsewhere) just closes the view.
+        if (recipe == null) {
+            viewing = null
+        } else {
+            RecipeDetailDialog(
+                recipe = recipe,
+                onEdit = { editing = recipe.id },
+                onDelete = {
+                    recipesViewModel.deleteRecipe(recipe.id)
+                    viewing = null
+                },
+                onDismiss = { viewing = null }
+            )
+        }
+    }
+
     editing?.let { target ->
         val recipe = recipes.firstOrNull { it.id == target }
-        // An id that no longer exists (deleted elsewhere) just closes the editor.
         if (target != NEW_RECIPE && recipe == null) {
             editing = null
         } else {
@@ -122,10 +141,6 @@ fun MealsScreen(
                 recipe = recipe,
                 onSave = {
                     recipesViewModel.saveRecipe(it)
-                    editing = null
-                },
-                onDelete = {
-                    recipesViewModel.deleteRecipe(it.id)
                     editing = null
                 },
                 onDismiss = { editing = null }

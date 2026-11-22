@@ -144,3 +144,7 @@ internal fun shoppingShareText(groups: List<ShoppingGroup>): String = buildStrin
 /** Under a recipe in Owned: "4 portions · 2 ingredients". */
 internal fun recipeServingLine(portions: Int, ingredients: Int): String =
     "${if (portions == 1) "1 portion" else "$portions portions"} · ${if (ingredients == 1) "1 ingredient" else "$ingredients ingredients"}"
+
+/** Under a recipe's name when reading it: "4 portions · 50 min" (no time when it's 0). */
+internal fun recipeDetailLine(portions: Int, cookMinutes: Int): String =
+    (if (portions == 1) "1 portion" else "$portions portions") + if (cookMinutes > 0) " · $cookMinutes min" else ""

@@ -118,7 +118,7 @@ private fun RecipeRow(recipe: Recipe, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClickLabel = "Edit recipe", onClick = onClick)
+            .clickable(onClickLabel = "Open recipe", onClick = onClick)
             .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
