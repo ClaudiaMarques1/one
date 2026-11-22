@@ -15,8 +15,12 @@ Type: backend + front-facing. Builds on #53 (`.claude/plans/53-meals-phase-1.md`
 - **Workout row** at the logged session's `createdAt` local time; name only (no duration data).
 - **Week start**: `MealSettings.weekStart` (MONDAY / SUNDAY), default from the device locale.
 - **Week arrows** (< / >) in the 1b header; Week plan / Shopping icons wait for phases 3 / 4.
-- **Today view**: `MealSettings.todayView` CHECKLIST / TIMELINE (default CHECKLIST). `MealsScreen`
-  switches on it; both views read the same selected date from `MealsViewModel`.
+- **Weekly view only (changed after review):** no Today view setting; Meals always shows 1b. The 1a
+  checklist (`MealsTodayContent`) is parked - kept in code, not shown. Its water drops moved to
+  `MealsWaterCard.kt` and replace 1b's -/+ buttons.
+- **Rest day switch (added after review):** per-date choice in `users/{uid}/mealDays/{date}`
+  (`MealDayChoice.restDay`); null = automatic (rest unless a workout is logged). Setting it back to
+  the automatic answer deletes the doc. Rest -> rest targets, no workout slots; the workout row stays.
 - **Week dots**: new `MealsRepository.observeMealDates(from, to)` - a range query on `date` (single
   field, no composite index), emitting the set of dates holding any meal.
 - **Timeline model** kept pure + tested: `buildTimeline(day, slotTimes, workout)` -> ordered rows
@@ -24,8 +28,6 @@ Type: backend + front-facing. Builds on #53 (`.claude/plans/53-meals-phase-1.md`
 - **Timeline rows in one list item:** the LazyColumn's 12dp item spacing broke the rail between rows
   (seen on the emulator), so the timeline renders as one Column item.
 - **Summary label:** `kcal left today` on today, `kcal left` on any other day.
-- **Water -/+**: one glass per tap, clamped 0..max (the README says 0-10; clamp at
-  `MAX_WATER_GLASSES` so a raised target still works).
 
 ## Checklist
 
@@ -35,8 +37,10 @@ Type: backend + front-facing. Builds on #53 (`.claude/plans/53-meals-phase-1.md`
 - [x] 1b screen: fixed header (month, week arrows, week strip), summary card, timeline rail, Eat button, workout row, empty slot, water card
 - [x] Settings -> Meals: Today view, week start, slot times
 - [x] Dark mode check
+- [x] Review changes: remove Today view setting (park 1a), water drops on the weekly view, Rest day switch
 - [ ] `/verify`, screenshots to `docs/screenshots/56-meals-phase-2/` + issue, PR `Closes #56`
 
 ## Next step
 
-User runs the Manual steps on #56 (Eat / water / Add write real data); then PR `Closes #56`.
+User runs the 12 Manual steps on #56 (they write real data); then PR `Closes #56`. More Meals input
+from the user is expected after the remaining phases.
