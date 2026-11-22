@@ -9,3 +9,6 @@ The training banner shows "t" because a test workout named "t" is logged for tha
 | `add-sheet-favourites-empty.png` | 1c Add sheet, Favourites tab before any favourites exist; footer `Pick a meal` |
 | `add-sheet-new-filled.png` | 1c New tab filled in; footer `Add to Breakfast` enabled |
 | `settings-meals.png` | Settings -> Meals: slot switches, training / rest-day targets, water |
+| `settings-rest-kcal-keyboard-fixed.png` | Fix: Rest day Calories focused - the field scrolls above the number pad |
+| `day-nav-tomorrow.png` / `day-nav-yesterday.png` | Day arrows: Tomorrow (rest-day targets) and Yesterday (a logged workout, training targets) |
+| `day-nav-further-out.png` | Two days ahead: the weekday as the title, only the date underneath |
