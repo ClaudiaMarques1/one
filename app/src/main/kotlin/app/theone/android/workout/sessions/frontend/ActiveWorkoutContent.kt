@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -107,6 +108,7 @@ import app.theone.android.workout.sessions.backend.doneSetCount
 import app.theone.android.workout.sessions.backend.elapsedFraction
 import app.theone.android.workout.sessions.backend.formatWeightInput
 import app.theone.android.workout.sessions.backend.hasUnfinishedSets
+import app.theone.android.workout.sessions.backend.inDisplayOrder
 import app.theone.android.workout.sessions.backend.isRestCountdownTick
 import app.theone.android.workout.sessions.backend.remainingSeconds
 import app.theone.android.workout.sessions.backend.restOptionsSeconds
@@ -145,6 +147,16 @@ fun ActiveWorkoutContent(
 ) {
     var restSheetFor by rememberSaveable { mutableStateOf<String?>(null) }
     var showFinishDialog by rememberSaveable { mutableStateOf(false) }
+    val displayed = exercises.inDisplayOrder()
+    val listState = rememberLazyListState()
+    // A finished exercise moves up (#64). The list otherwise holds on to the first visible card, which
+    // leaves the moved card cut off above; when already at the top, stay at the top instead.
+    val order = displayed.map { it.instanceId }
+    var lastOrder by remember { mutableStateOf(order) }
+    if (order != lastOrder) {
+        if (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0) listState.requestScrollToItem(0)
+        lastOrder = order
+    }
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
     val doneSets = exercises.doneSetCount()
 
@@ -167,12 +179,15 @@ fun ActiveWorkoutContent(
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
+                state = listState,
                 // Extra bottom room while the rest bar floats over the list.
                 contentPadding = PaddingValues(start = 12.dp, top = 12.dp, end = 12.dp, bottom = if (restState != null) 120.dp else 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(exercises, key = { it.instanceId }) { exercise ->
+                // Done exercises move up, in the order finished; animateItem slides each card to its place (#64).
+                items(displayed, key = { it.instanceId }) { exercise ->
                     ExerciseCard(
+                        modifier = Modifier.animateItem(),
                         exercise = exercise,
                         onRepsChange = { setIndex, text -> onRepsChange(exercise.instanceId, setIndex, text) },
                         onWeightChange = { setIndex, text -> onWeightChange(exercise.instanceId, setIndex, text) },
@@ -325,10 +340,11 @@ private fun ExerciseCard(
     onRemoveSet: (Int) -> Unit,
     onDuplicate: () -> Unit,
     onRemove: () -> Unit,
-    onRestClick: () -> Unit
+    onRestClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(CardShape)
             .background(CardSurface)

@@ -177,6 +177,19 @@ class StrengthViewModelTest {
     }
 
     @Test
+    fun `finishing an exercise orders it first on screen but the list keeps the template order`() {
+        viewModel.startSessionFromTemplate(pushDay)
+        val lateral = viewModel.currentExercises.value.first { it.name == "Lateral raise" }
+        viewModel.toggleSetDone(lateral.instanceId, 0)
+
+        assertEquals(listOf("Lateral raise", "Bench press"), viewModel.currentExercises.value.inDisplayOrder().map { it.name })
+        assertEquals(listOf("Bench press", "Lateral raise"), viewModel.currentExercises.value.map { it.name })
+
+        viewModel.addSet(lateral.instanceId) // a new, unticked set - no longer complete
+        assertEquals(listOf("Bench press", "Lateral raise"), viewModel.currentExercises.value.inDisplayOrder().map { it.name })
+    }
+
+    @Test
     fun `finishing with done sets only saves today's done sets and carries them back to the template`() {
         viewModel.startSessionFromTemplate(pushDay)
         viewModel.toggleSetDone(bench().instanceId, 0)

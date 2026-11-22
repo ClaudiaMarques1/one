@@ -28,10 +28,18 @@ data class ActiveExercise(
     /** The template's sets from last time, by set index - the Previous column and field placeholders. */
     val previousSets: List<StrengthSet> = emptyList(),
     val restSeconds: Int = DEFAULT_REST_SECONDS,
+    /**
+     * Set while every set is ticked: 1 for the first exercise finished, 2 for the next... - orders the
+     * done ones at the top of the screen ([inDisplayOrder]). Kept up to date by [withDoneOrder].
+     */
+    val doneOrder: Int? = null,
     /** Stable per instance, so rest times and list keys survive removing or duplicating exercises. */
     val instanceId: String = UUID.randomUUID().toString()
 ) : Serializable {
     fun previous(setIndex: Int): StrengthSet? = previousSets.getOrNull(setIndex)
+
+    /** Every set ticked (an exercise with no sets isn't complete). */
+    val isComplete: Boolean get() = sets.isNotEmpty() && sets.all { it.done }
 }
 
 data class RestState(
@@ -86,6 +94,25 @@ fun ActiveExercise.withAddedSet(): ActiveExercise {
     val last = sets.lastOrNull()
     return copy(sets = sets + ActiveSet(repsText = last?.repsText.orEmpty(), weightText = last?.weightText.orEmpty()))
 }
+
+/**
+ * Numbers newly complete exercises after the ones already done, and clears it from any that aren't
+ * complete any more (a set unticked, removed or added). The list itself keeps the template's order (#64).
+ */
+fun List<ActiveExercise>.withDoneOrder(): List<ActiveExercise> {
+    var next = mapNotNull { exercise -> exercise.doneOrder?.takeIf { exercise.isComplete } }.maxOrNull() ?: 0
+    return map { exercise ->
+        when {
+            !exercise.isComplete -> if (exercise.doneOrder == null) exercise else exercise.copy(doneOrder = null)
+            exercise.doneOrder != null -> exercise
+            else -> exercise.copy(doneOrder = ++next)
+        }
+    }
+}
+
+/** The screen's order: done exercises first, in the order they were finished, then the rest in list order (#64). */
+fun List<ActiveExercise>.inDisplayOrder(): List<ActiveExercise> =
+    filter { it.doneOrder != null }.sortedBy { it.doneOrder } + filter { it.doneOrder == null }
 
 fun List<ActiveExercise>.doneSetCount(): Int = sumOf { exercise -> exercise.sets.count { it.done } }
 

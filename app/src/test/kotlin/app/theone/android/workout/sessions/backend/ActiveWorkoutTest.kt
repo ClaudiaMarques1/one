@@ -122,4 +122,43 @@ class ActiveWorkoutTest {
         assertEquals(RestState("Bench press", 120, 130_000), rest.adjusted(30, nowMillis = 10_000))
         assertEquals(RestState("Bench press", 90, 130_000), rest.adjusted(30, nowMillis = 90_000))
     }
+
+    private fun exercise(id: String, vararg done: Boolean, doneOrder: Int? = null) =
+        ActiveExercise(name = id, sets = done.map { ActiveSet(done = it) }, doneOrder = doneOrder, instanceId = id)
+
+    @Test
+    fun `isComplete needs every set ticked and at least one set`() {
+        assertTrue(exercise("a", true, true).isComplete)
+        assertFalse(exercise("a", true, false).isComplete)
+        assertFalse(exercise("a").isComplete)
+    }
+
+    @Test
+    fun `withDoneOrder numbers exercises in the order they are finished`() {
+        val first = listOf(exercise("a", false), exercise("b", true), exercise("c", false)).withDoneOrder()
+        assertEquals(listOf(null, 1, null), first.map { it.doneOrder })
+
+        val second = first.map { if (it.instanceId == "a") it.copy(sets = listOf(ActiveSet(done = true))) else it }.withDoneOrder()
+        assertEquals(listOf(2, 1, null), second.map { it.doneOrder })
+    }
+
+    @Test
+    fun `withDoneOrder clears an exercise that is no longer complete`() {
+        val list = listOf(exercise("a", true, false, doneOrder = 1), exercise("b", true, doneOrder = 2)).withDoneOrder()
+        assertEquals(listOf(null, 2), list.map { it.doneOrder })
+        // Finishing "a" again puts it after "b".
+        val again = list.map { if (it.instanceId == "a") it.copy(sets = listOf(ActiveSet(done = true))) else it }.withDoneOrder()
+        assertEquals(listOf(3, 2), again.map { it.doneOrder })
+    }
+
+    @Test
+    fun `inDisplayOrder puts done exercises first by finish order, the rest in list order`() {
+        val list = listOf(
+            exercise("a", false),
+            exercise("b", true, doneOrder = 2),
+            exercise("c", false),
+            exercise("d", true, doneOrder = 1)
+        )
+        assertEquals(listOf("d", "b", "a", "c"), list.inDisplayOrder().map { it.instanceId })
+    }
 }

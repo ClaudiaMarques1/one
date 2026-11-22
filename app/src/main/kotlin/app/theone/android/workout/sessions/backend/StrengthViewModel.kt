@@ -176,8 +176,9 @@ class StrengthViewModel(
         updateExercises { list -> list.map { if (it.instanceId == instanceId) change(it) else it } }
     }
 
+    // Every change goes through here, so the done order (#64) always matches the ticks.
     private fun updateExercises(change: (List<ActiveExercise>) -> List<ActiveExercise>) {
-        savedStateHandle[KEY_CURRENT_EXERCISES] = change(currentExercises.value)
+        savedStateHandle[KEY_CURRENT_EXERCISES] = change(currentExercises.value).withDoneOrder()
     }
 
     private companion object {
