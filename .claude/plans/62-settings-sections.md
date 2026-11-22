@@ -20,11 +20,11 @@ Type: front-facing (Settings screens, navigation). No storage change.
 - [x] `SettingsSection` + summaries (+ tests)
 - [x] Settings list screen + section screen, controls moved
 - [x] Route `settings/{section}` in `Destination` / `OneNavHost`
-- [ ] Dark check (Manual 6); `/verify`, screenshots to `docs/screenshots/62-settings-sections/` + issue, PR `Closes #62`
+- [x] Dark check (Manual 6); `/verify`, screenshots to `docs/screenshots/62-settings-sections/` + issue, PR `Closes #62`
 
 ## Next step
 
-User runs the updated Manual steps on #62 (incl. week start); then PR `Closes #62`.
+All Checks ticked; PR to develop open - waiting for the user's review and "merge".
 
 ## Review changes (user, after the first round)
 
