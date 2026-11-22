@@ -11,7 +11,7 @@ Type: front-facing (Settings screens, navigation). No storage change.
 - **Sections**: `SettingsSection { APPEARANCE, WORKOUT, MEALS }` with route key, title, icon.
   `SettingsSectionScreen(section)` renders the existing controls: `ThemeCard`, the vibrate row,
   `MealSettingsSection` - moved, not changed. Meals keeps `imePadding()` (keyboard fix from #53).
-- **Navigation**: `Destination.SettingsSection` route `settings/{section}`; back pops to the list.
+- **Navigation**: `Destination.SettingsSectionPage` route `settings/{section}`; back pops to the list.
   Both screens get their own `SettingsViewModel` via `settingsViewModel()` (same DataStore), as today.
 - Not in a design handoff (Home 1d only covered the single screen) - same neutral card / row style.
 
