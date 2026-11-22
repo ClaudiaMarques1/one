@@ -112,6 +112,38 @@ class MealsViewModel(
         _mealsError.value = null
     }
 
+    /**
+     * Adds picks from the Add sheet's Favourites and Recipes tabs to [slot] as planned (not eaten), in
+     * one write. A recipe adds one portion and keeps its id, so the shopping list can use its ingredients.
+     */
+    fun addPicks(slot: MealSlot, favourites: List<FavouriteMeal>, recipes: List<Recipe>) {
+        val dateKey = date.value
+        val meals = favourites.map {
+            PlannedMeal(
+                date = dateKey,
+                slot = slot.name,
+                name = it.name,
+                kcal = it.kcal,
+                proteinG = it.proteinG,
+                carbsG = it.carbsG,
+                fatG = it.fatG
+            )
+        } + recipes.map {
+            PlannedMeal(
+                date = dateKey,
+                slot = slot.name,
+                name = it.name,
+                kcal = it.kcal,
+                proteinG = it.proteinG,
+                carbsG = it.carbsG,
+                fatG = it.fatG,
+                recipeId = it.id
+            )
+        }
+        if (meals.isEmpty()) return
+        launchCatching { repository.addMeals(meals) }
+    }
+
     /** Adds the picked favourites to [slot] as planned (not eaten). */
     fun addFavourites(slot: MealSlot, picks: List<FavouriteMeal>) {
         if (picks.isEmpty()) return
