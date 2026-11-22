@@ -13,3 +13,4 @@ The training banner shows "t" because a test workout named "t" is logged for tha
 | `day-nav-tomorrow.png` / `day-nav-yesterday.png` | Day arrows: Tomorrow (rest-day targets) and Yesterday (a logged workout, training targets) |
 | `day-nav-further-out.png` | Two days ahead: the weekday as the title, only the date underneath |
 | `empty-slot-add-from-favourites.png` | Empty slots read `Add from favourites` until Recipes arrives (phase 4); Tomorrow with a planned meal |
+| `today-filled-top.png` / `today-filled-bottom.png` | After the Manual steps: meals in several slots, Pre-workout switched on (training day), water 1.25 of 2.5 L |
