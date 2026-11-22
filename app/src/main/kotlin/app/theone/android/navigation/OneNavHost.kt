@@ -12,6 +12,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -36,6 +37,8 @@ import app.theone.android.meals.frontend.MealsScreen
 import app.theone.android.meals.frontend.MealsWeekScreen
 import app.theone.android.meals.frontend.ShoppingListScreen
 import app.theone.android.settings.frontend.SettingsScreen
+import app.theone.android.settings.frontend.SettingsSection
+import app.theone.android.settings.frontend.SettingsSectionScreen
 import app.theone.android.ui.theme.LocalOneColors
 import app.theone.android.ui.theme.NeutralNavBar
 import app.theone.android.ui.theme.NeutralSelected
@@ -166,7 +169,26 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                     }
                 }
                 composable(Destination.Settings.route) {
-                    NeutralTheme { SettingsScreen(onBack = { navController.popBackStack() }) }
+                    NeutralTheme {
+                        SettingsScreen(
+                            onBack = { navController.popBackStack() },
+                            onOpenSection = { navController.navigate(Destination.SettingsSectionPage.routeFor(it.key)) }
+                        )
+                    }
+                }
+                composable(
+                    Destination.SettingsSectionPage.route,
+                    arguments = listOf(navArgument(Destination.SettingsSectionPage.ARG_SECTION) { type = NavType.StringType })
+                ) { entry ->
+                    val section = SettingsSection.fromKey(entry.arguments?.getString(Destination.SettingsSectionPage.ARG_SECTION))
+                    NeutralTheme {
+                        if (section == null) {
+                            // An unknown section key can't come from the app itself; just go back.
+                            LaunchedEffect(Unit) { navController.popBackStack() }
+                        } else {
+                            SettingsSectionScreen(section = section, onBack = { navController.popBackStack() })
+                        }
+                    }
                 }
                 composable(Destination.MealsWeek.route) {
                     SectionTheme(SectionAccent.Meals) {

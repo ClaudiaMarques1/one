@@ -40,7 +40,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -77,15 +76,39 @@ fun settingsViewModel(): SettingsViewModel = viewModel(
     }
 )
 
+/** Settings: the list of sections (#62). Each row opens [SettingsSectionScreen]. */
 @Composable
-fun SettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = settingsViewModel()) {
+fun SettingsScreen(onBack: () -> Unit, onOpenSection: (SettingsSection) -> Unit, viewModel: SettingsViewModel = settingsViewModel()) {
     val themeMode by viewModel.themeMode.collectAsState()
     val vibrateOnRestEnd by viewModel.vibrateOnRestEnd.collectAsState()
     val mealSettings by viewModel.mealSettings.collectAsState()
     val settingsError by viewModel.settingsError.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        SettingsScreenContent(
+        SettingsListContent(
+            summaries = mapOf(
+                SettingsSection.APPEARANCE to appearanceSummary(themeMode),
+                SettingsSection.WORKOUT to workoutSummary(vibrateOnRestEnd),
+                SettingsSection.MEALS to mealsSummary(mealSettings)
+            ),
+            onBack = onBack,
+            onOpenSection = onOpenSection
+        )
+        ErrorBanner(message = settingsError, onDismiss = viewModel::clearSettingsError, modifier = Modifier.align(Alignment.TopCenter))
+    }
+}
+
+/** One Settings section on its own screen: the same controls as before the split, moved as they are. */
+@Composable
+fun SettingsSectionScreen(section: SettingsSection, onBack: () -> Unit, viewModel: SettingsViewModel = settingsViewModel()) {
+    val themeMode by viewModel.themeMode.collectAsState()
+    val vibrateOnRestEnd by viewModel.vibrateOnRestEnd.collectAsState()
+    val mealSettings by viewModel.mealSettings.collectAsState()
+    val settingsError by viewModel.settingsError.collectAsState()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        SettingsSectionContent(
+            section = section,
             themeMode = themeMode,
             onThemeModeChange = viewModel::setThemeMode,
             vibrateOnRestEnd = vibrateOnRestEnd,
@@ -94,18 +117,30 @@ fun SettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = settingsVi
             mealSettings = mealSettings,
             onMealSettingsChange = viewModel::setMealSettings
         )
-        ErrorBanner(
-            message = settingsError,
-            onDismiss = viewModel::clearSettingsError,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
+        ErrorBanner(message = settingsError, onDismiss = viewModel::clearSettingsError, modifier = Modifier.align(Alignment.TopCenter))
     }
 }
 
 private val CardShape = RoundedCornerShape(20.dp)
 
 @Composable
-private fun SettingsScreenContent(
+private fun SettingsListContent(summaries: Map<SettingsSection, String>, onBack: () -> Unit, onOpenSection: (SettingsSection) -> Unit) {
+    Column(modifier = Modifier.fillMaxSize().background(WarmSurface)) {
+        BackTopBar(title = "Settings", onBack = onBack)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 24.dp)
+        ) {
+            SettingsSectionList(summaries = summaries, onOpen = onOpenSection)
+        }
+    }
+}
+
+@Composable
+private fun SettingsSectionContent(
+    section: SettingsSection,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
     vibrateOnRestEnd: Boolean,
@@ -119,7 +154,7 @@ private fun SettingsScreenContent(
             .fillMaxSize()
             .background(WarmSurface)
     ) {
-        BackTopBar(title = "Settings", onBack = onBack)
+        BackTopBar(title = section.title, onBack = onBack)
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -130,42 +165,46 @@ private fun SettingsScreenContent(
                 .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            SectionLabel("Appearance")
-            ThemeCard(themeMode = themeMode, onThemeModeChange = onThemeModeChange)
-            SectionLabel("Workout", top = 12.dp)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(CardShape)
-                    .background(CardSurface)
-                    .border(1.dp, WarmCardBorder, CardShape)
-                    // The whole row toggles the switch.
-                    .toggleable(value = vibrateOnRestEnd, role = Role.Switch, onValueChange = onVibrateOnRestEndChange)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Outlined.Vibration, contentDescription = null, tint = WarmIcon, modifier = Modifier.size(24.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Vibrate when rest ends", fontSize = 16.sp, color = WarmOnSurface)
-                    Text("Buzz when the rest timer reaches zero", fontSize = 13.sp, color = WarmSecondaryText)
-                }
-                Switch(
-                    checked = vibrateOnRestEnd,
-                    onCheckedChange = null,
-                    colors = SwitchDefaults.colors(
-                        checkedTrackColor = WarmOnSurface,
-                        checkedThumbColor = NeutralSwitchOnThumb,
-                        checkedBorderColor = WarmOnSurface,
-                        uncheckedTrackColor = WarmDisabledFill,
-                        uncheckedThumbColor = NeutralSwitchOff,
-                        uncheckedBorderColor = NeutralSwitchOff
-                    )
-                )
+            when (section) {
+                SettingsSection.APPEARANCE -> ThemeCard(themeMode = themeMode, onThemeModeChange = onThemeModeChange)
+                SettingsSection.WORKOUT -> VibrateRow(vibrateOnRestEnd, onVibrateOnRestEndChange)
+                SettingsSection.MEALS -> MealSettingsSection(settings = mealSettings, onChange = onMealSettingsChange)
             }
-            SectionLabel("Meals", top = 12.dp)
-            MealSettingsSection(settings = mealSettings, onChange = onMealSettingsChange)
         }
+    }
+}
+
+@Composable
+private fun VibrateRow(vibrateOnRestEnd: Boolean, onVibrateOnRestEndChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(CardShape)
+            .background(CardSurface)
+            .border(1.dp, WarmCardBorder, CardShape)
+            // The whole row toggles the switch.
+            .toggleable(value = vibrateOnRestEnd, role = Role.Switch, onValueChange = onVibrateOnRestEndChange)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Outlined.Vibration, contentDescription = null, tint = WarmIcon, modifier = Modifier.size(24.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Vibrate when rest ends", fontSize = 16.sp, color = WarmOnSurface)
+            Text("Buzz when the rest timer reaches zero", fontSize = 13.sp, color = WarmSecondaryText)
+        }
+        Switch(
+            checked = vibrateOnRestEnd,
+            onCheckedChange = null,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = WarmOnSurface,
+                checkedThumbColor = NeutralSwitchOnThumb,
+                checkedBorderColor = WarmOnSurface,
+                uncheckedTrackColor = WarmDisabledFill,
+                uncheckedThumbColor = NeutralSwitchOff,
+                uncheckedBorderColor = NeutralSwitchOff
+            )
+        )
     }
 }
 
@@ -240,37 +279,27 @@ private fun ThemeCard(themeMode: ThemeMode, onThemeModeChange: (ThemeMode) -> Un
     }
 }
 
-@Composable
-private fun SectionLabel(text: String, top: Dp = 4.dp) {
-    Text(
-        text,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = WarmSecondaryText,
-        modifier = Modifier.padding(start = 8.dp, top = top, end = 8.dp)
-    )
-}
+private val previewSummaries = mapOf(
+    SettingsSection.APPEARANCE to appearanceSummary(ThemeMode.SYSTEM),
+    SettingsSection.WORKOUT to workoutSummary(true),
+    SettingsSection.MEALS to mealsSummary(MealSettings())
+)
 
 @Preview(showBackground = true)
 @Composable
 private fun SettingsScreenPreview() {
     NeutralTheme {
-        SettingsScreenContent(
-            themeMode = ThemeMode.SYSTEM,
-            onThemeModeChange = {},
-            vibrateOnRestEnd = true,
-            onVibrateOnRestEndChange = {},
-            onBack = {}
-        )
+        SettingsListContent(summaries = previewSummaries, onBack = {}, onOpenSection = {})
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun SettingsScreenDarkPreview() {
+private fun SettingsAppearanceDarkPreview() {
     OneTheme(darkTheme = true) {
         NeutralTheme {
-            SettingsScreenContent(
+            SettingsSectionContent(
+                section = SettingsSection.APPEARANCE,
                 themeMode = ThemeMode.DARK,
                 onThemeModeChange = {},
                 vibrateOnRestEnd = false,
