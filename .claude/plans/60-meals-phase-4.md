@@ -22,6 +22,9 @@ Type: backend + data + front-facing. Builds on #53 / #56 / #58.
   name (case-insensitive) + unit + aisle; groups in aisle order; tick + own items persisted per week
   at `users/{uid}/shopping/{weekStart}` (`ShoppingState(checked, manual)`); share unticked as text.
   Opened from the Week plan footer and a cart icon in the Food Diary header.
+- **Recipe read-only view** (asked in review): tapping a recipe opens `RecipeDetailDialog`; its menu has
+  Edit (the editor) and Delete (confirm). The editor no longer deletes.
+- **Servings when adding a recipe**: its own Todo card ("Meals: choose servings when adding a recipe").
 - Empty-slot copy back to `Add from favourites or recipes`.
 - Pure + tested: `buildShoppingList`, quantity formatting, recipe macro line with cook time.
 
