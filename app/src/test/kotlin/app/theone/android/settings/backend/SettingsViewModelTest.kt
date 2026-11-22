@@ -109,4 +109,26 @@ class SettingsViewModelTest {
         assertEquals("disk full", viewModel.settingsError.value)
         assertEquals(ThemeMode.LIGHT, viewModel.themeMode.value)
     }
+
+    @Test
+    fun `setWeekStart stores the app-wide week start and updates the flow`() = runTest {
+        val repository = FakeSettingsRepository(weekStart = WeekStart.MONDAY)
+        val viewModel = SettingsViewModel(repository)
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.weekStart.collect {} }
+
+        assertEquals(WeekStart.MONDAY, viewModel.weekStart.value)
+
+        viewModel.setWeekStart(WeekStart.SUNDAY)
+
+        assertEquals(WeekStart.SUNDAY, repository.storedWeekStart)
+        assertEquals(WeekStart.SUNDAY, viewModel.weekStart.value)
+    }
+
+    @Test
+    fun `WeekStart maps to java Calendar day numbers`() {
+        assertEquals(java.util.Calendar.MONDAY, WeekStart.MONDAY.toCalendarDay())
+        assertEquals(java.util.Calendar.SUNDAY, WeekStart.SUNDAY.toCalendarDay())
+        assertEquals(WeekStart.SUNDAY, WeekStart.fromLocale(java.util.Locale.US))
+        assertEquals(WeekStart.MONDAY, WeekStart.fromLocale(java.util.Locale.UK))
+    }
 }

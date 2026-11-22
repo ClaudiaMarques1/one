@@ -1,5 +1,6 @@
 package app.theone.android.meals.backend
 
+import app.theone.android.settings.backend.WeekStart
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

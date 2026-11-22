@@ -1,6 +1,7 @@
 package app.theone.android.meals.backend
 
 import app.theone.android.settings.backend.FakeSettingsRepository
+import app.theone.android.settings.backend.WeekStart
 import app.theone.android.testing.MainDispatcherRule
 import app.theone.android.workout.sessions.backend.FakeStrengthRepository
 import app.theone.android.workout.sessions.backend.StrengthSession
@@ -19,7 +20,7 @@ class MealsWeekViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val today = LocalDate.of(2026, 11, 19) // a Thursday
-    private val mondayStart = FakeSettingsRepository(mealSettings = MealSettings(weekStart = WeekStart.MONDAY))
+    private val mondayStart = FakeSettingsRepository(weekStart = WeekStart.MONDAY)
 
     private fun meal(id: String, date: String, slot: MealSlot, kcal: Int, eaten: Boolean = false) =
         PlannedMeal(id = id, date = date, slot = slot.name, name = id, kcal = kcal, eaten = eaten)

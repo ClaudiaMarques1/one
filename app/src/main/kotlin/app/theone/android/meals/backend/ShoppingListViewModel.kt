@@ -40,8 +40,8 @@ class ShoppingListViewModel(
     private val _shoppingError = MutableStateFlow<String?>(null)
     val shoppingError: StateFlow<String?> = _shoppingError
 
-    val list: StateFlow<ShoppingListUiState> = settingsRepository.observeMealSettings()
-        .map { settings -> weekOf(dayInWeek, settings.weekStart) }
+    val list: StateFlow<ShoppingListUiState> = settingsRepository.observeWeekStart()
+        .map { weekStart -> weekOf(dayInWeek, weekStart) }
         .distinctUntilChanged()
         .flatMapLatest { days ->
             val (from, to) = shoppingRange(days, today)

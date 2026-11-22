@@ -42,6 +42,17 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
         .catch { e -> _settingsError.value = e.message }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MealSettings())
 
+    val weekStart: StateFlow<WeekStart> = repository.observeWeekStart()
+        .catch { e -> _settingsError.value = e.message }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WeekStart.fromLocale())
+
+    fun setWeekStart(weekStart: WeekStart) {
+        viewModelScope.launch {
+            runCatching { repository.setWeekStart(weekStart) }
+                .onFailure { _settingsError.value = it.message }
+        }
+    }
+
     fun setMealSettings(settings: MealSettings) {
         viewModelScope.launch {
             runCatching { repository.setMealSettings(settings) }

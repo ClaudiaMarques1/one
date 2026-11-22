@@ -47,6 +47,7 @@ import app.theone.android.diary.journal.backend.DiaryDateKeys
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.backend.effectiveSoreness
 import app.theone.android.ui.EditDeleteMenu
+import app.theone.android.ui.LocalWeekStart
 import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.DiaryAccent
 import app.theone.android.ui.theme.DiaryColors
@@ -95,10 +96,11 @@ internal fun JournalContent(
     onDeleteEntry: (DiaryEntry) -> Unit
 ) {
     val todayKey = remember { DiaryDateKeys.todayKey() }
+    val firstDay = LocalWeekStart.current.dayOfWeek
     val todayEntry = entries.firstOrNull { it.date == todayKey }
-    val grouped = remember(entries, todayKey) {
+    val grouped = remember(entries, todayKey, firstDay) {
         entries.filter { it.date != todayKey }
-            .groupBy { DiaryDateLabels.groupLabel(it.date, todayKey) }
+            .groupBy { DiaryDateLabels.groupLabel(it.date, todayKey, firstDay) }
             .toList()
     }
 

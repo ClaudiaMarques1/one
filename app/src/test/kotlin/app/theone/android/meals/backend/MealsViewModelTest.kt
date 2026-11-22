@@ -1,6 +1,7 @@
 package app.theone.android.meals.backend
 
 import app.theone.android.settings.backend.FakeSettingsRepository
+import app.theone.android.settings.backend.WeekStart
 import app.theone.android.testing.MainDispatcherRule
 import app.theone.android.workout.sessions.backend.FakeStrengthRepository
 import app.theone.android.workout.sessions.backend.StrengthSession
@@ -199,7 +200,7 @@ class MealsViewModelTest {
                 PlannedMeal(id = "c", date = "2026-11-24", slot = MealSlot.DINNER.name, kcal = 700)
             )
         )
-        val settings = FakeSettingsRepository(mealSettings = MealSettings(weekStart = WeekStart.MONDAY))
+        val settings = FakeSettingsRepository(weekStart = WeekStart.MONDAY)
         val viewModel = viewModel(meals = meals, settings = settings)
         collect(viewModel)
 
@@ -207,7 +208,7 @@ class MealsViewModelTest {
         assertEquals("2026-11-22", viewModel.week.value.days.last())
         assertEquals(setOf("2026-11-16", "2026-11-19"), viewModel.week.value.mealDates)
 
-        settings.setMealSettings(MealSettings(weekStart = WeekStart.SUNDAY))
+        settings.setWeekStart(WeekStart.SUNDAY)
         assertEquals("2026-11-15", viewModel.week.value.days.first())
     }
 

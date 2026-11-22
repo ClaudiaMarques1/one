@@ -47,6 +47,13 @@ sealed class Destination(
 
     data object Settings : Destination("settings", "Settings", Icons.Filled.Settings)
 
+    // One Settings section (Appearance, Workout, Meals) on its own screen, opened from the Settings list.
+    data object SettingsSectionPage : Destination("settings/{section}", "Settings section", Icons.Filled.Settings) {
+        const val ARG_SECTION = "section"
+
+        fun routeFor(sectionKey: String) = "settings/$sectionKey"
+    }
+
     // Meals' Week plan (1d), opened from the weekly view's header; outside the bottom nav.
     data object MealsWeek : Destination("meals/week", "Week plan", Icons.Filled.CalendarViewWeek, accent = SectionAccent.Meals)
 

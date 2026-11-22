@@ -16,10 +16,10 @@ private fun StrengthSession.localDate(): LocalDate? =
         null
     }
 
-/** Sessions dated from Monday of [today]'s week up to and including [today]. */
-fun sessionsThisWeek(sessions: List<StrengthSession>, today: LocalDate): Int {
-    val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-    return sessions.count { session -> session.localDate()?.let { it in monday..today } == true }
+/** Sessions dated from the start of [today]'s week (on [firstDay], Settings -> Week starts on) up to and including [today]. */
+fun sessionsThisWeek(sessions: List<StrengthSession>, today: LocalDate, firstDay: DayOfWeek = DayOfWeek.MONDAY): Int {
+    val start = today.with(TemporalAdjusters.previousOrSame(firstDay))
+    return sessions.count { session -> session.localDate()?.let { it in start..today } == true }
 }
 
 /** The most recent session date per template name. */

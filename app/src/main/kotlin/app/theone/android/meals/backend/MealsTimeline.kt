@@ -1,5 +1,6 @@
 package app.theone.android.meals.backend
 
+import app.theone.android.settings.backend.WeekStart
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 

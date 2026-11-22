@@ -15,6 +15,11 @@ interface SettingsRepository {
 
     suspend fun setThemeMode(mode: ThemeMode)
 
+    /** Settings -> Week starts on: the first day of every week the app shows. Defaults to the locale's. */
+    fun observeWeekStart(): Flow<WeekStart>
+
+    suspend fun setWeekStart(weekStart: WeekStart)
+
     /** Settings -> Meals: slots, training / rest-day targets, water target. Defaults from the meals handoff. */
     fun observeMealSettings(): Flow<MealSettings>
 

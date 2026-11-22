@@ -45,8 +45,8 @@ class MealsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MealSettings())
 
     /** The selected day's week (7 dates from the week-start setting) and which of them hold meals. */
-    val week: StateFlow<MealsWeek> = combine(date, mealSettings) { dateKey, settings ->
-        weekOf(LocalDate.parse(dateKey), settings.weekStart).map { it.toString() }
+    val week: StateFlow<MealsWeek> = combine(date, settingsRepository.observeWeekStart()) { dateKey, weekStart ->
+        weekOf(LocalDate.parse(dateKey), weekStart).map { it.toString() }
     }
         .distinctUntilChanged()
         .flatMapLatest { days ->

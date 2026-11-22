@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class FakeSettingsRepository(
     vibrateOnRestEnd: Boolean = DEFAULT_VIBRATE_ON_REST_END,
     themeMode: ThemeMode = DEFAULT_THEME_MODE,
-    mealSettings: MealSettings = MealSettings()
+    mealSettings: MealSettings = MealSettings(),
+    weekStart: WeekStart = WeekStart.MONDAY
 ) : SettingsRepository {
     private val vibrate = MutableStateFlow(vibrateOnRestEnd)
     private val theme = MutableStateFlow(themeMode)
@@ -38,6 +39,17 @@ class FakeSettingsRepository(
     private val meals = MutableStateFlow(mealSettings)
 
     val storedMealSettings: MealSettings get() = meals.value
+
+    private val week = MutableStateFlow(weekStart)
+
+    val storedWeekStart: WeekStart get() = week.value
+
+    override fun observeWeekStart(): Flow<WeekStart> = week
+
+    override suspend fun setWeekStart(weekStart: WeekStart) {
+        throwIfFailing()
+        week.value = weekStart
+    }
 
     override fun observeMealSettings(): Flow<MealSettings> = meals
 
