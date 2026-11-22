@@ -5,6 +5,7 @@ Meal names are the test entries from #53's manual steps; no personal data.
 
 | File | Shows |
 |---|---|
-| `timeline-rest-day-light.png` | 1b on Monday (rest day, 2,400 kcal target): week strip with dots, `kcal left`, unbroken rail, `Plan lunch` empty slots, water -/+ |
-| `timeline-training-day-dark.png` | 1b today in dark: training day, slots by time, the logged workout `t` at 3:43 PM |
-| `settings-today-view-week-start-slot-times.png` | Settings -> Meals: Today view, Week starts on, a time per slot |
+| `weekly-rest-day-switch.png` | Weekly view (the only Meals view now): week strip with dots, the Rest day switch (off - a workout is logged, so training-day targets), `kcal left today` |
+| `weekly-timeline-water-drops.png` | Timeline by slot time with the logged workout `t`, `Plan dinner`, and the water drops |
+| `timeline-training-day-dark.png` | Timeline in dark (taken before the Rest day switch was added) |
+| `settings-meals-week-start-slot-times.png` | Settings -> Meals: Week starts on, a time per slot - no Today view option |
