@@ -18,9 +18,10 @@ Type: backend + front-facing. Builds on #53 (`.claude/plans/53-meals-phase-1.md`
 - **Weekly view only (changed after review):** no Today view setting; Meals always shows 1b. The 1a
   checklist (`MealsTodayContent`) is parked - kept in code, not shown. Its water drops moved to
   `MealsWaterCard.kt` and replace 1b's -/+ buttons.
-- **Rest day switch (added after review):** per-date choice in `users/{uid}/mealDays/{date}`
-  (`MealDayChoice.restDay`); null = automatic (rest unless a workout is logged). Setting it back to
-  the automatic answer deletes the doc. Rest -> rest targets, no workout slots; the workout row stays.
+- **Rest day switch (added after review):** a logged workout always means training - the switch is
+  locked off (`MealsDay.restDaySwitchLocked`) and any stored choice is ignored. Without a workout the
+  day is rest; switching off stores `MealDayChoice(restDay = false)` in `users/{uid}/mealDays/{date}`
+  (switching back on deletes it). Rest -> rest targets, no workout slots.
 - **Week dots**: new `MealsRepository.observeMealDates(from, to)` - a range query on `date` (single
   field, no composite index), emitting the set of dates holding any meal.
 - **Timeline model** kept pure + tested: `buildTimeline(day, slotTimes, workout)` -> ordered rows
