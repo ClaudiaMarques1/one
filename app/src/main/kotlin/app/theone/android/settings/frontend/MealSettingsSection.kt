@@ -59,7 +59,6 @@ import app.theone.android.meals.backend.MAX_WATER_GLASSES
 import app.theone.android.meals.backend.MealSettings
 import app.theone.android.meals.backend.MealSlot
 import app.theone.android.meals.backend.MealTargets
-import app.theone.android.meals.backend.TodayView
 import app.theone.android.meals.backend.WeekStart
 import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.NeutralSelected
@@ -89,13 +88,6 @@ internal fun MealSettingsSection(settings: MealSettings, onChange: (MealSettings
     val is24Hour = DateFormat.is24HourFormat(LocalContext.current)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SettingsCard {
-            ChoiceRow(
-                title = "Today view",
-                options = listOf(TodayView.CHECKLIST to "Checklist", TodayView.TIMELINE to "Timeline"),
-                selected = settings.todayView,
-                onSelect = { onChange(settings.copy(todayView = it)) }
-            )
-            HorizontalDivider(color = WarmDivider)
             ChoiceRow(
                 title = "Week starts on",
                 options = listOf(WeekStart.MONDAY to "Monday", WeekStart.SUNDAY to "Sunday"),

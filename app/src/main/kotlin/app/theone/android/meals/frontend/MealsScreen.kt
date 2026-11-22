@@ -16,7 +16,6 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.theone.android.meals.backend.MealSlot
 import app.theone.android.meals.backend.MealsViewModel
-import app.theone.android.meals.backend.TodayView
 import app.theone.android.settings.backend.DataStoreSettingsRepository
 import app.theone.android.ui.ErrorBanner
 
@@ -39,33 +38,22 @@ fun MealsScreen(viewModel: MealsViewModel = mealsViewModel()) {
     var addingTo by rememberSaveable { mutableStateOf<MealSlot?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Settings -> Meals -> Today view picks 1a or 1b; both show the ViewModel's selected day.
-        when (settings.todayView) {
-            TodayView.CHECKLIST -> MealsTodayContent(
-                day = day,
-                onAddToSlot = { addingTo = it },
-                onToggleEaten = viewModel::setEaten,
-                onRemoveMeal = viewModel::removeMeal,
-                onTapGlass = viewModel::tapWaterGlass,
-                todayKey = viewModel.todayKey,
-                onPreviousDay = viewModel::showPreviousDay,
-                onNextDay = viewModel::showNextDay,
-                onToday = viewModel::showToday
-            )
-            TodayView.TIMELINE -> MealsTimelineContent(
-                day = day,
-                week = week,
-                settings = settings,
-                onSelectDate = viewModel::selectDate,
-                onPreviousWeek = viewModel::showPreviousWeek,
-                onNextWeek = viewModel::showNextWeek,
-                onAddToSlot = { addingTo = it },
-                onToggleEaten = viewModel::setEaten,
-                onRemoveMeal = viewModel::removeMeal,
-                onStepWater = viewModel::stepWaterGlasses,
-                todayKey = viewModel.todayKey
-            )
-        }
+        // The weekly view (1b) is Meals' only view. The 1a checklist (MealsTodayContent) is parked:
+        // the Today view setting was removed on #56 and the screen is no longer shown.
+        MealsTimelineContent(
+            day = day,
+            week = week,
+            settings = settings,
+            onSelectDate = viewModel::selectDate,
+            onPreviousWeek = viewModel::showPreviousWeek,
+            onNextWeek = viewModel::showNextWeek,
+            onAddToSlot = { addingTo = it },
+            onToggleEaten = viewModel::setEaten,
+            onRemoveMeal = viewModel::removeMeal,
+            onTapGlass = viewModel::tapWaterGlass,
+            onRestDayChange = viewModel::setRestDay,
+            todayKey = viewModel.todayKey
+        )
         ErrorBanner(
             message = mealsError,
             onDismiss = viewModel::clearMealsError,

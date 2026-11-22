@@ -30,9 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -81,6 +79,8 @@ import app.theone.android.ui.theme.WarmSecondaryText
 import app.theone.android.ui.theme.WarmSurface
 import java.time.LocalDate
 
+// PARKED (#56): 1a, Today as a checklist - not shown since the weekly view became the only Meals view.
+// Kept for later; WaterCard moved to MealsWaterCard.kt and is shared with the weekly view.
 // 1a in the meals handoff: Today as a checklist. Renders MealsViewModel's day; every change goes back
 // through the callbacks.
 
@@ -383,44 +383,6 @@ private fun MealRow(meal: PlannedMeal, onToggleEaten: () -> Unit, onRemove: () -
                     onRemove()
                 }
             )
-        }
-    }
-}
-
-@Composable
-private fun WaterCard(glasses: Int, targetGlasses: Int, onTapGlass: (Int) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .card()
-            .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 14.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Water", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = WarmOnSurface, modifier = Modifier.weight(1f))
-            Text(waterLabel(glasses, targetGlasses), fontSize = 13.sp, color = WarmSecondaryText)
-        }
-        // One button per glass of the target; extra glasses past the target still show.
-        val count = maxOf(targetGlasses, glasses)
-        Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            for (n in 1..count) {
-                val full = n <= glasses
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable(onClickLabel = "Set water to ${litres(n)} L") { onTapGlass(n) }
-                        .semantics { contentDescription = "Glass $n of $count, ${if (full) "full" else "empty"}" },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        if (full) Icons.Filled.WaterDrop else Icons.Outlined.WaterDrop,
-                        contentDescription = null,
-                        tint = if (full) MealsColors.Eaten else WarmButtonOutline,
-                        modifier = Modifier.size(26.dp)
-                    )
-                }
-            }
         }
     }
 }

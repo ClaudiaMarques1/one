@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,14 +32,15 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -110,7 +112,8 @@ fun MealsTimelineContent(
     onAddToSlot: (MealSlot) -> Unit,
     onToggleEaten: (PlannedMeal, Boolean) -> Unit,
     onRemoveMeal: (PlannedMeal) -> Unit,
-    onStepWater: (Int) -> Unit,
+    onTapGlass: (Int) -> Unit,
+    onRestDayChange: (Boolean) -> Unit = {},
     todayKey: String = day.date
 ) {
     val is24Hour = DateFormat.is24HourFormat(LocalContext.current)
@@ -140,6 +143,7 @@ fun MealsTimelineContent(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            item { RestDayRow(day, onRestDayChange) }
             item { TimelineSummary(day, isToday = day.date == todayKey) }
             // One item, not one per row: the list's 12dp item spacing would break the rail between rows.
             item {
@@ -158,7 +162,7 @@ fun MealsTimelineContent(
                     }
                 }
             }
-            item { WaterStepperCard(day.waterGlasses, day.waterTargetGlasses, onStepWater) }
+            item { WaterCard(day.waterGlasses, day.waterTargetGlasses, onTapGlass) }
         }
     }
 }
@@ -413,53 +417,6 @@ private fun WorkoutLine(name: String) {
     }
 }
 
-@Composable
-private fun WaterStepperCard(glasses: Int, targetGlasses: Int, onStep: (Int) -> Unit) {
-    val shape = RoundedCornerShape(20.dp)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(CardSurface)
-            .border(1.dp, WarmCardBorder, shape)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(MealsColors.Soft),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = MealsColors.Accent, modifier = Modifier.size(22.dp))
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text("Water", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = WarmOnSurface)
-            Text(waterLabel(glasses, targetGlasses), fontSize = 13.sp, color = WarmSecondaryText)
-        }
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(CardSurface)
-                .border(1.dp, WarmButtonOutline, CircleShape)
-                .clickable(enabled = glasses > 0, onClickLabel = "One glass less") { onStep(-1) },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Filled.Remove, contentDescription = "Less water", tint = WarmIcon)
-        }
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MealsColors.Accent)
-                .clickable(onClickLabel = "One glass more") { onStep(1) },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = "More water", tint = MaterialTheme.colorScheme.onPrimary)
-        }
-    }
-}
-
 private val previewSettings = MealSettings(enabledSlots = MealSlot.entries.toSet())
 
 private fun previewMeal(slot: MealSlot, name: String, kcal: Int, eaten: Boolean = false) =
@@ -491,5 +448,45 @@ private fun MealsTimelinePreview() {
         SectionTheme(SectionAccent.Meals) {
             MealsTimelineContent(previewDay, previewWeek, previewSettings, {}, {}, {}, {}, { _, _ -> }, {}, {})
         }
+    }
+}
+
+/**
+ * Rest day switch for the shown day (not in the handoff - asked for on #56). On by default unless a
+ * workout is logged; flipping it switches the targets and the workout slots for that day only.
+ */
+@Composable
+private fun RestDayRow(day: MealsDay, onChange: (Boolean) -> Unit) {
+    val rest = !day.isTrainingDay
+    val shape = RoundedCornerShape(20.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(CardSurface)
+            .border(1.dp, WarmCardBorder, shape)
+            .toggleable(value = rest, role = Role.Switch, onValueChange = onChange)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Outlined.Bedtime, contentDescription = null, tint = WarmIcon, modifier = Modifier.size(24.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Rest day", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = WarmOnSurface)
+            Text(
+                "${if (rest) "Rest-day" else "Training-day"} targets · ${formatKcal(day.targets.kcal)} kcal",
+                fontSize = 13.sp,
+                color = WarmSecondaryText
+            )
+        }
+        Switch(
+            checked = rest,
+            onCheckedChange = null,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = MealsColors.Accent,
+                checkedBorderColor = MealsColors.Accent,
+                checkedThumbColor = MaterialTheme.colorScheme.onPrimary
+            )
+        )
     }
 }
