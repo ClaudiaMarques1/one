@@ -9,3 +9,5 @@ Meal names are the test entries from #53's manual steps; no personal data.
 | `weekly-timeline-water-drops.png` | Timeline by slot time with the logged workout `t`, `Plan dinner`, and the water drops |
 | `timeline-training-day-dark.png` | Timeline in dark (taken before the Rest day switch was added) |
 | `settings-meals-week-start-slot-times.png` | Settings -> Meals: Week starts on, a time per slot - no Today view option |
+| `rest-day-locked-workout-day-dark.png` | A day with a logged workout: Rest day switch off and locked - `Workout logged · training-day targets` |
+| `rest-day-on-no-workout-dark.png` | A day with no workout: Rest day switch on, rest-day targets (2,400 kcal) |
