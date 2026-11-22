@@ -2,6 +2,7 @@ package app.theone.android.settings.backend
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.theone.android.meals.backend.MealSettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +34,17 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch {
             runCatching { repository.setThemeMode(mode) }
+                .onFailure { _settingsError.value = it.message }
+        }
+    }
+
+    val mealSettings: StateFlow<MealSettings> = repository.observeMealSettings()
+        .catch { e -> _settingsError.value = e.message }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MealSettings())
+
+    fun setMealSettings(settings: MealSettings) {
+        viewModelScope.launch {
+            runCatching { repository.setMealSettings(settings) }
                 .onFailure { _settingsError.value = it.message }
         }
     }

@@ -2,11 +2,17 @@ package app.theone.android.settings.backend
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import app.theone.android.meals.backend.MealSettings
+import app.theone.android.meals.backend.MealSlot
+import app.theone.android.meals.backend.MealTargets
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -32,9 +38,46 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         dataStore.edit { it[KEY_THEME] = mode.name }
     }
 
+    override fun observeMealSettings(): Flow<MealSettings> = dataStore.data.map { prefs ->
+        val defaults = MealSettings()
+        MealSettings(
+            enabledSlots = prefs[KEY_MEAL_SLOTS]?.mapNotNull(MealSlot::fromStored)?.toSet() ?: defaults.enabledSlots,
+            trainingTargets = prefs.readTargets(TRAINING, defaults.trainingTargets),
+            restTargets = prefs.readTargets(REST, defaults.restTargets),
+            waterGlasses = prefs[KEY_WATER_GLASSES] ?: defaults.waterGlasses
+        )
+    }
+
+    override suspend fun setMealSettings(settings: MealSettings) {
+        dataStore.edit { prefs ->
+            prefs[KEY_MEAL_SLOTS] = settings.enabledSlots.map { it.name }.toSet()
+            prefs.writeTargets(TRAINING, settings.trainingTargets)
+            prefs.writeTargets(REST, settings.restTargets)
+            prefs[KEY_WATER_GLASSES] = settings.waterGlasses
+        }
+    }
+
+    private fun Preferences.readTargets(prefix: String, defaults: MealTargets) = MealTargets(
+        kcal = this[intPreferencesKey("${prefix}Kcal")] ?: defaults.kcal,
+        proteinG = this[intPreferencesKey("${prefix}ProteinG")] ?: defaults.proteinG,
+        carbsG = this[intPreferencesKey("${prefix}CarbsG")] ?: defaults.carbsG,
+        fatG = this[intPreferencesKey("${prefix}FatG")] ?: defaults.fatG
+    )
+
+    private fun MutablePreferences.writeTargets(prefix: String, targets: MealTargets) {
+        this[intPreferencesKey("${prefix}Kcal")] = targets.kcal
+        this[intPreferencesKey("${prefix}ProteinG")] = targets.proteinG
+        this[intPreferencesKey("${prefix}CarbsG")] = targets.carbsG
+        this[intPreferencesKey("${prefix}FatG")] = targets.fatG
+    }
+
     private companion object {
         val KEY_VIBRATE_ON_REST_END = booleanPreferencesKey("vibrateOnRestEnd")
         val KEY_THEME = stringPreferencesKey("theme")
+        val KEY_MEAL_SLOTS = stringSetPreferencesKey("mealSlots")
+        val KEY_WATER_GLASSES = intPreferencesKey("waterGlasses")
+        const val TRAINING = "trainingTarget"
+        const val REST = "restTarget"
     }
 }
 

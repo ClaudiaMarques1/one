@@ -1,5 +1,6 @@
 package app.theone.android.settings.backend
 
+import app.theone.android.meals.backend.MealSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -9,7 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
  */
 class FakeSettingsRepository(
     vibrateOnRestEnd: Boolean = DEFAULT_VIBRATE_ON_REST_END,
-    themeMode: ThemeMode = DEFAULT_THEME_MODE
+    themeMode: ThemeMode = DEFAULT_THEME_MODE,
+    mealSettings: MealSettings = MealSettings()
 ) : SettingsRepository {
     private val vibrate = MutableStateFlow(vibrateOnRestEnd)
     private val theme = MutableStateFlow(themeMode)
@@ -31,6 +33,17 @@ class FakeSettingsRepository(
     override suspend fun setThemeMode(mode: ThemeMode) {
         throwIfFailing()
         theme.value = mode
+    }
+
+    private val meals = MutableStateFlow(mealSettings)
+
+    val storedMealSettings: MealSettings get() = meals.value
+
+    override fun observeMealSettings(): Flow<MealSettings> = meals
+
+    override suspend fun setMealSettings(settings: MealSettings) {
+        throwIfFailing()
+        meals.value = settings
     }
 
     private fun throwIfFailing() {
