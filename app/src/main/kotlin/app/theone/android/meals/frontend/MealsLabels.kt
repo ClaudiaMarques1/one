@@ -1,7 +1,9 @@
 package app.theone.android.meals.frontend
 
 import app.theone.android.meals.backend.DayState
+import app.theone.android.meals.backend.ShoppingGroup
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalTime
@@ -103,3 +105,46 @@ internal fun weekDaySummary(state: DayState, eatenKcal: Int, plannedKcal: Int, t
     DayState.TODAY -> "${formatKcal(eatenKcal)} eaten · ${formatKcal(plannedKcal)} planned"
     DayState.FUTURE -> if (plannedKcal > 0) "${formatKcal(plannedKcal)} kcal planned" else "Nothing planned"
 }
+
+/** A recipe row: "520 kcal · P 42 · C 38 · F 20 · 50 min" (no time when it's 0). */
+internal fun recipeLine(kcal: Int, proteinG: Int, carbsG: Int, fatG: Int, cookMinutes: Int): String =
+    macroLine(kcal, proteinG, carbsG, fatG) + if (cookMinutes > 0) " · $cookMinutes min" else ""
+
+/** A shopping quantity: "250 g", "1.5 tins", "4" - up to 2 decimals, no trailing zeros. */
+internal fun formatQty(qty: Double, unit: String): String {
+    if (qty <= 0.0) return ""
+    val number = BigDecimal(qty).setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+    return if (unit.isBlank()) number else "$number $unit"
+}
+
+/** 1e subtitle: "From your plan for 19 - 22 Nov · 12 to buy". */
+internal fun shoppingSubtitle(from: LocalDate, to: LocalDate, toBuy: Int, locale: Locale = Locale.getDefault()): String {
+    val range = if (from == to) {
+        "${from.dayOfMonth} ${from.format(DateTimeFormatter.ofPattern("MMM", locale))}"
+    } else {
+        weekRangeLabel(from, to, locale)
+    }
+    return "From your plan for $range · $toBuy to buy"
+}
+
+/** Share: the unticked items as plain text, by aisle. */
+internal fun shoppingShareText(groups: List<ShoppingGroup>): String = buildString {
+    append("Shopping list")
+    groups.forEach { group ->
+        val open = group.items.filter { !it.checked }
+        if (open.isEmpty()) return@forEach
+        append("\n\n").append(group.aisle)
+        open.forEach { item ->
+            append("\n- ").append(item.name)
+            formatQty(item.qty, item.unit).takeIf { it.isNotEmpty() }?.let { append(" ").append(it) }
+        }
+    }
+}
+
+/** Under a recipe in Owned: "4 portions · 2 ingredients". */
+internal fun recipeServingLine(portions: Int, ingredients: Int): String =
+    "${if (portions == 1) "1 portion" else "$portions portions"} · ${if (ingredients == 1) "1 ingredient" else "$ingredients ingredients"}"
+
+/** Under a recipe's name when reading it: "4 portions · 50 min" (no time when it's 0). */
+internal fun recipeDetailLine(portions: Int, cookMinutes: Int): String =
+    (if (portions == 1) "1 portion" else "$portions portions") + if (cookMinutes > 0) " · $cookMinutes min" else ""

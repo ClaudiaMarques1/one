@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.theone.android.meals.backend.FavouriteMeal
 import app.theone.android.meals.backend.MealSlot
+import app.theone.android.meals.backend.Recipe
 import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.MealsColors
 import app.theone.android.ui.theme.WarmButtonOutline
@@ -72,9 +73,9 @@ import app.theone.android.ui.theme.WarmOnSurface
 import app.theone.android.ui.theme.WarmSecondaryText
 import app.theone.android.ui.theme.WarmSurface
 
-// 1c in the meals handoff. Phase 1 has the Favourites and New tabs; Recipes arrives in phase 4 (#53 plan).
+// 1c in the meals handoff: Favourites, Recipes (your owned recipes, #60) and New.
 
-private enum class AddTab(val label: String) { FAVOURITES("Favourites"), NEW("New") }
+private enum class AddTab(val label: String) { FAVOURITES("Favourites"), RECIPES("Recipes"), NEW("New") }
 
 /** What the New tab hands back: a meal to add, and whether to save it as a favourite too. */
 data class NewMeal(
@@ -91,14 +92,17 @@ data class NewMeal(
 fun AddMealSheet(
     slot: MealSlot,
     favourites: List<FavouriteMeal>,
-    onAddFavourites: (List<FavouriteMeal>) -> Unit,
+    recipes: List<Recipe>,
+    onAddPicks: (List<FavouriteMeal>, List<Recipe>) -> Unit,
     onAddNew: (NewMeal) -> Unit,
     onDismiss: () -> Unit
 ) {
     var tab by rememberSaveable { mutableStateOf(AddTab.FAVOURITES) }
     // Picks survive tab switches (handoff 1c); ids, so they're saveable.
     var picks by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var recipePicks by rememberSaveable { mutableStateOf(listOf<String>()) }
     var query by rememberSaveable { mutableStateOf("") }
+    var recipeQuery by rememberSaveable { mutableStateOf("") }
     var name by rememberSaveable { mutableStateOf("") }
     var kcal by rememberSaveable { mutableStateOf("") }
     var protein by rememberSaveable { mutableStateOf("") }
@@ -114,7 +118,8 @@ fun AddMealSheet(
         if (name.isBlank() || k == null || p == null || c == null || f == null) null else NewMeal(name.trim(), k, p, c, f, saveToFavourites)
     }
     val newTab = tab == AddTab.NEW
-    val enabled = if (newTab) newMeal != null else picks.isNotEmpty()
+    val pickCount = picks.size + recipePicks.size
+    val enabled = if (newTab) newMeal != null else pickCount > 0
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -143,6 +148,13 @@ fun AddMealSheet(
                         picks = picks,
                         onTogglePick = { id -> picks = if (id in picks) picks - id else picks + id }
                     )
+                    AddTab.RECIPES -> RecipesTab(
+                        recipes = recipes,
+                        query = recipeQuery,
+                        onQueryChange = { recipeQuery = it },
+                        picks = recipePicks,
+                        onTogglePick = { id -> recipePicks = if (id in recipePicks) recipePicks - id else recipePicks + id }
+                    )
                     AddTab.NEW -> NewTab(
                         name = name, onName = { name = it },
                         kcal = kcal, onKcal = { kcal = it },
@@ -159,7 +171,7 @@ fun AddMealSheet(
                     if (newTab) {
                         newMeal?.let(onAddNew)
                     } else {
-                        onAddFavourites(favourites.filter { it.id in picks })
+                        onAddPicks(favourites.filter { it.id in picks }, recipes.filter { it.id in recipePicks })
                     }
                 },
                 enabled = enabled,
@@ -172,7 +184,7 @@ fun AddMealSheet(
                     disabledContentColor = WarmMutedIcon
                 )
             ) {
-                Text(addButtonLabel(slot.label, picks.size, newTab), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text(addButtonLabel(slot.label, pickCount, newTab), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -220,30 +232,70 @@ private fun FavouritesTab(
     picks: List<String>,
     onTogglePick: (String) -> Unit
 ) {
-    val shown = favourites.filter { query.isBlank() || it.name.contains(query.trim(), ignoreCase = true) }
+    PickList(
+        rows = favourites.map { PickRow(it.id, it.name, macroLine(it.kcal, it.proteinG, it.carbsG, it.fatG)) },
+        query = query,
+        onQueryChange = onQueryChange,
+        placeholder = "Search favourites",
+        emptyNote = "No favourites yet. Add a meal on the New tab and keep \"Save to favourites\" on.",
+        picks = picks,
+        onTogglePick = onTogglePick
+    )
+}
+
+/** Recipes tab (1c): the owned recipes, macros per portion plus cook time. Picking adds one portion. */
+@Composable
+private fun RecipesTab(
+    recipes: List<Recipe>,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    picks: List<String>,
+    onTogglePick: (String) -> Unit
+) {
+    PickList(
+        rows = recipes.map { PickRow(it.id, it.name, recipeLine(it.kcal, it.proteinG, it.carbsG, it.fatG, it.cookMinutes)) },
+        query = query,
+        onQueryChange = onQueryChange,
+        placeholder = "Search recipes",
+        emptyNote = "No recipes yet. Write one in Meals -> Recipes -> Owned.",
+        picks = picks,
+        onTogglePick = onTogglePick
+    )
+}
+
+private data class PickRow(val id: String, val name: String, val line: String)
+
+/** Search + a multi-pick list, shared by the Favourites and Recipes tabs. */
+@Composable
+private fun PickList(
+    rows: List<PickRow>,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    placeholder: String,
+    emptyNote: String,
+    picks: List<String>,
+    onTogglePick: (String) -> Unit
+) {
+    val shown = rows.filter { query.isBlank() || it.name.contains(query.trim(), ignoreCase = true) }
     Column {
-        SearchField(query = query, onQueryChange = onQueryChange, placeholder = "Search favourites")
+        MealsSearchField(query = query, onQueryChange = onQueryChange, placeholder = placeholder)
         when {
-            favourites.isEmpty() -> EmptyNote("No favourites yet. Add a meal on the New tab and keep \"Save to favourites\" on.")
+            rows.isEmpty() -> EmptyNote(emptyNote)
             shown.isEmpty() -> EmptyNote("Nothing matches \"${query.trim()}\".")
             else -> LazyColumn(contentPadding = PaddingValues(bottom = 8.dp)) {
-                items(shown, key = { it.id }) { favourite ->
-                    val picked = favourite.id in picks
+                items(shown, key = { it.id }) { row ->
+                    val picked = row.id in picks
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .toggleable(value = picked, role = Role.Checkbox, onValueChange = { onTogglePick(favourite.id) })
+                            .toggleable(value = picked, role = Role.Checkbox, onValueChange = { onTogglePick(row.id) })
                             .padding(start = 24.dp, top = 10.dp, end = 16.dp, bottom = 10.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(favourite.name, fontSize = 15.sp, color = WarmOnSurface)
-                            Text(
-                                macroLine(favourite.kcal, favourite.proteinG, favourite.carbsG, favourite.fatG),
-                                fontSize = 12.sp,
-                                color = WarmSecondaryText
-                            )
+                            Text(row.name, fontSize = 15.sp, color = WarmOnSurface)
+                            Text(row.line, fontSize = 12.sp, color = WarmSecondaryText)
                         }
                         PickToggle(picked)
                     }
@@ -273,7 +325,7 @@ private fun PickToggle(picked: Boolean) {
 }
 
 @Composable
-private fun SearchField(query: String, onQueryChange: (String) -> Unit, placeholder: String) {
+internal fun MealsSearchField(query: String, onQueryChange: (String) -> Unit, placeholder: String) {
     Row(
         modifier = Modifier
             .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 4.dp)

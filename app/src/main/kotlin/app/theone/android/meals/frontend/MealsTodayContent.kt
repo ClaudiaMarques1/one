@@ -317,8 +317,7 @@ private fun SlotCard(
                     .padding(12.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // The handoff copy adds "or recipes" - restore it when the Recipes tab lands (phase 4).
-                Text("Add from favourites", fontSize = 14.sp, color = MealsColors.Accent)
+                Text("Add from favourites or recipes", fontSize = 14.sp, color = MealsColors.Accent)
             }
         } else {
             slot.meals.forEach { meal ->

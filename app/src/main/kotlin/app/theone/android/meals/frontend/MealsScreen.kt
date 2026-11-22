@@ -1,10 +1,12 @@
 package app.theone.android.meals.frontend
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -16,6 +18,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.theone.android.meals.backend.MealSlot
 import app.theone.android.meals.backend.MealsViewModel
+import app.theone.android.meals.backend.RecipesViewModel
 import app.theone.android.settings.backend.DataStoreSettingsRepository
 import app.theone.android.ui.ErrorBanner
 
@@ -27,37 +30,69 @@ fun mealsViewModel(): MealsViewModel = viewModel(
     }
 )
 
+/** The recipe editor's target: a new recipe, or the id of the one being edited. */
+private const val NEW_RECIPE = "new"
+
+/**
+ * Meals: tabs **Food Diary** (the weekly view, 1b) | **Recipes** (Owned / Search Recipe) - #60.
+ * The 1a checklist (MealsTodayContent) is parked since #56.
+ */
 @Composable
-fun MealsScreen(onOpenWeekPlan: () -> Unit = {}, viewModel: MealsViewModel = mealsViewModel()) {
+fun MealsScreen(
+    onOpenWeekPlan: () -> Unit = {},
+    onOpenShoppingList: (dayInWeek: String) -> Unit = {},
+    viewModel: MealsViewModel = mealsViewModel(),
+    recipesViewModel: RecipesViewModel = viewModel()
+) {
     val day by viewModel.day.collectAsState()
     val favourites by viewModel.favourites.collectAsState()
     val mealsError by viewModel.mealsError.collectAsState()
     val settings by viewModel.mealSettings.collectAsState()
     val week by viewModel.week.collectAsState()
+    val recipes by recipesViewModel.recipes.collectAsState()
+    val recipesError by recipesViewModel.recipesError.collectAsState()
+    var tab by rememberSaveable { mutableIntStateOf(0) }
     // The slot the Add sheet is open for, or null when closed.
     var addingTo by rememberSaveable { mutableStateOf<MealSlot?>(null) }
+    // A recipe opens read-only first (its menu has Edit / Delete); the editor sits on top of it.
+    var viewing by rememberSaveable { mutableStateOf<String?>(null) }
+    var editing by rememberSaveable { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // The weekly view (1b) is Meals' only view. The 1a checklist (MealsTodayContent) is parked:
-        // the Today view setting was removed on #56 and the screen is no longer shown.
-        MealsTimelineContent(
-            day = day,
-            week = week,
-            settings = settings,
-            onSelectDate = viewModel::selectDate,
-            onPreviousWeek = viewModel::showPreviousWeek,
-            onNextWeek = viewModel::showNextWeek,
-            onAddToSlot = { addingTo = it },
-            onToggleEaten = viewModel::setEaten,
-            onRemoveMeal = viewModel::removeMeal,
-            onTapGlass = viewModel::tapWaterGlass,
-            onRestDayChange = viewModel::setRestDay,
-            onOpenWeekPlan = onOpenWeekPlan,
-            todayKey = viewModel.todayKey
-        )
+        Column(modifier = Modifier.fillMaxSize()) {
+            MealsTabRow(labels = listOf("Food Diary", "Recipes"), selected = tab, onSelect = { tab = it })
+            Box(modifier = Modifier.weight(1f)) {
+                when (tab) {
+                    0 -> MealsTimelineContent(
+                        day = day,
+                        week = week,
+                        settings = settings,
+                        onSelectDate = viewModel::selectDate,
+                        onPreviousWeek = viewModel::showPreviousWeek,
+                        onNextWeek = viewModel::showNextWeek,
+                        onAddToSlot = { addingTo = it },
+                        onToggleEaten = viewModel::setEaten,
+                        onRemoveMeal = viewModel::removeMeal,
+                        onTapGlass = viewModel::tapWaterGlass,
+                        onRestDayChange = viewModel::setRestDay,
+                        onOpenWeekPlan = onOpenWeekPlan,
+                        onOpenShoppingList = { onOpenShoppingList(day.date) },
+                        todayKey = viewModel.todayKey
+                    )
+                    else -> RecipesContent(
+                        recipes = recipes,
+                        onNewRecipe = { editing = NEW_RECIPE },
+                        onOpenRecipe = { viewing = it.id }
+                    )
+                }
+            }
+        }
         ErrorBanner(
-            message = mealsError,
-            onDismiss = viewModel::clearMealsError,
+            message = mealsError ?: recipesError,
+            onDismiss = {
+                viewModel.clearMealsError()
+                recipesViewModel.clearRecipesError()
+            },
             modifier = Modifier.align(Alignment.TopCenter)
         )
     }
@@ -66,8 +101,9 @@ fun MealsScreen(onOpenWeekPlan: () -> Unit = {}, viewModel: MealsViewModel = mea
         AddMealSheet(
             slot = slot,
             favourites = favourites,
-            onAddFavourites = { picks ->
-                viewModel.addFavourites(slot, picks)
+            recipes = recipes,
+            onAddPicks = { pickedFavourites, pickedRecipes ->
+                viewModel.addPicks(slot, pickedFavourites, pickedRecipes)
                 addingTo = null
             },
             onAddNew = { meal ->
@@ -76,5 +112,39 @@ fun MealsScreen(onOpenWeekPlan: () -> Unit = {}, viewModel: MealsViewModel = mea
             },
             onDismiss = { addingTo = null }
         )
+    }
+
+    viewing?.let { id ->
+        val recipe = recipes.firstOrNull { it.id == id }
+        // An id that no longer exists (deleted elsewhere) just closes the view.
+        if (recipe == null) {
+            viewing = null
+        } else {
+            RecipeDetailDialog(
+                recipe = recipe,
+                onEdit = { editing = recipe.id },
+                onDelete = {
+                    recipesViewModel.deleteRecipe(recipe.id)
+                    viewing = null
+                },
+                onDismiss = { viewing = null }
+            )
+        }
+    }
+
+    editing?.let { target ->
+        val recipe = recipes.firstOrNull { it.id == target }
+        if (target != NEW_RECIPE && recipe == null) {
+            editing = null
+        } else {
+            RecipeEditorDialog(
+                recipe = recipe,
+                onSave = {
+                    recipesViewModel.saveRecipe(it)
+                    editing = null
+                },
+                onDismiss = { editing = null }
+            )
+        }
     }
 }

@@ -1,6 +1,8 @@
 package app.theone.android.meals.frontend
 
 import app.theone.android.meals.backend.DayState
+import app.theone.android.meals.backend.ShoppingGroup
+import app.theone.android.meals.backend.ShoppingItem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -50,6 +52,31 @@ class MealsLabelsTest {
         assertEquals("1,060 eaten · 1,960 planned", weekDaySummary(DayState.TODAY, 1060, 1960, 2500))
         assertEquals("2,240 kcal planned", weekDaySummary(DayState.FUTURE, 0, 2240, 2300))
         assertEquals("Nothing planned", weekDaySummary(DayState.FUTURE, 0, 0, 2300))
+    }
+
+    @Test
+    fun `recipe and shopping labels`() {
+        assertEquals("520 kcal · P 42 · C 38 · F 20 · 50 min", recipeLine(520, 42, 38, 20, 50))
+        assertEquals("340 kcal · P 24 · C 6 · F 24", recipeLine(340, 24, 6, 24, 0))
+        assertEquals("250 g", formatQty(250.0, "g"))
+        assertEquals("1.5 tins", formatQty(1.5, "tins"))
+        assertEquals("0.33", formatQty(1.0 / 3, ""))
+        assertEquals("", formatQty(0.0, ""))
+        assertEquals(
+            "From your plan for 19 - 22 Nov · 12 to buy",
+            shoppingSubtitle(LocalDate.of(2026, 11, 19), LocalDate.of(2026, 11, 22), 12, Locale.UK)
+        )
+        val groups = listOf(
+            ShoppingGroup(
+                "Cupboard",
+                listOf(
+                    ShoppingItem("a", "Kidney beans", 2.0, "tins", "Cupboard", checked = false),
+                    ShoppingItem("b", "Rice", 1.0, "kg", "Cupboard", checked = true)
+                )
+            ),
+            ShoppingGroup("Other", listOf(ShoppingItem("m", "Bin bags", 0.0, "", "Other", checked = false, manualIndex = 0)))
+        )
+        assertEquals("Shopping list\n\nCupboard\n- Kidney beans 2 tins\n\nOther\n- Bin bags", shoppingShareText(groups))
     }
 
     @Test

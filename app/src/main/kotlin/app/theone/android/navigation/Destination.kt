@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.FitnessCenter
@@ -48,6 +49,18 @@ sealed class Destination(
 
     // Meals' Week plan (1d), opened from the weekly view's header; outside the bottom nav.
     data object MealsWeek : Destination("meals/week", "Week plan", Icons.Filled.CalendarViewWeek, accent = SectionAccent.Meals)
+
+    // Meals' Shopping list (1e) for the week holding {date}; from the Week plan and the Food Diary header.
+    data object MealsShopping : Destination(
+        "meals/shopping/{date}",
+        "Shopping list",
+        Icons.Filled.ShoppingCart,
+        accent = SectionAccent.Meals
+    ) {
+        const val ARG_DATE = "date"
+
+        fun routeFor(dayInWeek: String) = "meals/shopping/$dayInWeek"
+    }
 }
 
 val bottomNavDestinations = listOf(

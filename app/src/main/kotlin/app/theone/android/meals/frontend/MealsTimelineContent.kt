@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarViewWeek
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.DropdownMenu
@@ -116,6 +117,7 @@ fun MealsTimelineContent(
     onTapGlass: (Int) -> Unit,
     onRestDayChange: (Boolean) -> Unit = {},
     onOpenWeekPlan: () -> Unit = {},
+    onOpenShoppingList: () -> Unit = {},
     todayKey: String = day.date
 ) {
     val is24Hour = DateFormat.is24HourFormat(LocalContext.current)
@@ -131,6 +133,9 @@ fun MealsTimelineContent(
                     color = WarmOnSurface,
                     modifier = Modifier.weight(1f)
                 )
+                IconButton(onClick = onOpenShoppingList, modifier = Modifier.size(44.dp)) {
+                    Icon(Icons.Filled.ShoppingCart, contentDescription = "Shopping list", tint = WarmIcon)
+                }
                 IconButton(onClick = onOpenWeekPlan, modifier = Modifier.size(44.dp)) {
                     Icon(Icons.Filled.CalendarViewWeek, contentDescription = "Week plan", tint = WarmIcon)
                 }

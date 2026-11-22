@@ -77,6 +77,8 @@ data class PlannedMeal(
     val carbsG: Int = 0,
     val fatG: Int = 0,
     val eaten: Boolean = false,
+    /** Set when the meal came from an owned recipe (one portion); feeds the shopping list. */
+    val recipeId: String = "",
     val createdAt: Long = System.currentTimeMillis()
 )
 
