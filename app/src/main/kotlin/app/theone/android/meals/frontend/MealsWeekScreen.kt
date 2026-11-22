@@ -23,10 +23,12 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -100,7 +102,11 @@ fun mealsWeekViewModel(): MealsWeekViewModel = viewModel(
 )
 
 @Composable
-fun MealsWeekScreen(onBack: () -> Unit, viewModel: MealsWeekViewModel = mealsWeekViewModel()) {
+fun MealsWeekScreen(
+    onBack: () -> Unit,
+    onOpenShoppingList: (dayInWeek: String) -> Unit = {},
+    viewModel: MealsWeekViewModel = mealsWeekViewModel()
+) {
     val plan by viewModel.plan.collectAsState()
     val error by viewModel.mealsError.collectAsState()
     Box(modifier = Modifier.fillMaxSize()) {
@@ -112,7 +118,8 @@ fun MealsWeekScreen(onBack: () -> Unit, viewModel: MealsWeekViewModel = mealsWee
             onCopyToNextDay = viewModel::copyToNextDay,
             onCopyTo = viewModel::copyDay,
             onClearDay = viewModel::clearDay,
-            onCopyWeek = viewModel::copyWeek
+            onCopyWeek = viewModel::copyWeek,
+            onOpenShoppingList = onOpenShoppingList
         )
         ErrorBanner(message = error, onDismiss = viewModel::clearMealsError, modifier = Modifier.align(Alignment.TopCenter))
     }
@@ -134,7 +141,8 @@ private fun MealsWeekContent(
     onCopyToNextDay: (String) -> Unit,
     onCopyTo: (String, String) -> Unit,
     onClearDay: (String) -> Unit,
-    onCopyWeek: () -> Unit
+    onCopyWeek: () -> Unit,
+    onOpenShoppingList: (String) -> Unit
 ) {
     var confirm by remember { mutableStateOf<Confirm?>(null) }
     var pickingDateFor by remember { mutableStateOf<String?>(null) }
@@ -169,17 +177,26 @@ private fun MealsWeekContent(
         }
         Column {
             HorizontalDivider(color = WarmDivider)
-            OutlinedButton(
-                onClick = { confirm = Confirm.CopyWeek },
-                enabled = plan.rows.any { it.meals.isNotEmpty() },
-                border = BorderStroke(1.dp, WarmButtonOutline),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 28.dp)
-                    .height(48.dp)
+            Row(
+                modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 28.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(Icons.Outlined.ContentCopy, contentDescription = null, tint = MealsColors.Accent, modifier = Modifier.size(20.dp))
-                Text("  Copy week", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = MealsColors.Accent)
+                OutlinedButton(
+                    onClick = { confirm = Confirm.CopyWeek },
+                    enabled = plan.rows.any { it.meals.isNotEmpty() },
+                    border = BorderStroke(1.dp, WarmButtonOutline),
+                    modifier = Modifier.weight(1f).height(48.dp)
+                ) {
+                    Icon(Icons.Outlined.ContentCopy, contentDescription = null, tint = MealsColors.Accent, modifier = Modifier.size(20.dp))
+                    Text("  Copy week", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = MealsColors.Accent)
+                }
+                Button(
+                    onClick = { plan.days.firstOrNull()?.let(onOpenShoppingList) },
+                    modifier = Modifier.weight(1f).height(48.dp)
+                ) {
+                    Icon(Icons.Filled.ShoppingCart, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Text("  Shopping list", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
         }
     }

@@ -20,10 +20,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import app.theone.android.auth.backend.AuthViewModel
 import app.theone.android.auth.frontend.AccountDetailsScreen
 import app.theone.android.calendar.frontend.CalendarScreen
@@ -32,6 +34,7 @@ import app.theone.android.dashboard.frontend.ProfileDrawerSheet
 import app.theone.android.diary.frontend.DiaryScreen
 import app.theone.android.meals.frontend.MealsScreen
 import app.theone.android.meals.frontend.MealsWeekScreen
+import app.theone.android.meals.frontend.ShoppingListScreen
 import app.theone.android.settings.frontend.SettingsScreen
 import app.theone.android.ui.theme.LocalOneColors
 import app.theone.android.ui.theme.NeutralNavBar
@@ -43,6 +46,7 @@ import app.theone.android.ui.theme.WarmIcon
 import app.theone.android.ui.theme.WarmOnSurface
 import app.theone.android.workout.frontend.WorkoutScreen
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 @Composable
 fun OneNavHost(authViewModel: AuthViewModel) {
@@ -143,7 +147,10 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                 }
                 composable(Destination.Meals.route) {
                     SectionTheme(SectionAccent.Meals) {
-                        MealsScreen(onOpenWeekPlan = { navController.navigate(Destination.MealsWeek.route) })
+                        MealsScreen(
+                            onOpenWeekPlan = { navController.navigate(Destination.MealsWeek.route) },
+                            onOpenShoppingList = { navController.navigate(Destination.MealsShopping.routeFor(it)) }
+                        )
                     }
                 }
                 composable(Destination.Diary.route) {
@@ -162,7 +169,21 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                     NeutralTheme { SettingsScreen(onBack = { navController.popBackStack() }) }
                 }
                 composable(Destination.MealsWeek.route) {
-                    SectionTheme(SectionAccent.Meals) { MealsWeekScreen(onBack = { navController.popBackStack() }) }
+                    SectionTheme(SectionAccent.Meals) {
+                        MealsWeekScreen(
+                            onBack = { navController.popBackStack() },
+                            onOpenShoppingList = { navController.navigate(Destination.MealsShopping.routeFor(it)) }
+                        )
+                    }
+                }
+                composable(
+                    Destination.MealsShopping.route,
+                    arguments = listOf(navArgument(Destination.MealsShopping.ARG_DATE) { type = NavType.StringType })
+                ) { entry ->
+                    val dayInWeek = entry.arguments?.getString(Destination.MealsShopping.ARG_DATE) ?: LocalDate.now().toString()
+                    SectionTheme(SectionAccent.Meals) {
+                        ShoppingListScreen(dayInWeek = dayInWeek, onBack = { navController.popBackStack() })
+                    }
                 }
             }
         }
