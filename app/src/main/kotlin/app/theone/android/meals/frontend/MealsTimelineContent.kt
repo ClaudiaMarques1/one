@@ -81,6 +81,7 @@ import app.theone.android.meals.backend.kcalLeft
 import app.theone.android.meals.backend.kcalMorePlanned
 import app.theone.android.meals.backend.lineAboveEaten
 import app.theone.android.meals.backend.weekOf
+import app.theone.android.settings.backend.WeekStart
 import app.theone.android.ui.dashedBorder
 import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.DeleteRed
@@ -447,7 +448,7 @@ private val previewDay = buildMealsDay(
 )
 
 private val previewWeek = MealsWeek(
-    days = weekOf(LocalDate.of(2026, 11, 19), previewSettings.weekStart).map { it.toString() },
+    days = weekOf(LocalDate.of(2026, 11, 19), WeekStart.MONDAY).map { it.toString() },
     mealDates = setOf("2026-11-16", "2026-11-17", "2026-11-19")
 )
 

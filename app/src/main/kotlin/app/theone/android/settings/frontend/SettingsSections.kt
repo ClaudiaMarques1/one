@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Contrast
+import androidx.compose.material.icons.outlined.Book
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material3.Icon
@@ -27,8 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.theone.android.meals.backend.MealSettings
-import app.theone.android.meals.backend.WeekStart
-import app.theone.android.settings.backend.ThemeMode
 import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.NeutralIconTile
 import app.theone.android.ui.theme.WarmCardBorder
@@ -38,32 +37,33 @@ import app.theone.android.ui.theme.WarmSecondaryText
 
 // Settings split into sections (#62): the top level lists them; each opens its own screen.
 
-/** A Settings section. [key] is its route segment (`settings/{key}`), so don't rename the keys. */
+/**
+ * A Settings section - one per app section, in bottom-nav order (Appearance stays on the Settings
+ * screen itself, as asked on #62). [key] is its route segment (`settings/{key}`), so don't rename it.
+ */
 enum class SettingsSection(val key: String, val title: String, val icon: ImageVector) {
-    APPEARANCE("appearance", "Appearance", Icons.Outlined.Contrast),
+    CALENDAR("calendar", "Calendar", Icons.Outlined.CalendarMonth),
     WORKOUT("workout", "Workout", Icons.Outlined.FitnessCenter),
-    MEALS("meals", "Meals", Icons.Outlined.Restaurant);
+    MEALS("meals", "Meals", Icons.Outlined.Restaurant),
+    DIARY("diary", "Diary", Icons.Outlined.Book);
 
     companion object {
         fun fromKey(key: String?): SettingsSection? = entries.firstOrNull { it.key == key }
     }
 }
 
-/** Appearance's row summary: "Theme: System". */
-internal fun appearanceSummary(themeMode: ThemeMode): String = "Theme: " + when (themeMode) {
-    ThemeMode.LIGHT -> "Light"
-    ThemeMode.DARK -> "Dark"
-    ThemeMode.SYSTEM -> "System"
-}
+/** The summary of a section that has nothing to set yet (Calendar, Diary). */
+internal const val NO_SETTINGS_YET = "No settings yet"
 
 /** Workout's row summary: "Vibrate when rest ends: On". */
 internal fun workoutSummary(vibrateOnRestEnd: Boolean): String = "Vibrate when rest ends: ${if (vibrateOnRestEnd) "On" else "Off"}"
 
-/** Meals' row summary: "Week starts Monday · 4 slots". */
+/** Meals' row summary: "4 slots · 2.5 L water". */
 internal fun mealsSummary(settings: MealSettings): String {
-    val start = if (settings.weekStart == WeekStart.MONDAY) "Monday" else "Sunday"
     val slots = settings.enabledSlots.size
-    return "Week starts $start · ${if (slots == 1) "1 slot" else "$slots slots"}"
+    val litres = settings.waterGlasses * 0.25
+    val water = if (litres % 1.0 == 0.0) "${litres.toInt()} L" else "$litres L"
+    return "${if (slots == 1) "1 slot" else "$slots slots"} · $water water"
 }
 
 /** The Settings list: one card per section with its summary; tapping opens it. */

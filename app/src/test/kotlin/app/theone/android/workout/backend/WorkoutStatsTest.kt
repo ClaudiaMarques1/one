@@ -8,6 +8,7 @@ import app.theone.android.workout.templates.backend.TemplateSet
 import app.theone.android.workout.templates.backend.WorkoutTemplate
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 class WorkoutStatsTest {
@@ -26,6 +27,14 @@ class WorkoutStatsTest {
         )
 
         assertEquals(2, sessionsThisWeek(sessions, LocalDate.of(2026, 10, 15)))
+    }
+
+    @Test
+    fun `sessionsThisWeek starts the week on Sunday when set`() {
+        // Thursday 2026-10-15: the Sunday week starts on the 11th, so the 11th counts too.
+        val sessions = listOf(session("2026-10-10"), session("2026-10-11"), session("2026-10-12"), session("2026-10-15"))
+
+        assertEquals(3, sessionsThisWeek(sessions, LocalDate.of(2026, 10, 15), DayOfWeek.SUNDAY))
     }
 
     @Test

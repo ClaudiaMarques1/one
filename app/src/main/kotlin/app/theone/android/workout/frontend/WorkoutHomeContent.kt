@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.theone.android.ui.EditDeleteMenu
+import app.theone.android.ui.LocalWeekStart
 import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.DeleteRed
 import app.theone.android.ui.theme.OneTheme
@@ -100,7 +101,8 @@ fun WorkoutHomeContent(
 ) {
     val lastDone = remember(sessions) { lastDoneByTemplate(sessions) }
     val recent = remember(sessions) { recentSessions(sessions) }
-    val weekCount = remember(sessions) { sessionsThisWeek(sessions, LocalDate.now()) }
+    val firstDay = LocalWeekStart.current.dayOfWeek
+    val weekCount = remember(sessions, firstDay) { sessionsThisWeek(sessions, LocalDate.now(), firstDay) }
     var pendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
 
     LazyColumn(

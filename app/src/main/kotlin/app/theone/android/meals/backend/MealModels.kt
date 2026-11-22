@@ -1,9 +1,5 @@
 package app.theone.android.meals.backend
 
-import java.time.DayOfWeek
-import java.time.temporal.WeekFields
-import java.util.Locale
-
 /**
  * Meal slots in checklist order (meals handoff). Stored by [name], so don't rename the entries.
  * [defaultMinutes] is the handoff's default time (minutes after midnight), used to order the timeline.
@@ -36,18 +32,6 @@ val DEFAULT_REST_TARGETS = MealTargets(kcal = 2300, proteinG = 150, carbsG = 250
 const val DEFAULT_WATER_GLASSES = 10
 const val MAX_WATER_GLASSES = 20
 
-/** First day of the week strip. Stored by name. */
-enum class WeekStart(val dayOfWeek: DayOfWeek) {
-    MONDAY(DayOfWeek.MONDAY),
-    SUNDAY(DayOfWeek.SUNDAY);
-
-    companion object {
-        /** Sunday where the locale starts weeks on Sunday (e.g. en-US), Monday otherwise - as Calendar does. */
-        fun fromLocale(locale: Locale = Locale.getDefault()): WeekStart =
-            if (WeekFields.of(locale).firstDayOfWeek == DayOfWeek.SUNDAY) SUNDAY else MONDAY
-    }
-}
-
 val DEFAULT_SLOT_TIMES: Map<MealSlot, Int> = MealSlot.entries.associateWith { it.defaultMinutes }
 
 /** Settings -> Meals. Kept on the device (SettingsRepository), not in Firestore. */
@@ -57,8 +41,7 @@ data class MealSettings(
     val restTargets: MealTargets = DEFAULT_REST_TARGETS,
     val waterGlasses: Int = DEFAULT_WATER_GLASSES,
     /** Minutes after midnight per slot; orders the timeline. */
-    val slotTimes: Map<MealSlot, Int> = DEFAULT_SLOT_TIMES,
-    val weekStart: WeekStart = WeekStart.fromLocale()
+    val slotTimes: Map<MealSlot, Int> = DEFAULT_SLOT_TIMES
 ) {
     fun timeOf(slot: MealSlot): Int = slotTimes[slot] ?: slot.defaultMinutes
 }

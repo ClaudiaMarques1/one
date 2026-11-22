@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -50,6 +51,7 @@ import app.theone.android.meals.backend.MealSettings
 import app.theone.android.settings.backend.DataStoreSettingsRepository
 import app.theone.android.settings.backend.SettingsViewModel
 import app.theone.android.settings.backend.ThemeMode
+import app.theone.android.settings.backend.WeekStart
 import app.theone.android.ui.BackTopBar
 import app.theone.android.ui.ErrorBanner
 import app.theone.android.ui.theme.CardSurface
@@ -80,16 +82,22 @@ fun settingsViewModel(): SettingsViewModel = viewModel(
 @Composable
 fun SettingsScreen(onBack: () -> Unit, onOpenSection: (SettingsSection) -> Unit, viewModel: SettingsViewModel = settingsViewModel()) {
     val themeMode by viewModel.themeMode.collectAsState()
+    val weekStart by viewModel.weekStart.collectAsState()
     val vibrateOnRestEnd by viewModel.vibrateOnRestEnd.collectAsState()
     val mealSettings by viewModel.mealSettings.collectAsState()
     val settingsError by viewModel.settingsError.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         SettingsListContent(
+            themeMode = themeMode,
+            onThemeModeChange = viewModel::setThemeMode,
+            weekStart = weekStart,
+            onWeekStartChange = viewModel::setWeekStart,
             summaries = mapOf(
-                SettingsSection.APPEARANCE to appearanceSummary(themeMode),
+                SettingsSection.CALENDAR to NO_SETTINGS_YET,
                 SettingsSection.WORKOUT to workoutSummary(vibrateOnRestEnd),
-                SettingsSection.MEALS to mealsSummary(mealSettings)
+                SettingsSection.MEALS to mealsSummary(mealSettings),
+                SettingsSection.DIARY to NO_SETTINGS_YET
             ),
             onBack = onBack,
             onOpenSection = onOpenSection
@@ -123,19 +131,56 @@ fun SettingsSectionScreen(section: SettingsSection, onBack: () -> Unit, viewMode
 
 private val CardShape = RoundedCornerShape(20.dp)
 
+/** App-wide settings first (Appearance -> Theme, General -> Week starts on), then a row per app section (#62). */
 @Composable
-private fun SettingsListContent(summaries: Map<SettingsSection, String>, onBack: () -> Unit, onOpenSection: (SettingsSection) -> Unit) {
+private fun SettingsListContent(
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    weekStart: WeekStart,
+    onWeekStartChange: (WeekStart) -> Unit,
+    summaries: Map<SettingsSection, String>,
+    onBack: () -> Unit,
+    onOpenSection: (SettingsSection) -> Unit
+) {
     Column(modifier = Modifier.fillMaxSize().background(WarmSurface)) {
         BackTopBar(title = "Settings", onBack = onBack)
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 24.dp)
+                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            SectionLabel("Appearance")
+            ThemeCard(themeMode = themeMode, onThemeModeChange = onThemeModeChange)
+            SectionLabel("General", top = 12.dp)
+            WeekStartCard(weekStart = weekStart, onChange = onWeekStartChange)
+            SectionLabel("Sections", top = 12.dp)
             SettingsSectionList(summaries = summaries, onOpen = onOpenSection)
         }
     }
+}
+
+@Composable
+private fun SectionLabel(text: String, top: Dp = 4.dp) {
+    Text(
+        text,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = WarmSecondaryText,
+        modifier = Modifier.padding(start = 8.dp, top = top, end = 8.dp)
+    )
+}
+
+/** Calendar and Diary have nothing to set yet. */
+@Composable
+private fun NoSettingsNote(section: SettingsSection) {
+    Text(
+        "No ${section.title} settings yet.",
+        fontSize = 14.sp,
+        color = WarmSecondaryText,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp)
+    )
 }
 
 @Composable
@@ -166,9 +211,9 @@ private fun SettingsSectionContent(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             when (section) {
-                SettingsSection.APPEARANCE -> ThemeCard(themeMode = themeMode, onThemeModeChange = onThemeModeChange)
                 SettingsSection.WORKOUT -> VibrateRow(vibrateOnRestEnd, onVibrateOnRestEndChange)
                 SettingsSection.MEALS -> MealSettingsSection(settings = mealSettings, onChange = onMealSettingsChange)
+                SettingsSection.CALENDAR, SettingsSection.DIARY -> NoSettingsNote(section)
             }
         }
     }
@@ -280,32 +325,26 @@ private fun ThemeCard(themeMode: ThemeMode, onThemeModeChange: (ThemeMode) -> Un
 }
 
 private val previewSummaries = mapOf(
-    SettingsSection.APPEARANCE to appearanceSummary(ThemeMode.SYSTEM),
+    SettingsSection.CALENDAR to NO_SETTINGS_YET,
     SettingsSection.WORKOUT to workoutSummary(true),
-    SettingsSection.MEALS to mealsSummary(MealSettings())
+    SettingsSection.MEALS to mealsSummary(MealSettings()),
+    SettingsSection.DIARY to NO_SETTINGS_YET
 )
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 900)
 @Composable
 private fun SettingsScreenPreview() {
     NeutralTheme {
-        SettingsListContent(summaries = previewSummaries, onBack = {}, onOpenSection = {})
+        SettingsListContent(ThemeMode.SYSTEM, {}, WeekStart.MONDAY, {}, previewSummaries, onBack = {}, onOpenSection = {})
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 900)
 @Composable
-private fun SettingsAppearanceDarkPreview() {
+private fun SettingsScreenDarkPreview() {
     OneTheme(darkTheme = true) {
         NeutralTheme {
-            SettingsSectionContent(
-                section = SettingsSection.APPEARANCE,
-                themeMode = ThemeMode.DARK,
-                onThemeModeChange = {},
-                vibrateOnRestEnd = false,
-                onVibrateOnRestEndChange = {},
-                onBack = {}
-            )
+            SettingsListContent(ThemeMode.DARK, {}, WeekStart.SUNDAY, {}, previewSummaries, onBack = {}, onOpenSection = {})
         }
     }
 }

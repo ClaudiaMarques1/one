@@ -59,7 +59,7 @@ import app.theone.android.meals.backend.MAX_WATER_GLASSES
 import app.theone.android.meals.backend.MealSettings
 import app.theone.android.meals.backend.MealSlot
 import app.theone.android.meals.backend.MealTargets
-import app.theone.android.meals.backend.WeekStart
+import app.theone.android.settings.backend.WeekStart
 import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.NeutralSelected
 import app.theone.android.ui.theme.NeutralSwitchOff
@@ -87,14 +87,6 @@ internal fun MealSettingsSection(settings: MealSettings, onChange: (MealSettings
     var editingTimeOf by remember { mutableStateOf<MealSlot?>(null) }
     val is24Hour = DateFormat.is24HourFormat(LocalContext.current)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SettingsCard {
-            ChoiceRow(
-                title = "Week starts on",
-                options = listOf(WeekStart.MONDAY to "Monday", WeekStart.SUNDAY to "Sunday"),
-                selected = settings.weekStart,
-                onSelect = { onChange(settings.copy(weekStart = it)) }
-            )
-        }
         SettingsCard {
             MealSlot.entries.forEachIndexed { index, slot ->
                 if (index > 0) HorizontalDivider(color = WarmDivider)
@@ -355,5 +347,18 @@ private fun StepButton(
             .border(1.dp, WarmButtonOutline, CircleShape)
     ) {
         Icon(icon, contentDescription = description, tint = if (enabled) WarmIcon else WarmButtonOutline)
+    }
+}
+
+/** Settings -> General -> Week starts on: the first day of every week in the app (#62). */
+@Composable
+internal fun WeekStartCard(weekStart: WeekStart, onChange: (WeekStart) -> Unit) {
+    SettingsCard {
+        ChoiceRow(
+            title = "Week starts on",
+            options = listOf(WeekStart.MONDAY to "Monday", WeekStart.SUNDAY to "Sunday"),
+            selected = weekStart,
+            onSelect = onChange
+        )
     }
 }

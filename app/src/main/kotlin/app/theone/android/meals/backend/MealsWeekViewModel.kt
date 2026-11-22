@@ -37,8 +37,12 @@ class MealsWeekViewModel(
     /** Any date in the week on screen; the arrows move it by 7 days. */
     private val anchor = MutableStateFlow(today)
 
-    val plan: StateFlow<MealsWeekPlan> = combine(anchor, settingsRepository.observeMealSettings()) { date, settings ->
-        weekOf(date, settings.weekStart).map { it.toString() } to settings
+    val plan: StateFlow<MealsWeekPlan> = combine(
+        anchor,
+        settingsRepository.observeMealSettings(),
+        settingsRepository.observeWeekStart()
+    ) { date, settings, weekStart ->
+        weekOf(date, weekStart).map { it.toString() } to settings
     }
         .distinctUntilChanged()
         .flatMapLatest { (days, settings) ->

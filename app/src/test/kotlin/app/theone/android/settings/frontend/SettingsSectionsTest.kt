@@ -2,30 +2,25 @@ package app.theone.android.settings.frontend
 
 import app.theone.android.meals.backend.MealSettings
 import app.theone.android.meals.backend.MealSlot
-import app.theone.android.meals.backend.WeekStart
-import app.theone.android.settings.backend.ThemeMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class SettingsSectionsTest {
     @Test
-    fun `sections round-trip through their route keys`() {
+    fun `sections follow the app's sections and round-trip through their route keys`() {
+        assertEquals(listOf("Calendar", "Workout", "Meals", "Diary"), SettingsSection.entries.map { it.title })
         SettingsSection.entries.forEach { assertEquals(it, SettingsSection.fromKey(it.key)) }
-        assertNull(SettingsSection.fromKey("nope"))
+        assertNull(SettingsSection.fromKey("appearance")) // Appearance lives on the Settings screen itself
         assertNull(SettingsSection.fromKey(null))
     }
 
     @Test
     fun `summaries describe each section's current values`() {
-        assertEquals("Theme: System", appearanceSummary(ThemeMode.SYSTEM))
-        assertEquals("Theme: Dark", appearanceSummary(ThemeMode.DARK))
         assertEquals("Vibrate when rest ends: On", workoutSummary(true))
         assertEquals("Vibrate when rest ends: Off", workoutSummary(false))
-        assertEquals("Week starts Monday · 4 slots", mealsSummary(MealSettings(weekStart = WeekStart.MONDAY)))
-        assertEquals(
-            "Week starts Sunday · 1 slot",
-            mealsSummary(MealSettings(weekStart = WeekStart.SUNDAY, enabledSlots = setOf(MealSlot.LUNCH)))
-        )
+        assertEquals("4 slots · 2.5 L water", mealsSummary(MealSettings()))
+        assertEquals("1 slot · 3 L water", mealsSummary(MealSettings(enabledSlots = setOf(MealSlot.LUNCH), waterGlasses = 12)))
+        assertEquals("No settings yet", NO_SETTINGS_YET)
     }
 }

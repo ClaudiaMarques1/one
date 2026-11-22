@@ -3,8 +3,6 @@ package app.theone.android.calendar.backend
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.temporal.WeekFields
-import java.util.Locale
 
 /**
  * Pure date-key ("yyyy-MM-dd", matching the Firestore-backed models' `date` field) arithmetic for
@@ -20,10 +18,6 @@ internal object CalendarDateKeys {
     fun formatDateKey(date: LocalDate): String = date.toString()
 
     fun parseDateKey(dateKey: String): LocalDate = LocalDate.parse(dateKey)
-
-    /** Calendar.SUNDAY (1) .. Calendar.SATURDAY (7), derived from the device locale. */
-    fun firstDayOfWeek(locale: Locale = Locale.getDefault()): Int =
-        WeekFields.of(locale).firstDayOfWeek.toCalendarDay()
 
     // LocalDate.plusMonths clamps to the target month's last day (May 31 + 1 month = June 30).
     fun addMonths(dateKey: String, delta: Int): String =

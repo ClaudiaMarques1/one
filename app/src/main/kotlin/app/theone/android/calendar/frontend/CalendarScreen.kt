@@ -72,6 +72,7 @@ import app.theone.android.calendar.backend.DayActivity
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.frontend.bodyPartLabels
 import app.theone.android.ui.ErrorBanner
+import app.theone.android.ui.LocalWeekStart
 import app.theone.android.ui.theme.CalendarColors
 import app.theone.android.ui.theme.DiaryInk
 import app.theone.android.ui.theme.OneTheme
@@ -138,7 +139,7 @@ private fun CalendarScreenContent(
     onOpenWorkoutSession: (String) -> Unit = {}
 ) {
     val todayKey = CalendarDateKeys.todayKey()
-    val firstDayOfWeek = CalendarDateKeys.firstDayOfWeek()
+    val firstDayOfWeek = LocalWeekStart.current.toCalendarDay()
     val weekKeys = CalendarDateKeys.weekDateKeys(selectedDate, firstDayOfWeek)
 
     Scaffold(containerColor = C.Surface) { padding ->
@@ -233,7 +234,7 @@ private fun HeaderRow(
             "$year · ${activeDays.size} ${if (activeDays.size == 1) "active day" else "active days"}"
         }
         CalendarView.WEEK -> CalendarDateLabels.weekRangeLabel(
-            CalendarDateKeys.weekDateKeys(selectedDate, CalendarDateKeys.firstDayOfWeek())
+            CalendarDateKeys.weekDateKeys(selectedDate, LocalWeekStart.current.toCalendarDay())
         )
         CalendarView.DAY -> {
             val base = "${CalendarDateLabels.dayOfWeekFullLabel(selectedDate)} · ${CalendarDateKeys.yearOf(selectedDate)}"

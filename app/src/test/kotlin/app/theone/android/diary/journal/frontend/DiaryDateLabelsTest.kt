@@ -3,6 +3,7 @@ package app.theone.android.diary.journal.frontend
 import app.theone.android.diary.journal.backend.DiaryDateKeys
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -43,6 +44,14 @@ class DiaryDateLabelsTest {
     @Test
     fun `groupLabel treats the previous week across New Year as Last week`() {
         assertEquals("Last week", DiaryDateLabels.groupLabel("2026-12-22", "2027-01-01"))
+    }
+
+    @Test
+    fun `groupLabel follows the week start setting`() {
+        // 2026-06-14 is a Sunday, the day before today (Monday 15th): last week when weeks start on
+        // Monday, this week when they start on Sunday.
+        assertEquals("Last week", DiaryDateLabels.groupLabel("2026-06-14", today, DayOfWeek.MONDAY))
+        assertEquals("This week", DiaryDateLabels.groupLabel("2026-06-14", today, DayOfWeek.SUNDAY))
     }
 
     @Test

@@ -1,6 +1,7 @@
 package app.theone.android.meals.backend
 
 import app.theone.android.settings.backend.FakeSettingsRepository
+import app.theone.android.settings.backend.WeekStart
 import app.theone.android.testing.MainDispatcherRule
 import app.theone.android.workout.sessions.backend.FakeStrengthRepository
 import kotlinx.coroutines.launch
@@ -79,7 +80,7 @@ class RecipesAndShoppingViewModelTest {
             )
         )
         val recipes = FakeRecipesRepository(listOf(chilli))
-        val settings = FakeSettingsRepository(mealSettings = MealSettings(weekStart = WeekStart.MONDAY))
+        val settings = FakeSettingsRepository(weekStart = WeekStart.MONDAY)
         val viewModel = ShoppingListViewModel(settings, today, meals, recipes, today)
         backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.list.collect {} }
 

@@ -13,7 +13,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import app.theone.android.meals.backend.MealSettings
 import app.theone.android.meals.backend.MealSlot
 import app.theone.android.meals.backend.MealTargets
-import app.theone.android.meals.backend.WeekStart
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -39,6 +38,14 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         dataStore.edit { it[KEY_THEME] = mode.name }
     }
 
+    // Same "weekStart" key Meals used before it became an app-wide setting (#62), so the choice carries over.
+    override fun observeWeekStart(): Flow<WeekStart> =
+        dataStore.data.map { prefs -> WeekStart.entries.firstOrNull { it.name == prefs[KEY_WEEK_START] } ?: WeekStart.fromLocale() }
+
+    override suspend fun setWeekStart(weekStart: WeekStart) {
+        dataStore.edit { it[KEY_WEEK_START] = weekStart.name }
+    }
+
     override fun observeMealSettings(): Flow<MealSettings> = dataStore.data.map { prefs ->
         val defaults = MealSettings()
         MealSettings(
@@ -46,8 +53,7 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
             trainingTargets = prefs.readTargets(TRAINING, defaults.trainingTargets),
             restTargets = prefs.readTargets(REST, defaults.restTargets),
             waterGlasses = prefs[KEY_WATER_GLASSES] ?: defaults.waterGlasses,
-            slotTimes = MealSlot.entries.associateWith { slot -> prefs[slotTimeKey(slot)] ?: defaults.timeOf(slot) },
-            weekStart = WeekStart.entries.firstOrNull { it.name == prefs[KEY_WEEK_START] } ?: defaults.weekStart
+            slotTimes = MealSlot.entries.associateWith { slot -> prefs[slotTimeKey(slot)] ?: defaults.timeOf(slot) }
         )
     }
 
@@ -58,7 +64,6 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
             prefs.writeTargets(REST, settings.restTargets)
             prefs[KEY_WATER_GLASSES] = settings.waterGlasses
             MealSlot.entries.forEach { slot -> prefs[slotTimeKey(slot)] = settings.timeOf(slot) }
-            prefs[KEY_WEEK_START] = settings.weekStart.name
         }
     }
 
