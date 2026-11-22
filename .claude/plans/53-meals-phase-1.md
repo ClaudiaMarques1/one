@@ -50,9 +50,11 @@ Meal settings: the README points to `Home Redesign.dc.html` 1d, which was never 
 - [x] 1a Today checklist screen (header, training banner, summary, slot cards, empty slot, water)
 - [x] 1c Add meal sheet (Favourites search + multi-pick, New form, footer states)
 - [x] Settings -> Meals rows (slots, training / rest targets, water target)
-- [ ] `/verify`, screenshots to `docs/screenshots/53-meals-phase-1/` + issue, PR with `Closes #53`
+- [x] `/verify` (all 15 Checks ticked), screenshots in `docs/screenshots/53-meals-phase-1/` + on the issue
+- [ ] PR to `develop` with `Closes #53` - user review
 
 ## Next step
 
-User runs the Manual steps on #53 (they write real Firestore data); then screenshots of a filled day,
-PR with `Closes #53`.
+PR open for review; merge only on the user's go-ahead. Then phase 2 (timeline 1b, week strip on the same
+selected date, slot times + Today view setting). The bug video (`IssueMeals.mp4`) is not committed - it
+may pass through the drawer (name + email); waiting on the user.
