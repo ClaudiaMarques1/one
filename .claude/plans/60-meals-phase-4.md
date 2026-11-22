@@ -37,9 +37,10 @@ Type: backend + data + front-facing. Builds on #53 / #56 / #58.
 - [x] Add sheet Recipes tab
 - [x] Shopping list screen (1e) + route + entry points (Week footer, Food Diary cart icon)
 - [x] Empty-slot copy (parked checklist only)
-- [ ] Dark check (Manual 11); `/verify`, screenshots, PR `Closes #60`
+- [x] Dark check (Manual 11); `/verify` (all 16 Checks ticked), screenshots in `docs/screenshots/60-meals-phase-4/` + issue
+- [ ] PR to `develop` with `Closes #60` - user review
 
 ## Next step
 
-User runs the 11 Manual steps on #60 (they create real recipes, meals and ticks); then PR `Closes #60`.
-Related Todo cards: "Settings: split into sections" and "Meals: Search Recipe".
+PR open for review; merge only on the user's go-ahead. Meals follow-ups in Todo: "Meals: choose servings
+when adding a recipe", "Meals: Search Recipe"; also "Settings: split into sections".
