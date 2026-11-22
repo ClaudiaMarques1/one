@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -24,8 +25,16 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         dataStore.edit { it[KEY_VIBRATE_ON_REST_END] = enabled }
     }
 
+    override fun observeThemeMode(): Flow<ThemeMode> =
+        dataStore.data.map { themeModeFromStored(it[KEY_THEME]) }
+
+    override suspend fun setThemeMode(mode: ThemeMode) {
+        dataStore.edit { it[KEY_THEME] = mode.name }
+    }
+
     private companion object {
         val KEY_VIBRATE_ON_REST_END = booleanPreferencesKey("vibrateOnRestEnd")
+        val KEY_THEME = stringPreferencesKey("theme")
     }
 }
 

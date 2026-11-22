@@ -30,7 +30,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -47,6 +46,7 @@ import app.theone.android.diary.journal.backend.DiaryViewModel
 import app.theone.android.ui.ProfileAvatar
 import app.theone.android.ui.formatDisplayDate
 import app.theone.android.ui.profileInitials
+import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.NeutralIconTile
 import app.theone.android.ui.theme.NeutralTheme
 import app.theone.android.ui.theme.WarmCardBorder
@@ -151,7 +151,7 @@ private fun DashboardCard(card: DashboardCardData) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(CardShape)
-            .background(Color.White)
+            .background(CardSurface)
             .border(1.dp, WarmCardBorder, CardShape)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -31,7 +31,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,7 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,6 +50,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.theone.android.ui.EditDeleteMenu
+import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.DeleteRed
 import app.theone.android.ui.theme.OneTheme
 import app.theone.android.ui.theme.WarmBodyText
@@ -83,10 +82,11 @@ import java.time.format.DateTimeParseException
 
 private val CardShape = RoundedCornerShape(20.dp)
 
+@Composable
 private fun Modifier.workoutCard(): Modifier =
     fillMaxWidth()
         .clip(CardShape)
-        .background(Color.White)
+        .background(CardSurface)
         .border(1.dp, WarmCardBorder, CardShape)
 
 @Composable
@@ -195,7 +195,7 @@ private fun TemplateButton(onClick: () -> Unit) {
         modifier = Modifier.height(40.dp),
         contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
         border = BorderStroke(1.dp, WarmButtonOutline),
-        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = WorkoutInk)
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = CardSurface, contentColor = WorkoutInk)
     ) {
         Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
         Spacer(modifier = Modifier.width(6.dp))
@@ -264,7 +264,7 @@ private fun TemplateCard(
                 onClick = onStart,
                 modifier = Modifier.height(40.dp),
                 contentPadding = PaddingValues(start = 14.dp, end = 18.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = Color.White)
+                colors = ButtonDefaults.buttonColors()
             ) {
                 Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(4.dp))

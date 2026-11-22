@@ -48,6 +48,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.OneTheme
 import app.theone.android.ui.theme.WarmButtonOutline
 import app.theone.android.ui.theme.WarmCardBorder
@@ -155,7 +156,7 @@ fun TemplateBuilderContent(
             enabled = name.isNotBlank() && exercises.isNotEmpty(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 disabledContainerColor = WarmDisabledFill,
                 disabledContentColor = WarmMutedIcon
             ),
@@ -173,8 +174,8 @@ fun TemplateBuilderContent(
 private fun fieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = MaterialTheme.colorScheme.primary,
     unfocusedBorderColor = WarmButtonOutline,
-    focusedContainerColor = Color.White,
-    unfocusedContainerColor = Color.White
+    focusedContainerColor = CardSurface,
+    unfocusedContainerColor = CardSurface
 )
 
 @Composable
@@ -223,7 +224,7 @@ private fun ExerciseListCard(exercises: List<TemplateExercise>, onRemove: (Int) 
         modifier = Modifier
             .fillMaxWidth()
             .clip(CardShape)
-            .background(Color.White)
+            .background(CardSurface)
             .border(1.dp, WarmCardBorder, CardShape)
     ) {
         if (exercises.isEmpty()) {
@@ -266,7 +267,7 @@ private fun ExerciseRow(
     Column(
         modifier = Modifier
             .then(if (isDragging) Modifier.shadow(8.dp, RoundedCornerShape(12.dp)) else Modifier)
-            .background(Color.White)
+            .background(CardSurface)
     ) {
         if (showDivider) HorizontalDivider(color = WarmDivider)
         Row(

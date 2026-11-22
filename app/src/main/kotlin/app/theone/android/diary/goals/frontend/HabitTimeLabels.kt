@@ -1,5 +1,7 @@
 package app.theone.android.diary.goals.frontend
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import app.theone.android.diary.goals.backend.HabitReminder
 import app.theone.android.diary.goals.backend.TimeOfDay
@@ -27,6 +29,8 @@ internal fun HabitReminder.timeLabel(is24Hour: Boolean): String = formatReminder
 internal fun timesCountLabel(count: Int): String = if (count == 1) "1 time" else "$count times"
 
 /** Background and text colour of a part-of-day label. */
+@Composable
+@ReadOnlyComposable
 internal fun TimeOfDay.labelColors(): Pair<Color, Color> = when (this) {
     TimeOfDay.MORNING -> MorningLabelBackground to MorningLabelText
     TimeOfDay.AFTERNOON -> AfternoonLabelBackground to AfternoonLabelText

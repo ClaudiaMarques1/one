@@ -32,9 +32,11 @@ import app.theone.android.dashboard.frontend.ProfileDrawerSheet
 import app.theone.android.diary.frontend.DiaryScreen
 import app.theone.android.meals.frontend.MealsScreen
 import app.theone.android.settings.frontend.SettingsScreen
+import app.theone.android.ui.theme.LocalOneColors
 import app.theone.android.ui.theme.NeutralNavBar
 import app.theone.android.ui.theme.NeutralSelected
 import app.theone.android.ui.theme.NeutralTheme
+import app.theone.android.ui.theme.SectionAccent
 import app.theone.android.ui.theme.SectionTheme
 import app.theone.android.ui.theme.WarmIcon
 import app.theone.android.ui.theme.WarmOnSurface
@@ -57,7 +59,8 @@ fun OneNavHost(authViewModel: AuthViewModel) {
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,
-        scrimColor = Color.Black.copy(alpha = 0.32f),
+        // Black at 32% in light, 60% in dark (home handoff).
+        scrimColor = if (LocalOneColors.current.isDark) Color.Black.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.32f),
         drawerContent = {
             NeutralTheme {
                 ProfileDrawerSheet(
@@ -81,7 +84,8 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                         bottomNavDestinations.forEach { destination ->
                             val selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true
                             // Home has no accent: its selected item is neutral, never dynamic colour.
-                            val selectedInk = destination.accentColor ?: WarmOnSurface
+                            val accent = destination.accent?.current
+                            val selectedInk = accent ?: WarmOnSurface
                             NavigationBarItem(
                                 selected = selected,
                                 onClick = {
@@ -105,7 +109,7 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = selectedInk,
                                     selectedTextColor = selectedInk,
-                                    indicatorColor = destination.accentColor?.copy(alpha = 0.18f) ?: NeutralSelected,
+                                    indicatorColor = accent?.copy(alpha = 0.18f) ?: NeutralSelected,
                                     unselectedIconColor = WarmIcon,
                                     unselectedTextColor = WarmIcon
                                 )
@@ -126,7 +130,7 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                     }
                 }
                 composable(Destination.Calendar.route) {
-                    SectionTheme(Destination.Calendar.accentColor!!) {
+                    SectionTheme(SectionAccent.Calendar) {
                         CalendarScreen(
                             onNavigateToWorkout = { navController.navigate(Destination.Workout.route) },
                             onNavigateToDiary = { navController.navigate(Destination.Diary.route) }
@@ -134,13 +138,13 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                     }
                 }
                 composable(Destination.Workout.route) {
-                    SectionTheme(Destination.Workout.accentColor!!) { WorkoutScreen() }
+                    SectionTheme(SectionAccent.Workout) { WorkoutScreen() }
                 }
                 composable(Destination.Meals.route) {
-                    SectionTheme(Destination.Meals.accentColor!!) { MealsScreen() }
+                    SectionTheme(SectionAccent.Meals) { MealsScreen() }
                 }
                 composable(Destination.Diary.route) {
-                    SectionTheme(Destination.Diary.accentColor!!) { DiaryScreen() }
+                    SectionTheme(SectionAccent.Diary) { DiaryScreen() }
                 }
                 composable(Destination.Account.route) {
                     NeutralTheme {

@@ -8,4 +8,9 @@ interface SettingsRepository {
     fun observeVibrateOnRestEnd(): Flow<Boolean>
 
     suspend fun setVibrateOnRestEnd(enabled: Boolean)
+
+    /** Light, dark, or follow the phone. Defaults to [ThemeMode.SYSTEM]. */
+    fun observeThemeMode(): Flow<ThemeMode>
+
+    suspend fun setThemeMode(mode: ThemeMode)
 }

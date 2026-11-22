@@ -21,6 +21,22 @@ Every `.kt` / `.kts` change also needs `./gradlew lint` (runs ktlint against the
 CI (`.github/workflows/unit-tests.yml`) runs `test`, `lint` and `build` (`assembleDebug`) as separate
 jobs on every PR; device checks stay local.
 
+## Screenshots
+
+Every change that can be screenshotted gets screenshots, kept in two places:
+
+1. **Git:** `docs/screenshots/<n>-<kebab>/` (descriptive file names + a short `README.md` index),
+   committed with the ticket's work.
+2. **The ticket:** once pushed, a comment on the issue showing them inline - `<img width="200">`
+   in 4-column tables, `src` = `https://raw.githubusercontent.com/ClaudiaMarques1/one/<commit-sha>/docs/screenshots/...`
+   (pin the SHA, not the branch, so links survive merge/branch changes; `gh` can't upload attachments).
+   Repeat in the PR body's "How it was tested".
+
+**Why:** the user wants the visual record with the change and on the ticket, not in a scratch folder.
+**How to apply:** before committing, check each image for personal data - emails, passwords, full
+names, tokens - and paint it over (PowerShell `System.Drawing` `FillRectangle` in the surface colour;
+no ImageMagick here) or leave that image out. Skip outdated shots that no longer match the code.
+
 ## Ticket lifecycle
 
 Project board "one" (https://github.com/users/ClaudiaMarques1/projects/1), columns

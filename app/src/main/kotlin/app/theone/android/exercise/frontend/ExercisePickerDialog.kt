@@ -67,6 +67,7 @@ import app.theone.android.exercise.backend.preselectedIds
 import app.theone.android.exercise.backend.selectedCountByCategory
 import app.theone.android.exercise.backend.selectedInOrder
 import app.theone.android.exercise.backend.visibleExercises
+import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.WarmBodyText
 import app.theone.android.ui.theme.WarmButtonOutline
 import app.theone.android.ui.theme.WarmDisabledFill
@@ -212,7 +213,7 @@ fun ExercisePickerDialog(
                     enabled = selectedExercises.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                         disabledContainerColor = WarmDisabledFill,
                         disabledContentColor = WarmMutedIcon
                     ),
@@ -273,7 +274,7 @@ private fun CategoryRail(
                                 .padding(horizontal = 5.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("$count", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                            Text("$count", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimary)
                         }
                     }
                 }
@@ -297,7 +298,7 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit) {
             .padding(start = 12.dp, top = 12.dp, end = 12.dp, bottom = 4.dp)
             .height(44.dp)
             .clip(shape)
-            .background(Color.White)
+            .background(CardSurface)
             .border(1.dp, WarmButtonOutline, shape),
         decorationBox = { innerTextField ->
             Row(

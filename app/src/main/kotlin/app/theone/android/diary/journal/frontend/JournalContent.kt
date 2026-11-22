@@ -25,8 +25,10 @@ import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,17 +47,45 @@ import app.theone.android.diary.journal.backend.DiaryDateKeys
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.backend.effectiveSoreness
 import app.theone.android.ui.EditDeleteMenu
+import app.theone.android.ui.theme.CardSurface
+import app.theone.android.ui.theme.DiaryAccent
+import app.theone.android.ui.theme.DiaryColors
+import app.theone.android.ui.theme.DiaryInk
 import app.theone.android.ui.theme.OneTheme
+import app.theone.android.ui.theme.WarmBodyText
+import app.theone.android.ui.theme.WarmCardBorder
+import app.theone.android.ui.theme.WarmField
+import app.theone.android.ui.theme.WarmIcon
+import app.theone.android.ui.theme.WarmOnSurface
+import app.theone.android.ui.theme.WarmSecondaryText
 
-private val Accent = Color(0xFF8E24AA)
-private val AccentInk = Color(0xFF6A1B86)
-private val AccentSoft = Color(0xFFF6EEF8)
-private val OnSurface = Color(0xFF1D1B20)
-private val SecondaryText = Color(0xFF6B655F)
-private val CardBorder = Color(0xFFEAE4DE)
-private val ChipFill = Color(0xFFF4F1EE)
-private val BodyText = Color(0xFF3B3733)
-private val TodayHelper = Color(0xFF5E5560)
+private val Accent: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryAccent
+private val AccentInk: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryInk
+private val AccentSoft: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryColors.Soft
+private val OnSurface: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmOnSurface
+private val SecondaryText: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmSecondaryText
+private val CardBorder: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmCardBorder
+private val ChipFill: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmField
+private val BodyText: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmBodyText
+private val TodayHelper: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryColors.TodayHelper
 
 @Composable
 internal fun JournalContent(
@@ -135,8 +165,16 @@ private fun TodayPromptCard(onWriteTodayClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(Icons.Filled.EditNote, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-            Text("Write today's entry", style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color.White))
+            Icon(
+                Icons.Filled.EditNote,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                "Write today's entry",
+                style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimary)
+            )
         }
     }
 }
@@ -151,7 +189,7 @@ private fun EntryCard(entry: DiaryEntry, onEdit: () -> Unit, onDelete: () -> Uni
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White)
+            .background(CardSurface)
             .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
             .padding(start = 14.dp, top = 14.dp, end = 8.dp, bottom = 14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -178,7 +216,7 @@ private fun EntryCard(entry: DiaryEntry, onEdit: () -> Unit, onDelete: () -> Uni
             }
             Box {
                 IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(44.dp)) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = "More", tint = Color(0xFF49454F), modifier = Modifier.size(22.dp))
+                    Icon(Icons.Filled.MoreVert, contentDescription = "More", tint = WarmIcon, modifier = Modifier.size(22.dp))
                 }
                 EditDeleteMenu(expanded = menuOpen, onDismiss = { menuOpen = false }, onEdit = onEdit, onDelete = onDelete)
             }

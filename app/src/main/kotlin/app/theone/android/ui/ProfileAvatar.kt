@@ -10,12 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import app.theone.android.ui.theme.NeutralAvatar
+import app.theone.android.ui.theme.NeutralAvatarInitials
 import coil3.compose.AsyncImage
 
 /**
@@ -31,7 +31,7 @@ fun ProfileAvatar(photoUrl: String?, initials: String, size: Dp, initialsSize: T
             .background(NeutralAvatar),
         contentAlignment = Alignment.Center
     ) {
-        Text(initials, fontSize = initialsSize, fontWeight = FontWeight.SemiBold, color = Color.White)
+        Text(initials, fontSize = initialsSize, fontWeight = FontWeight.SemiBold, color = NeutralAvatarInitials)
         if (photoUrl != null) {
             AsyncImage(
                 model = photoUrl,

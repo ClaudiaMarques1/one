@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -22,12 +23,20 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import app.theone.android.ui.theme.DiaryColors
+import app.theone.android.ui.theme.WarmSurface
 
 internal enum class BodySide { FRONT, BACK }
 
-private val FigureNeutralColor = Color(0xFFECE6E0)
-private val FigureIdleColor = Color(0xFFD9D0C8)
-private val FigureStrokeColor = Color(0xFFFFFBFE)
+private val FigureNeutralColor: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryColors.FigureNeutral
+private val FigureIdleColor: Color
+    @Composable @ReadOnlyComposable
+    get() = DiaryColors.FigureIdle
+private val FigureStrokeColor: Color
+    @Composable @ReadOnlyComposable
+    get() = WarmSurface
 
 /**
  * The athletic front/back figure from design_handoff_diary_journal. Draws [BodyFigureData]'s
@@ -47,6 +56,11 @@ internal fun BodyFigure(
     val headPath = remember { BodyFigureData.head.toComposePath() }
     val neutralPaths = remember(data) { data.neutral.map { it.toComposePath() } }
     val partPaths = remember(data) { data.parts.map { it.id to it.shape.toComposePath() } }
+
+    // Read the themed colours here: the Canvas draw lambda is not composable.
+    val neutral = FigureNeutralColor
+    val idle = FigureIdleColor
+    val stroke = FigureStrokeColor
 
     Canvas(
         modifier = modifier
@@ -73,24 +87,24 @@ internal fun BodyFigure(
         val scaleX = size.width / 200f
         val scaleY = size.height / 400f
         scale(scaleX = scaleX, scaleY = scaleY, pivot = Offset.Zero) {
-            drawPath(headPath, color = FigureNeutralColor)
-            neutralPaths.forEach { drawPath(it, color = FigureNeutralColor) }
-            partPaths.forEach { (id, path) -> drawRegion(path, colorForLevel(levelFor(id), levelColors)) }
+            drawPath(headPath, color = neutral)
+            neutralPaths.forEach { drawPath(it, color = neutral) }
+            partPaths.forEach { (id, path) -> drawRegion(path, colorForLevel(levelFor(id), levelColors, idle), stroke) }
             scale(scaleX = -1f, scaleY = 1f, pivot = Offset(100f, 0f)) {
-                neutralPaths.forEach { drawPath(it, color = FigureNeutralColor) }
-                partPaths.forEach { (id, path) -> drawRegion(path, colorForLevel(levelFor(id), levelColors)) }
+                neutralPaths.forEach { drawPath(it, color = neutral) }
+                partPaths.forEach { (id, path) -> drawRegion(path, colorForLevel(levelFor(id), levelColors, idle), stroke) }
             }
         }
     }
 }
 
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRegion(path: Path, fill: Color) {
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRegion(path: Path, fill: Color, stroke: Color) {
     drawPath(path, color = fill)
-    drawPath(path, color = FigureStrokeColor, style = Stroke(width = 2.5f, join = StrokeJoin.Round))
+    drawPath(path, color = stroke, style = Stroke(width = 2.5f, join = StrokeJoin.Round))
 }
 
-private fun colorForLevel(level: Int, levelColors: List<Color>): Color =
-    if (level in 1..levelColors.size) levelColors[level - 1] else FigureIdleColor
+private fun colorForLevel(level: Int, levelColors: List<Color>, idle: Color): Color =
+    if (level in 1..levelColors.size) levelColors[level - 1] else idle
 
 private fun FigureShape.toComposePath(): Path = when (this) {
     is FigureShape.PathData -> PathParser().parsePathString(d).toPath()

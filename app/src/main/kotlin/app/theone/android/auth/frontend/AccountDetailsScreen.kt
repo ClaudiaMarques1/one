@@ -30,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +39,7 @@ import app.theone.android.auth.backend.UserProfile
 import app.theone.android.ui.BackTopBar
 import app.theone.android.ui.ProfileAvatar
 import app.theone.android.ui.profileInitials
+import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.DeleteRed
 import app.theone.android.ui.theme.NeutralTheme
 import app.theone.android.ui.theme.SignOutPressed
@@ -80,7 +80,7 @@ fun AccountDetailsScreen(profile: UserProfile?, onBack: () -> Unit, onSignOut: (
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(CardShape)
-                    .background(Color.White)
+                    .background(CardSurface)
                     .border(1.dp, WarmCardBorder, CardShape)
             ) {
                 AccountRow(label = "Name", value = nameLabel(profile?.name.orEmpty()))
@@ -115,7 +115,7 @@ private fun SignOutButton(onClick: () -> Unit) {
         interactionSource = interactionSource,
         border = BorderStroke(1.dp, WarmButtonOutline),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = if (pressed) SignOutPressed else Color.White,
+            containerColor = if (pressed) SignOutPressed else CardSurface,
             contentColor = DeleteRed
         ),
         modifier = Modifier

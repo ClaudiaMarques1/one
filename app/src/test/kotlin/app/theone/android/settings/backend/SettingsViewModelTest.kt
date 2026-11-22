@@ -57,4 +57,38 @@ class SettingsViewModelTest {
         viewModel.clearSettingsError()
         assertNull(viewModel.settingsError.value)
     }
+
+    @Test
+    fun `themeMode defaults to system`() = runTest {
+        val viewModel = SettingsViewModel(FakeSettingsRepository())
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.themeMode.collect {} }
+
+        assertEquals(ThemeMode.SYSTEM, viewModel.themeMode.value)
+    }
+
+    @Test
+    fun `setThemeMode stores the value and updates the flow`() = runTest {
+        val repository = FakeSettingsRepository()
+        val viewModel = SettingsViewModel(repository)
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.themeMode.collect {} }
+
+        viewModel.setThemeMode(ThemeMode.DARK)
+
+        assertEquals(ThemeMode.DARK, repository.storedThemeMode)
+        assertEquals(ThemeMode.DARK, viewModel.themeMode.value)
+        assertNull(viewModel.settingsError.value)
+    }
+
+    @Test
+    fun `a failed theme write surfaces settingsError and keeps the old value`() = runTest {
+        val repository = FakeSettingsRepository(themeMode = ThemeMode.LIGHT)
+            .apply { failNext = IllegalStateException("disk full") }
+        val viewModel = SettingsViewModel(repository)
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.themeMode.collect {} }
+
+        viewModel.setThemeMode(ThemeMode.DARK)
+
+        assertEquals("disk full", viewModel.settingsError.value)
+        assertEquals(ThemeMode.LIGHT, viewModel.themeMode.value)
+    }
 }
