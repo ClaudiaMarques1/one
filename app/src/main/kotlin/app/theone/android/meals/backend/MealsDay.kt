@@ -36,14 +36,16 @@ data class MealsDay(
     val eaten: MacroTotals = MacroTotals(),
     val planned: MacroTotals = MacroTotals(),
     val waterGlasses: Int = 0,
-    val waterTargetGlasses: Int = DEFAULT_WATER_GLASSES
-) {
-    val isTrainingDay: Boolean get() = workoutName != null
-}
+    val waterTargetGlasses: Int = DEFAULT_WATER_GLASSES,
+    /** Training-day targets and workout slots; from the Rest day switch, else from a logged workout. */
+    val isTrainingDay: Boolean = false
+)
 
 /**
- * Builds the day from raw data. A slot shows when it's switched on in Settings (optional slots only
- * on training days) - or whenever it already holds meals, so nothing logged is ever hidden.
+ * Builds the day from raw data. The Rest day switch's [restDayChoice] wins; without one, a logged
+ * workout makes it a training day. A slot shows when it's switched on in Settings (optional slots
+ * only on training days) - or whenever it already holds meals, so nothing logged is ever hidden.
+ * The workout itself stays on the timeline even on a day marked as rest - it still happened.
  */
 fun buildMealsDay(
     date: String,
@@ -51,9 +53,10 @@ fun buildMealsDay(
     settings: MealSettings,
     workoutName: String?,
     waterGlasses: Int,
-    workoutMinutes: Int? = null
+    workoutMinutes: Int? = null,
+    restDayChoice: Boolean? = null
 ): MealsDay {
-    val training = workoutName != null
+    val training = restDayChoice?.not() ?: (workoutName != null)
     val bySlot = meals.groupBy { MealSlot.fromStored(it.slot) ?: MealSlot.SNACKS }
     val slots = MealSlot.entries.mapNotNull { slot ->
         val slotMeals = bySlot[slot].orEmpty()
@@ -63,13 +66,14 @@ fun buildMealsDay(
     return MealsDay(
         date = date,
         workoutName = workoutName,
-        workoutMinutes = workoutMinutes.takeIf { training },
+        workoutMinutes = workoutMinutes.takeIf { workoutName != null },
         targets = if (training) settings.trainingTargets else settings.restTargets,
         slots = slots,
         eaten = meals.filter { it.eaten }.totals(),
         planned = meals.totals(),
         waterGlasses = waterGlasses,
-        waterTargetGlasses = settings.waterGlasses
+        waterTargetGlasses = settings.waterGlasses,
+        isTrainingDay = training
     )
 }
 

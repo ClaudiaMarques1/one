@@ -60,6 +60,17 @@ class FakeMealsRepository(
         waterFlow.value = waterFlow.value + (date to glasses)
     }
 
+    private val restDays = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+
+    fun storedRestDayChoice(date: String): Boolean? = restDays.value[date]
+
+    override fun observeRestDayChoice(date: String): Flow<Boolean?> = restDays.map { it[date] }
+
+    override suspend fun setRestDayChoice(date: String, restDay: Boolean?) {
+        throwIfFailing()
+        restDays.value = if (restDay == null) restDays.value - date else restDays.value + (date to restDay)
+    }
+
     private fun throwIfFailing() {
         failNext?.let {
             failNext = null

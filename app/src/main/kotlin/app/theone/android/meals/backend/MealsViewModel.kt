@@ -83,8 +83,9 @@ class MealsViewModel(
             repository.observeMeals(dateKey),
             repository.observeWaterGlasses(dateKey),
             settingsRepository.observeMealSettings(),
-            strengthRepository.observeSessions()
-        ) { meals, water, settings, sessions ->
+            strengthRepository.observeSessions(),
+            repository.observeRestDayChoice(dateKey)
+        ) { meals, water, settings, sessions, restDayChoice ->
             val workout = sessions.firstOrNull { it.date == dateKey }
             buildMealsDay(
                 date = dateKey,
@@ -95,7 +96,8 @@ class MealsViewModel(
                 workoutMinutes = workout?.let {
                     val time = Instant.ofEpochMilli(it.createdAt).atZone(zone).toLocalTime()
                     time.hour * 60 + time.minute
-                }
+                },
+                restDayChoice = restDayChoice
             )
         }
     }
@@ -176,12 +178,14 @@ class MealsViewModel(
         launchCatching { repository.setWaterGlasses(dateKey, next) }
     }
 
-    /** Timeline water card: -1 / +1 glass, clamped to 0..[MAX_WATER_GLASSES]. */
-    fun stepWaterGlasses(delta: Int) {
-        val next = stepWater(day.value.waterGlasses, delta)
-        if (next == day.value.waterGlasses) return
+    /**
+     * The Rest day switch for the shown day. Matching the automatic answer (rest unless a workout is
+     * logged) clears the stored choice, so the day goes back to following the workouts.
+     */
+    fun setRestDay(rest: Boolean) {
         val dateKey = date.value
-        launchCatching { repository.setWaterGlasses(dateKey, next) }
+        val automaticRest = day.value.workoutName == null
+        launchCatching { repository.setRestDayChoice(dateKey, if (rest == automaticRest) null else rest) }
     }
 
     private fun launchCatching(block: suspend () -> Unit) {

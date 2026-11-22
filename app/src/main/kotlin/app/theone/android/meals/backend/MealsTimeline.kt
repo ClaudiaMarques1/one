@@ -50,8 +50,5 @@ fun weekOf(date: LocalDate, weekStart: WeekStart): List<LocalDate> {
     return (0L..6L).map { first.plusDays(it) }
 }
 
-/** Water -/+ on the timeline: one glass per press, never below 0 or above [MAX_WATER_GLASSES]. */
-fun stepWater(current: Int, delta: Int): Int = (current + delta).coerceIn(0, MAX_WATER_GLASSES)
-
 /** The week strip: its 7 date keys and the ones holding any meal (for the dots). */
 data class MealsWeek(val days: List<String> = emptyList(), val mealDates: Set<String> = emptySet())

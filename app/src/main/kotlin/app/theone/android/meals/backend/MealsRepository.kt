@@ -27,4 +27,10 @@ interface MealsRepository {
     suspend fun deleteMeal(id: String)
 
     suspend fun setWaterGlasses(date: String, glasses: Int)
+
+    /** The Rest day switch's stored choice for [date]: true rest, false training, null automatic. */
+    fun observeRestDayChoice(date: String): Flow<Boolean?>
+
+    /** Stores the choice for [date]; null removes it, so the day follows the logged workouts again. */
+    suspend fun setRestDayChoice(date: String, restDay: Boolean?)
 }

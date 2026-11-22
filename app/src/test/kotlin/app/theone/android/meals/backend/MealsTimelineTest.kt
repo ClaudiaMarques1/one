@@ -101,9 +101,20 @@ class MealsTimelineTest {
     }
 
     @Test
-    fun `water steps one glass and stays in range`() {
-        assertEquals(6, stepWater(5, 1))
-        assertEquals(0, stepWater(0, -1))
-        assertEquals(MAX_WATER_GLASSES, stepWater(MAX_WATER_GLASSES, 1))
+    fun `a day marked as rest keeps its workout row but uses rest targets`() {
+        val rest = buildMealsDay(
+            date,
+            emptyList(),
+            settings,
+            workoutName = "Leg day",
+            waterGlasses = 0,
+            workoutMinutes = 18 * 60,
+            restDayChoice = true
+        )
+
+        assertFalse(rest.isTrainingDay)
+        assertEquals(DEFAULT_REST_TARGETS, rest.targets)
+        assertFalse(rest.slots.any { it.slot.optional })
+        assertTrue(buildTimeline(rest, settings).any { it is TimelineRow.Workout })
     }
 }

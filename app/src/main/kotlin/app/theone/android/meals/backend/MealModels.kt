@@ -36,9 +36,6 @@ val DEFAULT_REST_TARGETS = MealTargets(kcal = 2300, proteinG = 150, carbsG = 250
 const val DEFAULT_WATER_GLASSES = 10
 const val MAX_WATER_GLASSES = 20
 
-/** How Meals shows a day: 1a checklist or 1b timeline. Stored by name. */
-enum class TodayView { CHECKLIST, TIMELINE }
-
 /** First day of the week strip. Stored by name. */
 enum class WeekStart(val dayOfWeek: DayOfWeek) {
     MONDAY(DayOfWeek.MONDAY),
@@ -61,8 +58,7 @@ data class MealSettings(
     val waterGlasses: Int = DEFAULT_WATER_GLASSES,
     /** Minutes after midnight per slot; orders the timeline. */
     val slotTimes: Map<MealSlot, Int> = DEFAULT_SLOT_TIMES,
-    val weekStart: WeekStart = WeekStart.fromLocale(),
-    val todayView: TodayView = TodayView.CHECKLIST
+    val weekStart: WeekStart = WeekStart.fromLocale()
 ) {
     fun timeOf(slot: MealSlot): Int = slotTimes[slot] ?: slot.defaultMinutes
 }
@@ -97,3 +93,9 @@ data class FavouriteMeal(
 
 /** Glasses of water drunk on a date (`users/{uid}/water/{date}`). */
 data class WaterLog(val glasses: Int = 0)
+
+/**
+ * The user's choice for a date (`users/{uid}/mealDays/{date}`): [restDay] true marks a rest day, false a
+ * training day. No document means automatic - a day with a logged workout is a training day.
+ */
+data class MealDayChoice(val restDay: Boolean? = null)

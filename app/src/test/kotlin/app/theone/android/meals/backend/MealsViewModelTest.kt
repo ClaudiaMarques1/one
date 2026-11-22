@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -238,17 +239,38 @@ class MealsViewModelTest {
     }
 
     @Test
-    fun `water minus and plus step one glass and stop at zero`() = runTest {
-        val meals = FakeMealsRepository(water = mapOf(todayKey to 1))
+    fun `the rest day switch overrides a logged workout, and switching back clears the choice`() = runTest {
+        val meals = FakeMealsRepository()
+        val strength = FakeStrengthRepository(listOf(StrengthSession(date = todayKey, templateName = "Leg day")))
+        val viewModel = viewModel(meals = meals, strength = strength)
+        collect(viewModel)
+        assertTrue(viewModel.day.value.isTrainingDay)
+
+        viewModel.setRestDay(true)
+        assertEquals(true, meals.storedRestDayChoice(todayKey))
+        assertFalse(viewModel.day.value.isTrainingDay)
+        assertEquals(DEFAULT_REST_TARGETS, viewModel.day.value.targets)
+
+        viewModel.setRestDay(false) // matches the logged workout again -> automatic
+        assertNull(meals.storedRestDayChoice(todayKey))
+        assertTrue(viewModel.day.value.isTrainingDay)
+    }
+
+    @Test
+    fun `a day with no workout can be planned as a training day`() = runTest {
+        val meals = FakeMealsRepository()
         val viewModel = viewModel(meals = meals)
         collect(viewModel)
+        viewModel.showNextDay()
+        assertFalse(viewModel.day.value.isTrainingDay)
 
-        viewModel.stepWaterGlasses(1)
-        assertEquals(2, meals.storedWater(todayKey))
-        viewModel.stepWaterGlasses(-1)
-        viewModel.stepWaterGlasses(-1)
-        viewModel.stepWaterGlasses(-1)
-        assertEquals(0, viewModel.day.value.waterGlasses)
+        viewModel.setRestDay(false)
+
+        assertEquals(false, meals.storedRestDayChoice("2026-11-20"))
+        assertTrue(viewModel.day.value.isTrainingDay)
+        assertEquals(DEFAULT_TRAINING_TARGETS, viewModel.day.value.targets)
+        viewModel.showToday()
+        assertFalse(viewModel.day.value.isTrainingDay) // the choice is per date
     }
 
     @Test

@@ -13,7 +13,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import app.theone.android.meals.backend.MealSettings
 import app.theone.android.meals.backend.MealSlot
 import app.theone.android.meals.backend.MealTargets
-import app.theone.android.meals.backend.TodayView
 import app.theone.android.meals.backend.WeekStart
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -48,8 +47,7 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
             restTargets = prefs.readTargets(REST, defaults.restTargets),
             waterGlasses = prefs[KEY_WATER_GLASSES] ?: defaults.waterGlasses,
             slotTimes = MealSlot.entries.associateWith { slot -> prefs[slotTimeKey(slot)] ?: defaults.timeOf(slot) },
-            weekStart = WeekStart.entries.firstOrNull { it.name == prefs[KEY_WEEK_START] } ?: defaults.weekStart,
-            todayView = TodayView.entries.firstOrNull { it.name == prefs[KEY_TODAY_VIEW] } ?: defaults.todayView
+            weekStart = WeekStart.entries.firstOrNull { it.name == prefs[KEY_WEEK_START] } ?: defaults.weekStart
         )
     }
 
@@ -61,7 +59,6 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
             prefs[KEY_WATER_GLASSES] = settings.waterGlasses
             MealSlot.entries.forEach { slot -> prefs[slotTimeKey(slot)] = settings.timeOf(slot) }
             prefs[KEY_WEEK_START] = settings.weekStart.name
-            prefs[KEY_TODAY_VIEW] = settings.todayView.name
         }
     }
 
@@ -87,7 +84,6 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         val KEY_MEAL_SLOTS = stringSetPreferencesKey("mealSlots")
         val KEY_WATER_GLASSES = intPreferencesKey("waterGlasses")
         val KEY_WEEK_START = stringPreferencesKey("weekStart")
-        val KEY_TODAY_VIEW = stringPreferencesKey("todayView")
         const val TRAINING = "trainingTarget"
         const val REST = "restTarget"
     }

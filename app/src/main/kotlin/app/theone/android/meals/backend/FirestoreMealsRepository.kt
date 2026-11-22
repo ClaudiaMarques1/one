@@ -15,6 +15,8 @@ class FirestoreMealsRepository : MealsRepository {
 
     private fun water(): CollectionReference? = FirebaseModule.userCollection("water")
 
+    private fun mealDays(): CollectionReference? = FirebaseModule.userCollection("mealDays")
+
     override fun observeMeals(date: String): Flow<List<PlannedMeal>> = callbackFlow {
         val collection = meals()
         if (collection == null) {
@@ -120,6 +122,28 @@ class FirestoreMealsRepository : MealsRepository {
     override suspend fun deleteMeal(id: String) {
         if (id.isEmpty()) return
         meals()?.document(id)?.delete()?.await()
+    }
+
+    override fun observeRestDayChoice(date: String): Flow<Boolean?> = callbackFlow {
+        val collection = mealDays()
+        if (collection == null) {
+            trySend(null)
+            close()
+            return@callbackFlow
+        }
+        val registration = collection.document(date).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+            trySend(snapshot?.toObject(MealDayChoice::class.java)?.restDay)
+        }
+        awaitClose { registration.remove() }
+    }
+
+    override suspend fun setRestDayChoice(date: String, restDay: Boolean?) {
+        val doc = mealDays()?.document(date) ?: return
+        if (restDay == null) doc.delete().await() else doc.set(MealDayChoice(restDay)).await()
     }
 
     override suspend fun setWaterGlasses(date: String, glasses: Int) {
