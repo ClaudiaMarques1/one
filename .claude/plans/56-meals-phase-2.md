@@ -39,9 +39,10 @@ Type: backend + front-facing. Builds on #53 (`.claude/plans/53-meals-phase-1.md`
 - [x] Settings -> Meals: Today view, week start, slot times
 - [x] Dark mode check
 - [x] Review changes: remove Today view setting (park 1a), water drops on the weekly view, Rest day switch
-- [ ] `/verify`, screenshots to `docs/screenshots/56-meals-phase-2/` + issue, PR `Closes #56`
+- [x] `/verify` (all 17 Checks ticked), screenshots in `docs/screenshots/56-meals-phase-2/` + on the issue
+- [ ] PR to `develop` with `Closes #56` - user review
 
 ## Next step
 
-User runs the 12 Manual steps on #56 (they write real data); then PR `Closes #56`. More Meals input
-from the user is expected after the remaining phases.
+PR open for review; merge only on the user's go-ahead. The user will share more Meals input after the
+remaining phases (3 Week plan, 4 Recipes + shopping list). The 1a checklist screen stays parked.
