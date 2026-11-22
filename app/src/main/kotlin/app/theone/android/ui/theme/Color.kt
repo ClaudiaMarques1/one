@@ -196,7 +196,7 @@ val LocalOneColors = staticCompositionLocalOf { LightOneColors }
 enum class SectionAccent(val light: Color, val dark: Color) {
     Calendar(Color(0xFFFB8C00), Color(0xFFF1994C)),
     Workout(Color(0xFF1E88E5), Color(0xFF8DC4FF)),
-    Meals(Color(0xFF43A047), Color(0xFF82D583)),
+    Meals(Color(0xFF2E7D32), Color(0xFF91E091)),
     Diary(Color(0xFF8E24AA), Color(0xFFECB6FE));
 
     val current: Color
