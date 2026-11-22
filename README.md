@@ -454,9 +454,11 @@ Current version: **0.1.0** (`versionCode 1`).
 
 Auth, the navigation shell, Home (with the profile drawer and Settings), Calendar, and Workout's Strength Training (templates ->
 session -> history) are functional end-to-end with Firestore. Diary's Journal and Goals/Habits, with
-reminder notifications, are also functional. Meals plans the week - a weekly timeline
-with a Rest day switch, a Week plan (copy days or the whole week, clear a day), Add meal (favourites or a new meal), water, and training / rest-day targets and
-slot times in Settings. The whole app has a
+reminder notifications, are also functional. Meals has two tabs.
+Food Diary plans the week: a weekly timeline with a Rest day switch, a Week plan (copy days or the
+whole week, clear a day), Add meal (favourites, your recipes or a new meal), water, and a shopping list
+built from planned recipes. Recipes holds the recipes you write (Search Recipe is still to come).
+Training / rest-day targets and slot times are in Settings. The whole app has a
 dark mode: Settings -> Appearance -> Theme (Light / Dark / System, default System).
 
 Workout is planned to split into four independent session types - Warmup/Stretch, Strength Training,
