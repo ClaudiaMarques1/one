@@ -1,5 +1,6 @@
 package app.theone.android.meals.frontend
 
+import app.theone.android.meals.backend.DayState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -39,6 +40,16 @@ class MealsLabelsTest {
         assertEquals("Workout logged · training-day targets · 2,500 kcal", restDaySubtitle(rest = false, workoutLogged = true, "2,500"))
         assertEquals("Rest-day targets · 2,300 kcal", restDaySubtitle(rest = true, workoutLogged = false, "2,300"))
         assertEquals("Training-day targets · 2,500 kcal", restDaySubtitle(rest = false, workoutLogged = false, "2,500"))
+    }
+
+    @Test
+    fun `week plan labels follow the handoff`() {
+        assertEquals("15 - 21 Nov", weekRangeLabel(LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 21), Locale.UK))
+        assertEquals("29 Nov - 5 Dec", weekRangeLabel(LocalDate.of(2026, 11, 29), LocalDate.of(2026, 12, 5), Locale.UK))
+        assertEquals("2,280 of 2,300 kcal", weekDaySummary(DayState.PAST, 2280, 2280, 2300))
+        assertEquals("1,060 eaten · 1,960 planned", weekDaySummary(DayState.TODAY, 1060, 1960, 2500))
+        assertEquals("2,240 kcal planned", weekDaySummary(DayState.FUTURE, 0, 2240, 2300))
+        assertEquals("Nothing planned", weekDaySummary(DayState.FUTURE, 0, 0, 2300))
     }
 
     @Test

@@ -28,7 +28,7 @@ fun mealsViewModel(): MealsViewModel = viewModel(
 )
 
 @Composable
-fun MealsScreen(viewModel: MealsViewModel = mealsViewModel()) {
+fun MealsScreen(onOpenWeekPlan: () -> Unit = {}, viewModel: MealsViewModel = mealsViewModel()) {
     val day by viewModel.day.collectAsState()
     val favourites by viewModel.favourites.collectAsState()
     val mealsError by viewModel.mealsError.collectAsState()
@@ -52,6 +52,7 @@ fun MealsScreen(viewModel: MealsViewModel = mealsViewModel()) {
             onRemoveMeal = viewModel::removeMeal,
             onTapGlass = viewModel::tapWaterGlass,
             onRestDayChange = viewModel::setRestDay,
+            onOpenWeekPlan = onOpenWeekPlan,
             todayKey = viewModel.todayKey
         )
         ErrorBanner(

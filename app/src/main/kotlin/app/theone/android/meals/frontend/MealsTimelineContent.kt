@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarViewWeek
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.outlined.Bedtime
@@ -114,6 +115,7 @@ fun MealsTimelineContent(
     onRemoveMeal: (PlannedMeal) -> Unit,
     onTapGlass: (Int) -> Unit,
     onRestDayChange: (Boolean) -> Unit = {},
+    onOpenWeekPlan: () -> Unit = {},
     todayKey: String = day.date
 ) {
     val is24Hour = DateFormat.is24HourFormat(LocalContext.current)
@@ -129,6 +131,9 @@ fun MealsTimelineContent(
                     color = WarmOnSurface,
                     modifier = Modifier.weight(1f)
                 )
+                IconButton(onClick = onOpenWeekPlan, modifier = Modifier.size(44.dp)) {
+                    Icon(Icons.Filled.CalendarViewWeek, contentDescription = "Week plan", tint = WarmIcon)
+                }
                 IconButton(onClick = onPreviousWeek, modifier = Modifier.size(44.dp)) {
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous week", tint = WarmIcon)
                 }

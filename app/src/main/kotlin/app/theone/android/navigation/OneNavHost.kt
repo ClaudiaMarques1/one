@@ -31,6 +31,7 @@ import app.theone.android.dashboard.frontend.DashboardScreen
 import app.theone.android.dashboard.frontend.ProfileDrawerSheet
 import app.theone.android.diary.frontend.DiaryScreen
 import app.theone.android.meals.frontend.MealsScreen
+import app.theone.android.meals.frontend.MealsWeekScreen
 import app.theone.android.settings.frontend.SettingsScreen
 import app.theone.android.ui.theme.LocalOneColors
 import app.theone.android.ui.theme.NeutralNavBar
@@ -141,7 +142,9 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                     SectionTheme(SectionAccent.Workout) { WorkoutScreen() }
                 }
                 composable(Destination.Meals.route) {
-                    SectionTheme(SectionAccent.Meals) { MealsScreen() }
+                    SectionTheme(SectionAccent.Meals) {
+                        MealsScreen(onOpenWeekPlan = { navController.navigate(Destination.MealsWeek.route) })
+                    }
                 }
                 composable(Destination.Diary.route) {
                     SectionTheme(SectionAccent.Diary) { DiaryScreen() }
@@ -157,6 +160,9 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                 }
                 composable(Destination.Settings.route) {
                     NeutralTheme { SettingsScreen(onBack = { navController.popBackStack() }) }
+                }
+                composable(Destination.MealsWeek.route) {
+                    SectionTheme(SectionAccent.Meals) { MealsWeekScreen(onBack = { navController.popBackStack() }) }
                 }
             }
         }
