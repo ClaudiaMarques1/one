@@ -31,6 +31,13 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         dataStore.edit { it[KEY_VIBRATE_ON_REST_END] = enabled }
     }
 
+    override fun observeDndDuringWorkout(): Flow<Boolean> =
+        dataStore.data.map { it[KEY_DND_DURING_WORKOUT] ?: false }
+
+    override suspend fun setDndDuringWorkout(enabled: Boolean) {
+        dataStore.edit { it[KEY_DND_DURING_WORKOUT] = enabled }
+    }
+
     override fun observeThemeMode(): Flow<ThemeMode> =
         dataStore.data.map { themeModeFromStored(it[KEY_THEME]) }
 
@@ -85,6 +92,7 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
 
     private companion object {
         val KEY_VIBRATE_ON_REST_END = booleanPreferencesKey("vibrateOnRestEnd")
+        val KEY_DND_DURING_WORKOUT = booleanPreferencesKey("dndDuringWorkout")
         val KEY_THEME = stringPreferencesKey("theme")
         val KEY_MEAL_SLOTS = stringSetPreferencesKey("mealSlots")
         val KEY_WATER_GLASSES = intPreferencesKey("waterGlasses")

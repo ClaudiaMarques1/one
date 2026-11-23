@@ -17,8 +17,8 @@ class SettingsSectionsTest {
 
     @Test
     fun `summaries describe each section's current values`() {
-        assertEquals("Vibrate when rest ends: On", workoutSummary(true))
-        assertEquals("Vibrate when rest ends: Off", workoutSummary(false))
+        assertEquals("Vibrate: On · Do Not Disturb: Off", workoutSummary(true, false))
+        assertEquals("Vibrate: Off · Do Not Disturb: On", workoutSummary(false, true))
         assertEquals("4 slots · 2.5 L water", mealsSummary(MealSettings()))
         assertEquals("1 slot · 3 L water", mealsSummary(MealSettings(enabledSlots = setOf(MealSlot.LUNCH), waterGlasses = 12)))
         assertEquals("No settings yet", NO_SETTINGS_YET)

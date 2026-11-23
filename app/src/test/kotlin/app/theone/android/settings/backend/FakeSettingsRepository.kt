@@ -12,7 +12,8 @@ class FakeSettingsRepository(
     vibrateOnRestEnd: Boolean = DEFAULT_VIBRATE_ON_REST_END,
     themeMode: ThemeMode = DEFAULT_THEME_MODE,
     mealSettings: MealSettings = MealSettings(),
-    weekStart: WeekStart = WeekStart.MONDAY
+    weekStart: WeekStart = WeekStart.MONDAY,
+    dndDuringWorkout: Boolean = false
 ) : SettingsRepository {
     private val vibrate = MutableStateFlow(vibrateOnRestEnd)
     private val theme = MutableStateFlow(themeMode)
@@ -27,6 +28,17 @@ class FakeSettingsRepository(
     override suspend fun setVibrateOnRestEnd(enabled: Boolean) {
         throwIfFailing()
         vibrate.value = enabled
+    }
+
+    private val dnd = MutableStateFlow(dndDuringWorkout)
+
+    val storedDndDuringWorkout: Boolean get() = dnd.value
+
+    override fun observeDndDuringWorkout(): Flow<Boolean> = dnd
+
+    override suspend fun setDndDuringWorkout(enabled: Boolean) {
+        throwIfFailing()
+        dnd.value = enabled
     }
 
     override fun observeThemeMode(): Flow<ThemeMode> = theme
