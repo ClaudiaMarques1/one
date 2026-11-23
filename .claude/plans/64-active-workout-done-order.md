@@ -30,12 +30,11 @@ Branch `feature/cmarques/64-active-workout-done-order` from develop `99eff84`. I
 - [x] `ActiveWorkoutContent`: display order + `animateItem()`; `imePadding()` for the keyboard
 - [x] Checks pass (test, lint, assembleDebug); installed on emulator; issue #64 title/text + Manual 1-8
   rewritten; old screenshots removed
-- [ ] User runs Manual 1-8 on #64; commit; new screenshots; PR `Closes #64`, CI, card -> In Review
+- [x] User ran Manual 1-8 on #64; committed; new screenshots; PR #66 `Closes #64`, CI green, card -> In Review
 
 ## Next step (session of 2026-11-23)
 
-1. **#64**: user runs Manual 1-8 (exercise moves after rest + keyboard). Then commit, new screenshots in
-   `docs/screenshots/64-active-workout-done-order/` + on #64, PR to develop with `Closes #64`, wait for CI (`gh pr checks`), card -> In Review, then wait for "merge".
+1. **#64**: PR #66 waits for the user's review - merge only on their explicit "merge".
 2. **#65 Do Not Disturb** (card already In Progress, issue has Checks): branch
    `feature/cmarques/65-workout-do-not-disturb` from develop after #64 merges, plan
    `.claude/plans/65-workout-do-not-disturb.md`. Proposed approach, to confirm with the user first:
