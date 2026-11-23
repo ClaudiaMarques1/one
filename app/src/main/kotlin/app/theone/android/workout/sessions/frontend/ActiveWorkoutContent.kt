@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -176,7 +177,9 @@ fun ActiveWorkoutContent(
         )
         HorizontalDivider(color = WarmDivider)
 
-        Box(modifier = Modifier.fillMaxSize()) {
+        // Edge-to-edge doesn't resize the window for the keyboard: shrink the list (and lift the rest
+        // bar) instead, so a focused kg/reps field scrolls above the number pad - same fix as Settings.
+        Box(modifier = Modifier.fillMaxSize().imePadding()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 state = listState,

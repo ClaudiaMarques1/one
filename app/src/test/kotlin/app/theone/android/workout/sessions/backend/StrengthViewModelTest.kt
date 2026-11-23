@@ -38,6 +38,8 @@ class StrengthViewModelTest {
 
     private fun bench() = viewModel.currentExercises.value.first { it.name == "Bench press" }
 
+    private fun shown() = viewModel.currentExercises.value.inDisplayOrder().map { it.name }
+
     @Test
     fun `startSessionFromTemplate sets up empty sets with previous values and rest times`() {
         viewModel.startSessionFromTemplate(pushDay)
@@ -82,7 +84,7 @@ class StrengthViewModelTest {
         viewModel.toggleSetDone(bench().instanceId, 0)
 
         assertEquals(ActiveSet("8", "60", done = true), bench().sets[0])
-        assertEquals(RestState("Bench press", 120, now + 120_000), viewModel.restState.value)
+        assertEquals(RestState("Bench press", 120, now + 120_000, bench().instanceId), viewModel.restState.value)
     }
 
     @Test
@@ -107,7 +109,7 @@ class StrengthViewModelTest {
         viewModel.toggleSetDone(bench().instanceId, 0)
 
         viewModel.adjustRest(30)
-        assertEquals(RestState("Bench press", 150, now + 150_000), viewModel.restState.value)
+        assertEquals(RestState("Bench press", 150, now + 150_000, bench().instanceId), viewModel.restState.value)
 
         viewModel.endRest()
         assertNull(viewModel.restState.value)
@@ -177,16 +179,33 @@ class StrengthViewModelTest {
     }
 
     @Test
-    fun `finishing an exercise orders it first on screen but the list keeps the template order`() {
+    fun `ticking a set moves its exercise up once the rest ends, but the list keeps the template order`() {
         viewModel.startSessionFromTemplate(pushDay)
         val lateral = viewModel.currentExercises.value.first { it.name == "Lateral raise" }
-        viewModel.toggleSetDone(lateral.instanceId, 0)
 
-        assertEquals(listOf("Lateral raise", "Bench press"), viewModel.currentExercises.value.inDisplayOrder().map { it.name })
+        viewModel.toggleSetDone(lateral.instanceId, 0) // rest Off - moves up straight away
+        assertEquals(listOf("Lateral raise", "Bench press"), shown())
         assertEquals(listOf("Bench press", "Lateral raise"), viewModel.currentExercises.value.map { it.name })
 
-        viewModel.addSet(lateral.instanceId) // a new, unticked set - no longer complete
-        assertEquals(listOf("Bench press", "Lateral raise"), viewModel.currentExercises.value.inDisplayOrder().map { it.name })
+        viewModel.toggleSetDone(lateral.instanceId, 0) // no ticked set left - back in its place
+        assertEquals(listOf("Bench press", "Lateral raise"), shown())
+    }
+
+    @Test
+    fun `a resting exercise waits below the started ones until the rest is skipped`() {
+        viewModel.startSessionFromTemplate(pushDay.copy(exercises = pushDay.exercises.map { it.copy(restSeconds = 60) }))
+        val lateral = viewModel.currentExercises.value.first { it.name == "Lateral raise" }
+
+        viewModel.toggleSetDone(lateral.instanceId, 0)
+        assertEquals(listOf("Bench press", "Lateral raise"), shown())
+
+        viewModel.endRest()
+        assertEquals(listOf("Lateral raise", "Bench press"), shown())
+
+        viewModel.toggleSetDone(bench().instanceId, 0) // goes under Lateral raise after its rest
+        viewModel.endRest()
+        assertEquals(listOf("Lateral raise", "Bench press"), shown())
+        assertEquals(listOf(2, 1), viewModel.currentExercises.value.map { it.doneOrder })
     }
 
     @Test

@@ -127,26 +127,33 @@ class ActiveWorkoutTest {
         ActiveExercise(name = id, sets = done.map { ActiveSet(done = it) }, doneOrder = doneOrder, instanceId = id)
 
     @Test
-    fun `isComplete needs every set ticked and at least one set`() {
-        assertTrue(exercise("a", true, true).isComplete)
-        assertFalse(exercise("a", true, false).isComplete)
-        assertFalse(exercise("a").isComplete)
+    fun `hasDoneSet needs at least one set ticked`() {
+        assertTrue(exercise("a", true, false).hasDoneSet)
+        assertFalse(exercise("a", false, false).hasDoneSet)
+        assertFalse(exercise("a").hasDoneSet)
     }
 
     @Test
-    fun `withDoneOrder numbers exercises in the order they are finished`() {
-        val first = listOf(exercise("a", false), exercise("b", true), exercise("c", false)).withDoneOrder()
+    fun `withDoneOrder numbers exercises in the order they are started`() {
+        val first = listOf(exercise("a", false, false), exercise("b", true, false), exercise("c", false)).withDoneOrder()
         assertEquals(listOf(null, 1, null), first.map { it.doneOrder })
 
-        val second = first.map { if (it.instanceId == "a") it.copy(sets = listOf(ActiveSet(done = true))) else it }.withDoneOrder()
-        assertEquals(listOf(2, 1, null), second.map { it.doneOrder })
+        val second = first.map { if (it.instanceId == "c") it.copy(sets = listOf(ActiveSet(done = true))) else it }.withDoneOrder()
+        assertEquals(listOf(null, 1, 2), second.map { it.doneOrder })
     }
 
     @Test
-    fun `withDoneOrder clears an exercise that is no longer complete`() {
-        val list = listOf(exercise("a", true, false, doneOrder = 1), exercise("b", true, doneOrder = 2)).withDoneOrder()
+    fun `withDoneOrder waits while that exercise is resting`() {
+        val list = listOf(exercise("a", true), exercise("b", false))
+        assertEquals(listOf(null, null), list.withDoneOrder(restingId = "a").map { it.doneOrder })
+        assertEquals(listOf(1, null), list.withDoneOrder(restingId = "b").map { it.doneOrder })
+    }
+
+    @Test
+    fun `withDoneOrder clears an exercise with no ticked set any more`() {
+        val list = listOf(exercise("a", false, false, doneOrder = 1), exercise("b", true, doneOrder = 2)).withDoneOrder()
         assertEquals(listOf(null, 2), list.map { it.doneOrder })
-        // Finishing "a" again puts it after "b".
+        // Starting "a" again puts it after "b".
         val again = list.map { if (it.instanceId == "a") it.copy(sets = listOf(ActiveSet(done = true))) else it }.withDoneOrder()
         assertEquals(listOf(3, 2), again.map { it.doneOrder })
     }

@@ -78,15 +78,17 @@ class StrengthViewModel(
     fun toggleSetDone(instanceId: String, setIndex: Int) {
         val exercise = currentExercises.value.find { it.instanceId == instanceId } ?: return
         val toggled = exercise.toggleSetDone(setIndex)
-        updateExercise(instanceId) { toggled }
         val nowDone = toggled.sets.getOrNull(setIndex)?.done == true
+        // Rest first, so the exercise waits for it to end before moving up (#64).
         if (nowDone && exercise.restSeconds > 0) {
             savedStateHandle[KEY_REST] = RestState(
                 exerciseName = exercise.name,
                 totalSeconds = exercise.restSeconds,
-                endsAtMillis = clock() + exercise.restSeconds * 1000L
+                endsAtMillis = clock() + exercise.restSeconds * 1000L,
+                instanceId = instanceId
             )
         }
+        updateExercise(instanceId) { toggled }
     }
 
     fun addSet(instanceId: String) {
@@ -129,11 +131,13 @@ class StrengthViewModel(
     /** The rest bar's -30 / +30. */
     fun adjustRest(deltaSeconds: Int) {
         savedStateHandle[KEY_REST] = restState.value?.adjusted(deltaSeconds, clock())
+        updateExercises { it } // -30 can end the rest
     }
 
-    /** Skip, or the timer reaching 0. */
+    /** Skip, or the timer reaching 0 - the resting exercise now moves up (#64). */
     fun endRest() {
         savedStateHandle[KEY_REST] = null
+        updateExercises { it }
     }
 
     /** Finish needs a choice from the user when some sets aren't ticked. */
@@ -176,9 +180,9 @@ class StrengthViewModel(
         updateExercises { list -> list.map { if (it.instanceId == instanceId) change(it) else it } }
     }
 
-    // Every change goes through here, so the done order (#64) always matches the ticks.
+    // Every change goes through here, so the done order (#64) always matches the ticks and the rest.
     private fun updateExercises(change: (List<ActiveExercise>) -> List<ActiveExercise>) {
-        savedStateHandle[KEY_CURRENT_EXERCISES] = change(currentExercises.value).withDoneOrder()
+        savedStateHandle[KEY_CURRENT_EXERCISES] = change(currentExercises.value).withDoneOrder(restState.value?.instanceId)
     }
 
     private companion object {
