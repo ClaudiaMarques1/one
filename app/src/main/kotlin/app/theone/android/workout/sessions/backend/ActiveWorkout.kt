@@ -28,16 +28,26 @@ data class ActiveExercise(
     /** The template's sets from last time, by set index - the Previous column and field placeholders. */
     val previousSets: List<StrengthSet> = emptyList(),
     val restSeconds: Int = DEFAULT_REST_SECONDS,
+    /**
+     * Set once a set is ticked and that rest is over: 1 for the first exercise started, 2 for the next... -
+     * orders the started ones at the top of the screen ([inDisplayOrder]). Kept up to date by [withDoneOrder].
+     */
+    val doneOrder: Int? = null,
     /** Stable per instance, so rest times and list keys survive removing or duplicating exercises. */
     val instanceId: String = UUID.randomUUID().toString()
 ) : Serializable {
     fun previous(setIndex: Int): StrengthSet? = previousSets.getOrNull(setIndex)
+
+    /** At least one set ticked. */
+    val hasDoneSet: Boolean get() = sets.any { it.done }
 }
 
 data class RestState(
     val exerciseName: String,
     val totalSeconds: Int,
-    val endsAtMillis: Long
+    val endsAtMillis: Long,
+    /** The resting exercise's [ActiveExercise.instanceId] - it moves up only once this rest is over (#64). */
+    val instanceId: String = ""
 ) : Serializable
 
 /** What Finish saves when some sets aren't ticked. */
@@ -86,6 +96,26 @@ fun ActiveExercise.withAddedSet(): ActiveExercise {
     val last = sets.lastOrNull()
     return copy(sets = sets + ActiveSet(repsText = last?.repsText.orEmpty(), weightText = last?.weightText.orEmpty()))
 }
+
+/**
+ * Numbers newly started exercises (a set ticked) after the ones already started - except the one whose
+ * rest is running ([restingId]), which waits until the rest ends or is skipped. Clears it from any with
+ * no ticked set any more. The list itself keeps the template's order (#64).
+ */
+fun List<ActiveExercise>.withDoneOrder(restingId: String? = null): List<ActiveExercise> {
+    var next = mapNotNull { exercise -> exercise.doneOrder?.takeIf { exercise.hasDoneSet } }.maxOrNull() ?: 0
+    return map { exercise ->
+        when {
+            !exercise.hasDoneSet -> if (exercise.doneOrder == null) exercise else exercise.copy(doneOrder = null)
+            exercise.doneOrder != null || exercise.instanceId == restingId -> exercise
+            else -> exercise.copy(doneOrder = ++next)
+        }
+    }
+}
+
+/** The screen's order: started exercises first, in the order they moved up, then the rest in list order (#64). */
+fun List<ActiveExercise>.inDisplayOrder(): List<ActiveExercise> =
+    filter { it.doneOrder != null }.sortedBy { it.doneOrder } + filter { it.doneOrder == null }
 
 fun List<ActiveExercise>.doneSetCount(): Int = sumOf { exercise -> exercise.sets.count { it.done } }
 

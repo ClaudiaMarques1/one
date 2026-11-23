@@ -122,4 +122,50 @@ class ActiveWorkoutTest {
         assertEquals(RestState("Bench press", 120, 130_000), rest.adjusted(30, nowMillis = 10_000))
         assertEquals(RestState("Bench press", 90, 130_000), rest.adjusted(30, nowMillis = 90_000))
     }
+
+    private fun exercise(id: String, vararg done: Boolean, doneOrder: Int? = null) =
+        ActiveExercise(name = id, sets = done.map { ActiveSet(done = it) }, doneOrder = doneOrder, instanceId = id)
+
+    @Test
+    fun `hasDoneSet needs at least one set ticked`() {
+        assertTrue(exercise("a", true, false).hasDoneSet)
+        assertFalse(exercise("a", false, false).hasDoneSet)
+        assertFalse(exercise("a").hasDoneSet)
+    }
+
+    @Test
+    fun `withDoneOrder numbers exercises in the order they are started`() {
+        val first = listOf(exercise("a", false, false), exercise("b", true, false), exercise("c", false)).withDoneOrder()
+        assertEquals(listOf(null, 1, null), first.map { it.doneOrder })
+
+        val second = first.map { if (it.instanceId == "c") it.copy(sets = listOf(ActiveSet(done = true))) else it }.withDoneOrder()
+        assertEquals(listOf(null, 1, 2), second.map { it.doneOrder })
+    }
+
+    @Test
+    fun `withDoneOrder waits while that exercise is resting`() {
+        val list = listOf(exercise("a", true), exercise("b", false))
+        assertEquals(listOf(null, null), list.withDoneOrder(restingId = "a").map { it.doneOrder })
+        assertEquals(listOf(1, null), list.withDoneOrder(restingId = "b").map { it.doneOrder })
+    }
+
+    @Test
+    fun `withDoneOrder clears an exercise with no ticked set any more`() {
+        val list = listOf(exercise("a", false, false, doneOrder = 1), exercise("b", true, doneOrder = 2)).withDoneOrder()
+        assertEquals(listOf(null, 2), list.map { it.doneOrder })
+        // Starting "a" again puts it after "b".
+        val again = list.map { if (it.instanceId == "a") it.copy(sets = listOf(ActiveSet(done = true))) else it }.withDoneOrder()
+        assertEquals(listOf(3, 2), again.map { it.doneOrder })
+    }
+
+    @Test
+    fun `inDisplayOrder puts done exercises first by finish order, the rest in list order`() {
+        val list = listOf(
+            exercise("a", false),
+            exercise("b", true, doneOrder = 2),
+            exercise("c", false),
+            exercise("d", true, doneOrder = 1)
+        )
+        assertEquals(listOf("d", "b", "a", "c"), list.inDisplayOrder().map { it.instanceId })
+    }
 }
