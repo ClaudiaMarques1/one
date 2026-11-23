@@ -1,6 +1,7 @@
 package app.theone.android.navigation
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
@@ -130,7 +131,9 @@ fun OneNavHost(authViewModel: AuthViewModel) {
             NavHost(
                 navController = navController,
                 startDestination = Destination.Home.route,
-                modifier = Modifier.padding(padding)
+                // Consumed so a screen's imePadding() only adds what the keyboard covers beyond the
+                // bottom bar - otherwise the bar's height shows as an empty gap above the keyboard.
+                modifier = Modifier.padding(padding).consumeWindowInsets(padding)
             ) {
                 composable(Destination.Home.route) {
                     NeutralTheme {
