@@ -46,6 +46,19 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `dndDuringWorkout defaults to off and can be turned on`() = runTest {
+        val repository = FakeSettingsRepository()
+        val viewModel = SettingsViewModel(repository)
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.dndDuringWorkout.collect {} }
+        assertFalse(viewModel.dndDuringWorkout.value)
+
+        viewModel.setDndDuringWorkout(true)
+
+        assertTrue(repository.storedDndDuringWorkout)
+        assertTrue(viewModel.dndDuringWorkout.value)
+    }
+
+    @Test
     fun `a failed write surfaces settingsError and keeps the old value`() = runTest {
         val repository = FakeSettingsRepository().apply { failNext = IllegalStateException("disk full") }
         val viewModel = SettingsViewModel(repository)

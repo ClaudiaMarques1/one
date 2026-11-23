@@ -10,6 +10,11 @@ interface SettingsRepository {
 
     suspend fun setVibrateOnRestEnd(enabled: Boolean)
 
+    /** Whether a workout turns on Do Not Disturb (Priority only) while it runs (#65). Defaults to false. */
+    fun observeDndDuringWorkout(): Flow<Boolean>
+
+    suspend fun setDndDuringWorkout(enabled: Boolean)
+
     /** Light, dark, or follow the phone. Defaults to [ThemeMode.SYSTEM]. */
     fun observeThemeMode(): Flow<ThemeMode>
 

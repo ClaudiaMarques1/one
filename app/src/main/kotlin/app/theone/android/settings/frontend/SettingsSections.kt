@@ -55,8 +55,11 @@ enum class SettingsSection(val key: String, val title: String, val icon: ImageVe
 /** The summary of a section that has nothing to set yet (Calendar, Diary). */
 internal const val NO_SETTINGS_YET = "No settings yet"
 
-/** Workout's row summary: "Vibrate when rest ends: On". */
-internal fun workoutSummary(vibrateOnRestEnd: Boolean): String = "Vibrate when rest ends: ${if (vibrateOnRestEnd) "On" else "Off"}"
+/** Workout's row summary: "Vibrate: On · Do Not Disturb: Off". */
+internal fun workoutSummary(vibrateOnRestEnd: Boolean, dndDuringWorkout: Boolean): String =
+    "Vibrate: ${onOff(vibrateOnRestEnd)} · Do Not Disturb: ${onOff(dndDuringWorkout)}"
+
+private fun onOff(value: Boolean) = if (value) "On" else "Off"
 
 /** Meals' row summary: "4 slots · 2.5 L water". */
 internal fun mealsSummary(settings: MealSettings): String {

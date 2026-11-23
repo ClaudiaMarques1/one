@@ -1,5 +1,7 @@
 package app.theone.android.settings.frontend
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Contrast
 import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.DoNotDisturbOn
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material3.Icon
@@ -33,10 +36,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,6 +54,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.theone.android.meals.backend.MealSettings
+import app.theone.android.notifications.WorkoutDoNotDisturb
+import app.theone.android.notifications.dndAccessSettingsIntent
 import app.theone.android.settings.backend.DataStoreSettingsRepository
 import app.theone.android.settings.backend.SettingsViewModel
 import app.theone.android.settings.backend.ThemeMode
@@ -67,6 +75,7 @@ import app.theone.android.ui.theme.WarmIcon
 import app.theone.android.ui.theme.WarmOnSurface
 import app.theone.android.ui.theme.WarmSecondaryText
 import app.theone.android.ui.theme.WarmSurface
+import kotlinx.coroutines.launch
 
 // 1d / 2d in the home handoff.
 
@@ -84,6 +93,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenSection: (SettingsSection) -> Unit,
     val themeMode by viewModel.themeMode.collectAsState()
     val weekStart by viewModel.weekStart.collectAsState()
     val vibrateOnRestEnd by viewModel.vibrateOnRestEnd.collectAsState()
+    val dndDuringWorkout by viewModel.dndDuringWorkout.collectAsState()
     val mealSettings by viewModel.mealSettings.collectAsState()
     val settingsError by viewModel.settingsError.collectAsState()
 
@@ -95,7 +105,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenSection: (SettingsSection) -> Unit,
             onWeekStartChange = viewModel::setWeekStart,
             summaries = mapOf(
                 SettingsSection.CALENDAR to NO_SETTINGS_YET,
-                SettingsSection.WORKOUT to workoutSummary(vibrateOnRestEnd),
+                SettingsSection.WORKOUT to workoutSummary(vibrateOnRestEnd, dndDuringWorkout),
                 SettingsSection.MEALS to mealsSummary(mealSettings),
                 SettingsSection.DIARY to NO_SETTINGS_YET
             ),
@@ -111,8 +121,28 @@ fun SettingsScreen(onBack: () -> Unit, onOpenSection: (SettingsSection) -> Unit,
 fun SettingsSectionScreen(section: SettingsSection, onBack: () -> Unit, viewModel: SettingsViewModel = settingsViewModel()) {
     val themeMode by viewModel.themeMode.collectAsState()
     val vibrateOnRestEnd by viewModel.vibrateOnRestEnd.collectAsState()
+    val dndDuringWorkout by viewModel.dndDuringWorkout.collectAsState()
     val mealSettings by viewModel.mealSettings.collectAsState()
     val settingsError by viewModel.settingsError.collectAsState()
+
+    // Do Not Disturb needs access the user grants in system settings (#65): turning the switch on without
+    // it opens that screen, and the setting is stored on return only if access was granted.
+    val context = LocalContext.current
+    val workoutDnd = remember(context) { WorkoutDoNotDisturb(context) }
+    val scope = rememberCoroutineScope()
+    val accessLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (workoutDnd.hasAccess()) viewModel.setDndDuringWorkout(true)
+    }
+    val onDndDuringWorkoutChange: (Boolean) -> Unit = { enabled ->
+        when {
+            !enabled -> {
+                viewModel.setDndDuringWorkout(false)
+                scope.launch { workoutDnd.restore() } // also mid-workout
+            }
+            workoutDnd.hasAccess() -> viewModel.setDndDuringWorkout(true)
+            else -> accessLauncher.launch(dndAccessSettingsIntent())
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         SettingsSectionContent(
@@ -121,6 +151,8 @@ fun SettingsSectionScreen(section: SettingsSection, onBack: () -> Unit, viewMode
             onThemeModeChange = viewModel::setThemeMode,
             vibrateOnRestEnd = vibrateOnRestEnd,
             onVibrateOnRestEndChange = viewModel::setVibrateOnRestEnd,
+            dndDuringWorkout = dndDuringWorkout,
+            onDndDuringWorkoutChange = onDndDuringWorkoutChange,
             onBack = onBack,
             mealSettings = mealSettings,
             onMealSettingsChange = viewModel::setMealSettings
@@ -190,6 +222,8 @@ private fun SettingsSectionContent(
     onThemeModeChange: (ThemeMode) -> Unit,
     vibrateOnRestEnd: Boolean,
     onVibrateOnRestEndChange: (Boolean) -> Unit,
+    dndDuringWorkout: Boolean,
+    onDndDuringWorkoutChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     mealSettings: MealSettings = MealSettings(),
     onMealSettingsChange: (MealSettings) -> Unit = {}
@@ -211,7 +245,22 @@ private fun SettingsSectionContent(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             when (section) {
-                SettingsSection.WORKOUT -> VibrateRow(vibrateOnRestEnd, onVibrateOnRestEndChange)
+                SettingsSection.WORKOUT -> {
+                    SwitchRow(
+                        icon = Icons.Outlined.Vibration,
+                        title = "Vibrate when rest ends",
+                        subtitle = "Buzz when the rest timer reaches zero",
+                        checked = vibrateOnRestEnd,
+                        onCheckedChange = onVibrateOnRestEndChange
+                    )
+                    SwitchRow(
+                        icon = Icons.Outlined.DoNotDisturbOn,
+                        title = "Do Not Disturb during workouts",
+                        subtitle = "Priority only while a workout runs, then back to how it was",
+                        checked = dndDuringWorkout,
+                        onCheckedChange = onDndDuringWorkoutChange
+                    )
+                }
                 SettingsSection.MEALS -> MealSettingsSection(settings = mealSettings, onChange = onMealSettingsChange)
                 SettingsSection.CALENDAR, SettingsSection.DIARY -> NoSettingsNote(section)
             }
@@ -220,7 +269,7 @@ private fun SettingsSectionContent(
 }
 
 @Composable
-private fun VibrateRow(vibrateOnRestEnd: Boolean, onVibrateOnRestEndChange: (Boolean) -> Unit) {
+private fun SwitchRow(icon: ImageVector, title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -228,18 +277,18 @@ private fun VibrateRow(vibrateOnRestEnd: Boolean, onVibrateOnRestEndChange: (Boo
             .background(CardSurface)
             .border(1.dp, WarmCardBorder, CardShape)
             // The whole row toggles the switch.
-            .toggleable(value = vibrateOnRestEnd, role = Role.Switch, onValueChange = onVibrateOnRestEndChange)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(Icons.Outlined.Vibration, contentDescription = null, tint = WarmIcon, modifier = Modifier.size(24.dp))
+        Icon(icon, contentDescription = null, tint = WarmIcon, modifier = Modifier.size(24.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text("Vibrate when rest ends", fontSize = 16.sp, color = WarmOnSurface)
-            Text("Buzz when the rest timer reaches zero", fontSize = 13.sp, color = WarmSecondaryText)
+            Text(title, fontSize = 16.sp, color = WarmOnSurface)
+            Text(subtitle, fontSize = 13.sp, color = WarmSecondaryText)
         }
         Switch(
-            checked = vibrateOnRestEnd,
+            checked = checked,
             onCheckedChange = null,
             colors = SwitchDefaults.colors(
                 checkedTrackColor = WarmOnSurface,
@@ -326,7 +375,7 @@ private fun ThemeCard(themeMode: ThemeMode, onThemeModeChange: (ThemeMode) -> Un
 
 private val previewSummaries = mapOf(
     SettingsSection.CALENDAR to NO_SETTINGS_YET,
-    SettingsSection.WORKOUT to workoutSummary(true),
+    SettingsSection.WORKOUT to workoutSummary(true, false),
     SettingsSection.MEALS to mealsSummary(MealSettings()),
     SettingsSection.DIARY to NO_SETTINGS_YET
 )

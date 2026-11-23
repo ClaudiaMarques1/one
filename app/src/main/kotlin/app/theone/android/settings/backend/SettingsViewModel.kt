@@ -27,6 +27,17 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
         }
     }
 
+    val dndDuringWorkout: StateFlow<Boolean> = repository.observeDndDuringWorkout()
+        .catch { e -> _settingsError.value = e.message }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setDndDuringWorkout(enabled: Boolean) {
+        viewModelScope.launch {
+            runCatching { repository.setDndDuringWorkout(enabled) }
+                .onFailure { _settingsError.value = it.message }
+        }
+    }
+
     val themeMode: StateFlow<ThemeMode> = repository.observeThemeMode()
         .catch { e -> _settingsError.value = e.message }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_THEME_MODE)
