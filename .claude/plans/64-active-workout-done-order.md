@@ -1,39 +1,41 @@
-# #64 Active workout: move completed exercises up
+# #64 Active workout: move an exercise up once a set is ticked and its rest ends
 
 Branch `feature/cmarques/64-active-workout-done-order` from develop `99eff84`. Issue #64 (card In Progress).
 #65 (Do Not Disturb) is also In Progress, at the user's request - it gets its own branch after this one.
 
 ## Decisions
 
-- **Complete** = the exercise has sets and every one is ticked (`ActiveExercise.isComplete`).
-- **Order lives in `doneOrder: Int?`** on `ActiveExercise` (1 = first finished, 2 = next...), not in the
-  list order. The list keeps the template's order, so saving still writes the template back in its own
-  order, and the exercise picker / duplicate keep working on positions as before.
-- `withDoneOrder()` (pure, in `ActiveWorkout.kt`) runs on every change in `StrengthViewModel.updateExercises`:
-  numbers newly complete exercises after the done ones, clears it from any no longer complete (set
-  unticked, removed or added).
-- `inDisplayOrder()`: done ones first by `doneOrder`, then the rest in list order. Unticking puts an
-  exercise back in its own place among the still-to-do ones (not the top of them - the issue text
-  is updated to match).
-- UI: `ActiveWorkoutContent` renders `exercises.inDisplayOrder()` with `Modifier.animateItem()` (Compose BOM
-  2024.12.01 has it) so cards slide. LazyColumn keeps the first visible card's key in place, so the next
-  exercise to do stays in view.
-- Saved session (`toSessionExercises`) uses list order = template order.
+- **User's rule (clarified 2026-11-23, after two misreads):** tick a set of an exercise further down ->
+  once that rest ends (timer 0 or Skip) the card moves up, under the cards already started; none
+  started -> very top. Not "every set done" (first version, `85055e1`), not sets moving inside a card
+  (tried and dropped the same day).
+- **Started** = `ActiveExercise.hasDoneSet` (any set ticked). Order in `doneOrder: Int?` (1 = first to
+  move up...), not in the list order - the list keeps the template's order for saving / picker / duplicate.
+- `withDoneOrder(restingId)` (pure, `ActiveWorkout.kt`) runs on every change in
+  `StrengthViewModel.updateExercises` with `restState.instanceId`: numbers newly started exercises except
+  the resting one, clears it when no set is ticked. `RestState.instanceId` (defaulted) was added for this.
+- `toggleSetDone` sets the rest *before* updating exercises, so the ticked exercise waits; a new rest from
+  another exercise releases the previous one. `endRest()` (Skip + timer 0) and `adjustRest` (-30 can end
+  it) re-run the order. Rest Off -> moves immediately.
+- UI: `inDisplayOrder()` + `Modifier.animateItem()`; `requestScrollToItem(0)` when already at the top
+  (else the moved card ends up cut off above).
+- **Keyboard (user report, same session):** number pad covered kg/reps fields - `imePadding()` on the
+  `Box` around the workout `LazyColumn`, same as the Settings fix in #53.
+  The empty gap above the keyboard (bottom bar height counted twice) - fixed app-wide with
+  `consumeWindowInsets(padding)` on the NavHost in `OneNavHost.kt`.
 
 ## Checklist
 
-- [x] `isComplete`, `doneOrder`, `withDoneOrder()`, `inDisplayOrder()` + unit tests
-- [x] `StrengthViewModel.updateExercises` applies `withDoneOrder()` + ViewModel test
-- [x] `ActiveWorkoutContent`: display order + `animateItem()`; stays at the top when already there (`requestScrollToItem(0)` - without it the moved card ended up cut off above)
-- [x] Checks pass (test, lint, assembleDebug); emulator run of Manual 1-3 by Claude; screenshots in `docs/screenshots/64-active-workout-done-order/` + issue, PR `Closes #64`
-
-- [ ] User ticks Manual steps 1-6 on #64; then PR `Closes #64`, CI, card -> In Review
+- [x] `hasDoneSet`, `withDoneOrder(restingId)`, `RestState.instanceId`, ViewModel rest hooks + unit/VM tests
+- [x] `ActiveWorkoutContent`: display order + `animateItem()`; `imePadding()` for the keyboard
+- [x] Checks pass (test, lint, assembleDebug); installed on emulator; issue #64 title/text + Manual 1-8
+  rewritten; old screenshots removed
+- [ ] User runs Manual 1-8 on #64; commit; new screenshots; PR `Closes #64`, CI, card -> In Review
 
 ## Next step (session of 2026-11-23)
 
-1. **#64**: give the user the 6 Manual steps (Claude already ran 1-3 on the emulator: screenshots in
-   `docs/screenshots/64-active-workout-done-order/`, posted on #64). Once ticked: PR to develop with
-   `Closes #64`, wait for CI (`gh pr checks`), card -> In Review, then wait for "merge".
+1. **#64**: user runs Manual 1-8 (exercise moves after rest + keyboard). Then commit, new screenshots in
+   `docs/screenshots/64-active-workout-done-order/` + on #64, PR to develop with `Closes #64`, wait for CI (`gh pr checks`), card -> In Review, then wait for "merge".
 2. **#65 Do Not Disturb** (card already In Progress, issue has Checks): branch
    `feature/cmarques/65-workout-do-not-disturb` from develop after #64 merges, plan
    `.claude/plans/65-workout-do-not-disturb.md`. Proposed approach, to confirm with the user first:
