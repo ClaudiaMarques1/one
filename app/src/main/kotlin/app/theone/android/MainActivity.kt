@@ -12,19 +12,25 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.lifecycleScope
 import app.theone.android.auth.backend.AuthViewModel
 import app.theone.android.auth.frontend.SignInScreen
 import app.theone.android.navigation.OneNavHost
+import app.theone.android.notifications.WorkoutDoNotDisturb
 import app.theone.android.settings.backend.isDark
 import app.theone.android.settings.frontend.settingsViewModel
 import app.theone.android.ui.LocalWeekStart
 import app.theone.android.ui.theme.OneTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // A fresh launch can't have a running workout (it lives in saved state), so if the app was killed
+        // mid-workout, put Do Not Disturb back to how it was before it (#65).
+        if (savedInstanceState == null) lifecycleScope.launch { WorkoutDoNotDisturb(applicationContext).restore() }
         enableEdgeToEdge()
         setContent {
             // Settings -> Appearance -> Theme; System follows the phone, as before the setting existed.

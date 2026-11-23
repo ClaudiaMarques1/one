@@ -3,6 +3,7 @@ package app.theone.android.workout.frontend
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,12 +11,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.theone.android.exercise.backend.Exercise
 import app.theone.android.exercise.frontend.ExercisePickerDialog
+import app.theone.android.notifications.WorkoutDoNotDisturb
 import app.theone.android.settings.backend.SettingsViewModel
 import app.theone.android.settings.frontend.settingsViewModel
 import app.theone.android.ui.ErrorBanner
@@ -50,6 +53,7 @@ fun WorkoutScreen(
     val currentExercises by strengthViewModel.currentExercises.collectAsState()
     val restState by strengthViewModel.restState.collectAsState()
     val vibrateOnRestEnd by settingsViewModel.vibrateOnRestEnd.collectAsState()
+    val dndDuringWorkout by settingsViewModel.dndDuringWorkout.collectAsState()
     val workoutError by strengthViewModel.workoutError.collectAsState()
     val templateError by templateViewModel.templateError.collectAsState()
 
@@ -57,6 +61,20 @@ fun WorkoutScreen(
     var showPicker by remember { mutableStateOf(false) }
     var showActiveWorkoutPicker by remember { mutableStateOf(false) }
     var pendingStartTemplate by remember { mutableStateOf<WorkoutTemplate?>(null) }
+
+    // Do Not Disturb during a workout (#65): on while one runs (if the setting is on), back to how it was
+    // once it's finished or discarded. The setting's initial false doesn't restore mid-workout - that
+    // would flicker DND off when coming back to this tab; turning the setting off restores from Settings.
+    val context = LocalContext.current
+    val workoutDnd = remember(context) { WorkoutDoNotDisturb(context) }
+    val workoutActive = activeTemplateName.isNotEmpty()
+    LaunchedEffect(workoutActive, dndDuringWorkout) {
+        if (!workoutActive) {
+            workoutDnd.restore()
+        } else if (dndDuringWorkout) {
+            workoutDnd.turnOn()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
