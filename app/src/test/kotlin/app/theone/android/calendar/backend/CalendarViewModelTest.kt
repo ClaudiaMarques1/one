@@ -3,6 +3,8 @@ package app.theone.android.calendar.backend
 import androidx.lifecycle.SavedStateHandle
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.backend.FakeDiaryRepository
+import app.theone.android.meals.backend.FakeMealsRepository
+import app.theone.android.meals.backend.PlannedMeal
 import app.theone.android.testing.MainDispatcherRule
 import app.theone.android.workout.sessions.backend.FakeStrengthRepository
 import app.theone.android.workout.sessions.backend.StrengthSession
@@ -22,13 +24,15 @@ class CalendarViewModelTest {
 
     private val strengthRepository = FakeStrengthRepository()
     private val diaryRepository = FakeDiaryRepository()
+    private val mealsRepository = FakeMealsRepository()
 
     // Lazy: the ViewModel must be built after MainDispatcherRule has replaced Dispatchers.Main.
     private val viewModel by lazy {
         CalendarViewModel(
             strengthRepository = strengthRepository,
             diaryRepository = diaryRepository,
-            savedStateHandle = SavedStateHandle()
+            savedStateHandle = SavedStateHandle(),
+            mealsRepository = mealsRepository
         )
     }
 
@@ -176,5 +180,52 @@ class CalendarViewModelTest {
         strengthRepository.addSession(StrengthSession(date = "2026-10-05", templateName = "Push Day"))
 
         assertTrue(viewModel.dayByDate.value.getValue("2026-10-05").isActive)
+    }
+
+    @Test
+    fun `DayActivity has anything with meals too, but meals don't make a day active`() {
+        val mealsOnly = DayActivity(meals = listOf(PlannedMeal(name = "Oats")))
+        assertTrue(mealsOnly.hasAnything)
+        assertFalse(mealsOnly.isActive)
+        assertFalse(DayActivity().hasAnything)
+    }
+
+    @Test
+    fun `dayByDate adds the selected month's meals in slot order, with eaten and kcal totals`() = runTest {
+        viewModel.selectDate("2026-10-10")
+        mealsRepository.addMeals(
+            listOf(
+                PlannedMeal(date = "2026-10-10", slot = "DINNER", name = "Salmon", kcal = 600, createdAt = 1L),
+                PlannedMeal(date = "2026-10-10", slot = "BREAKFAST", name = "Oats", kcal = 400, eaten = true, createdAt = 2L),
+                PlannedMeal(date = "2026-10-10", slot = "UNKNOWN", name = "Bar", kcal = 200, createdAt = 3L)
+            )
+        )
+        diaryRepository.addEntry(DiaryEntry(date = "2026-10-10", mood = "🙂"))
+        backgroundScope.collectDayByDate()
+
+        val day = viewModel.dayByDate.value.getValue("2026-10-10")
+        // Breakfast, Dinner, then the unknown slot counted as Snacks (after Dinner in the Meals checklist order).
+        assertEquals(listOf("Oats", "Salmon", "Bar"), day.meals.map { it.name })
+        assertEquals(1, day.mealsEaten)
+        assertEquals(1200, day.mealsKcal)
+        assertEquals("🙂", day.diary?.mood)
+    }
+
+    @Test
+    fun `meals load for the selected month padded by a week, and follow the month`() = runTest {
+        mealsRepository.addMeals(
+            listOf(
+                PlannedMeal(date = "2026-09-24", name = "In the padding"),
+                PlannedMeal(date = "2026-09-23", name = "Too early"),
+                PlannedMeal(date = "2026-11-20", name = "Next month")
+            )
+        )
+        viewModel.selectDate("2026-10-10")
+        backgroundScope.collectDayByDate()
+
+        assertEquals(setOf("2026-09-24"), viewModel.dayByDate.value.keys)
+
+        viewModel.selectDate("2026-11-02")
+        assertEquals(setOf("2026-11-20"), viewModel.dayByDate.value.keys)
     }
 }
