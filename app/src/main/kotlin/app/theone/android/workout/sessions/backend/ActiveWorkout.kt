@@ -50,8 +50,15 @@ data class RestState(
     val instanceId: String = ""
 ) : Serializable
 
-/** What Finish saves when some sets aren't ticked. */
+/** Which sets [setsToSave] keeps: Finish logs done sets only; Edit sets on a logged session keeps all. */
 enum class FinishMode { DONE_SETS_ONLY, ALL_SETS }
+
+/**
+ * What Finish writes back to the template when some sets aren't ticked (#48) - the session log itself
+ * always keeps only the ticked sets. [TRIM_TO_DONE] makes the template what was done, e.g. after
+ * swapping one exercise for another mid-workout.
+ */
+enum class TemplateUpdate { KEEP_FULL, TRIM_TO_DONE }
 
 fun parseReps(text: String): Int? = text.trim().toIntOrNull()?.takeIf { it >= 0 }
 
@@ -74,6 +81,23 @@ fun WorkoutTemplate.toActiveExercises(newId: () -> String = { UUID.randomUUID().
             instanceId = newId()
         )
     }
+
+/**
+ * Repeat from session detail (#48): one empty set row per logged set, with the logged sets as Previous.
+ * Rest times come from [template]'s exercise of the same name, else the default.
+ */
+fun StrengthSession.toActiveExercises(
+    template: WorkoutTemplate?,
+    newId: () -> String = { UUID.randomUUID().toString() }
+): List<ActiveExercise> = exercises.map { exercise ->
+    ActiveExercise(
+        name = exercise.name,
+        sets = List(exercise.sets.size) { ActiveSet() },
+        previousSets = exercise.sets,
+        restSeconds = template?.exercises?.firstOrNull { it.name == exercise.name }?.restSeconds ?: DEFAULT_REST_SECONDS,
+        instanceId = newId()
+    )
+}
 
 /** Ticking a set: toggles done; when marking done, empty fields are filled from the previous set. */
 fun ActiveExercise.toggleSetDone(setIndex: Int): ActiveExercise {
@@ -126,13 +150,16 @@ fun List<ActiveExercise>.hasUnfinishedSets(): Boolean = any { exercise -> exerci
 /** The sets Finish keeps for one exercise, as saved values (an empty field falls back to the previous set, then 0). */
 fun ActiveExercise.setsToSave(mode: FinishMode): List<StrengthSet> =
     sets.mapIndexedNotNull { index, set ->
-        if (mode == FinishMode.DONE_SETS_ONLY && !set.done) return@mapIndexedNotNull null
-        val previous = previous(index)
-        StrengthSet(
-            reps = parseReps(set.repsText) ?: previous?.reps ?: 0,
-            weightKg = parseWeightKg(set.weightText) ?: previous?.weightKg ?: 0.0
-        )
+        if (mode == FinishMode.DONE_SETS_ONLY && !set.done) null else savedSet(index, set)
     }
+
+private fun ActiveExercise.savedSet(index: Int, set: ActiveSet): StrengthSet {
+    val previous = previous(index)
+    return StrengthSet(
+        reps = parseReps(set.repsText) ?: previous?.reps ?: 0,
+        weightKg = parseWeightKg(set.weightText) ?: previous?.weightKg ?: 0.0
+    )
+}
 
 /** The saved session's exercises: exercises left with no sets are dropped. */
 fun List<ActiveExercise>.toSessionExercises(mode: FinishMode): List<StrengthExercise> =
@@ -141,12 +168,19 @@ fun List<ActiveExercise>.toSessionExercises(mode: FinishMode): List<StrengthExer
     }
 
 /**
- * What finishing writes back to the template: every exercise in the workout, in order, with the sets
- * just logged - or its previous sets if nothing was saved for it - and its rest time.
+ * What finishing writes back to the template, in list order with rest times (#48):
+ * - [TemplateUpdate.KEEP_FULL]: every exercise and set row; ticked sets take today's values, unticked
+ *   ones keep their previous values (an exercise with no rows left keeps its previous sets).
+ * - [TemplateUpdate.TRIM_TO_DONE]: only the ticked sets, and only exercises with one ticked.
  */
-fun List<ActiveExercise>.toTemplateExercises(mode: FinishMode): List<TemplateExercise> =
-    map { exercise ->
-        val sets = exercise.setsToSave(mode).ifEmpty { exercise.previousSets }
+fun List<ActiveExercise>.toTemplateExercises(update: TemplateUpdate): List<TemplateExercise> =
+    mapNotNull { exercise ->
+        val sets = when (update) {
+            TemplateUpdate.TRIM_TO_DONE -> exercise.setsToSave(FinishMode.DONE_SETS_ONLY).ifEmpty { return@mapNotNull null }
+            TemplateUpdate.KEEP_FULL -> exercise.sets.mapIndexed { index, set ->
+                exercise.previous(index)?.takeUnless { set.done } ?: exercise.savedSet(index, set)
+            }.ifEmpty { exercise.previousSets }
+        }
         TemplateExercise(
             name = exercise.name,
             sets = sets.map { TemplateSet(it.reps, it.weightKg) },

@@ -1,11 +1,10 @@
 package app.theone.android.workout.frontend
 
-import java.text.NumberFormat
+import app.theone.android.workout.sessions.frontend.minutesLabel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
-import kotlin.math.roundToLong
 
 // Display text for the Workout home screen (1a) and the start sheet (1b).
 
@@ -38,12 +37,15 @@ internal fun lastDoneShortLabel(date: LocalDate?, today: LocalDate, locale: Loca
     return "last done $text"
 }
 
-/** Recent row meta: "13 sets · 4,560 kg"; bodyweight-only sessions leave out the kg. */
-internal fun sessionMetaLabel(setCount: Int, volumeKg: Double, locale: Locale = Locale.getDefault()): String {
+/** Recent row meta: "13 sets · 62 min"; sessions without a recorded start (older ones) show just the sets (#48). */
+internal fun sessionMetaLabel(setCount: Int, durationMinutes: Long?): String {
     val sets = countLabel(setCount, "set")
-    val volume = volumeKg.roundToLong()
-    return if (volume <= 0) sets else "$sets · ${NumberFormat.getIntegerInstance(locale).format(volume)} kg"
+    return if (durationMinutes == null) sets else "$sets · ${minutesLabel(durationMinutes)}"
 }
+
+/** Recent row date block, top line: "NOV" (#48). */
+internal fun shortMonth(date: LocalDate, locale: Locale = Locale.getDefault()): String =
+    date.format(DateTimeFormatter.ofPattern("MMM", locale)).uppercase(locale)
 
 /** Recent row date block: "Thu" above "8". */
 internal fun shortWeekday(date: LocalDate, locale: Locale = Locale.getDefault()): String =

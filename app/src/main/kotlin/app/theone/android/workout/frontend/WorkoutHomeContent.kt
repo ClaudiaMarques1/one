@@ -3,6 +3,7 @@ package app.theone.android.workout.frontend
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,15 +70,15 @@ import app.theone.android.workout.backend.lastDoneByTemplate
 import app.theone.android.workout.backend.recentSessions
 import app.theone.android.workout.backend.sessionsThisWeek
 import app.theone.android.workout.backend.setCount
-import app.theone.android.workout.backend.volumeKg
 import app.theone.android.workout.sessions.backend.StrengthExercise
 import app.theone.android.workout.sessions.backend.StrengthSession
 import app.theone.android.workout.sessions.backend.StrengthSet
+import app.theone.android.workout.sessions.backend.durationMinutes
+import app.theone.android.workout.sessions.backend.localDate
 import app.theone.android.workout.templates.backend.TemplateExercise
 import app.theone.android.workout.templates.backend.TemplateSet
 import app.theone.android.workout.templates.backend.WorkoutTemplate
 import java.time.LocalDate
-import java.time.format.DateTimeParseException
 
 // 1a in the workout redesign handoff.
 
@@ -97,7 +98,8 @@ fun WorkoutHomeContent(
     onCreateTemplateClick: () -> Unit,
     onStartClick: (WorkoutTemplate) -> Unit,
     onEditTemplate: (WorkoutTemplate) -> Unit,
-    onDeleteTemplate: (String) -> Unit
+    onDeleteTemplate: (String) -> Unit,
+    onOpenSession: (StrengthSession) -> Unit = {}
 ) {
     val lastDone = remember(sessions) { lastDoneByTemplate(sessions) }
     val recent = remember(sessions) { recentSessions(sessions) }
@@ -147,7 +149,7 @@ fun WorkoutHomeContent(
                 Column(modifier = Modifier.workoutCard()) {
                     recent.forEachIndexed { index, session ->
                         if (index > 0) HorizontalDivider(color = WarmDivider)
-                        RecentRow(session)
+                        RecentRow(session, onClick = { onOpenSession(session) })
                     }
                 }
             }
@@ -290,24 +292,28 @@ internal fun TemplateIconTile(size: Int, radius: Int, iconSize: Int) {
     }
 }
 
-/** Not clickable until a session detail screen exists (handoff 1a). */
+/** Opens the session detail (3a, #48). Date block: month, day, weekday. */
 @Composable
-private fun RecentRow(session: StrengthSession) {
-    val date = try {
-        LocalDate.parse(session.date)
-    } catch (e: DateTimeParseException) {
-        null
-    }
+private fun RecentRow(session: StrengthSession, onClick: () -> Unit) {
+    val date = session.localDate()
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.width(44.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(date?.let(::shortWeekday).orEmpty(), fontSize = 12.sp, fontWeight = FontWeight.Medium, color = WarmSecondaryText)
+            Text(
+                date?.let(::shortMonth).orEmpty(),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 0.44.sp,
+                color = WarmSecondaryText
+            )
             Text(date?.dayOfMonth?.toString().orEmpty(), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = WarmOnSurface)
+            Text(date?.let(::shortWeekday).orEmpty(), fontSize = 12.sp, fontWeight = FontWeight.Medium, color = WarmSecondaryText)
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -318,7 +324,7 @@ private fun RecentRow(session: StrengthSession) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(sessionMetaLabel(session.setCount(), session.volumeKg()), fontSize = 13.sp, color = WarmSecondaryText)
+            Text(sessionMetaLabel(session.setCount(), session.durationMinutes()), fontSize = 13.sp, color = WarmSecondaryText)
         }
         Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = WarmMutedIcon, modifier = Modifier.size(22.dp))
     }

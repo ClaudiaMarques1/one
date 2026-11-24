@@ -67,9 +67,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -81,6 +83,7 @@ import app.theone.android.ui.theme.CardSurface
 import app.theone.android.ui.theme.DeleteRed
 import app.theone.android.ui.theme.OnWorkoutDeep
 import app.theone.android.ui.theme.OneTheme
+import app.theone.android.ui.theme.WarmBodyText
 import app.theone.android.ui.theme.WarmButtonOutline
 import app.theone.android.ui.theme.WarmCardBorder
 import app.theone.android.ui.theme.WarmDisabledFill
@@ -101,10 +104,10 @@ import app.theone.android.ui.theme.WorkoutRestSecondary
 import app.theone.android.ui.theme.WorkoutSoft
 import app.theone.android.workout.sessions.backend.ActiveExercise
 import app.theone.android.workout.sessions.backend.ActiveSet
-import app.theone.android.workout.sessions.backend.FinishMode
 import app.theone.android.workout.sessions.backend.RestState
 import app.theone.android.workout.sessions.backend.RestVibrator
 import app.theone.android.workout.sessions.backend.StrengthSet
+import app.theone.android.workout.sessions.backend.TemplateUpdate
 import app.theone.android.workout.sessions.backend.doneSetCount
 import app.theone.android.workout.sessions.backend.elapsedFraction
 import app.theone.android.workout.sessions.backend.formatWeightInput
@@ -143,8 +146,11 @@ fun ActiveWorkoutContent(
     onAdjustRest: (deltaSeconds: Int) -> Unit,
     onEndRest: () -> Unit,
     onAddExerciseClick: () -> Unit,
-    onFinish: (FinishMode) -> Unit,
-    onDiscard: () -> Unit
+    onFinish: (TemplateUpdate) -> Unit,
+    onDiscard: () -> Unit,
+    notes: String = "",
+    onNotesChange: (String) -> Unit = {},
+    hasTemplate: Boolean = false
 ) {
     var restSheetFor by rememberSaveable { mutableStateOf<String?>(null) }
     var showFinishDialog by rememberSaveable { mutableStateOf(false) }
@@ -172,7 +178,8 @@ fun ActiveWorkoutContent(
             progress = progressLabel(doneSets, exercises.totalSetCount()),
             finishEnabled = doneSets > 0,
             onFinish = {
-                if (exercises.hasUnfinishedSets()) showFinishDialog = true else onFinish(FinishMode.ALL_SETS)
+                // Only ticked sets are logged; the choice is what the template keeps (#48) - no template, no question.
+                if (hasTemplate && exercises.hasUnfinishedSets()) showFinishDialog = true else onFinish(TemplateUpdate.KEEP_FULL)
             }
         )
         HorizontalDivider(color = WarmDivider)
@@ -201,6 +208,9 @@ fun ActiveWorkoutContent(
                         onRemove = { onRemoveExercise(exercise.instanceId) },
                         onRestClick = { restSheetFor = exercise.instanceId }
                     )
+                }
+                item {
+                    NotesCard(notes = notes, onNotesChange = onNotesChange)
                 }
                 item {
                     AddExerciseButton(onClick = onAddExerciseClick)
@@ -240,6 +250,9 @@ fun ActiveWorkoutContent(
 
     if (showFinishDialog) {
         FinishDialog(
+            templateName = templateName,
+            doneSets = doneSets,
+            totalSets = exercises.totalSetCount(),
             onSave = {
                 showFinishDialog = false
                 onFinish(it)
@@ -361,12 +374,37 @@ private fun ExerciseCard(
             onDuplicate = onDuplicate,
             onRemove = onRemove
         )
+        SetTable(
+            exercise = exercise,
+            onRepsChange = onRepsChange,
+            onWeightChange = onWeightChange,
+            onToggleSetDone = onToggleSetDone,
+            onAddSet = onAddSet,
+            onRemoveSet = onRemoveSet
+        )
+    }
+}
+
+/**
+ * The set table: column headers, one row per set, Add set. Shared with session detail's Edit sets (#48),
+ * which passes no [onToggleSetDone] - its rows have no tick.
+ */
+@Composable
+internal fun SetTable(
+    exercise: ActiveExercise,
+    onRepsChange: (Int, String) -> Unit,
+    onWeightChange: (Int, String) -> Unit,
+    onToggleSetDone: ((Int) -> Unit)?,
+    onAddSet: () -> Unit,
+    onRemoveSet: (Int) -> Unit
+) {
+    Column {
         SetGridRow(modifier = Modifier.padding(start = 4.dp, top = 10.dp, end = 4.dp, bottom = 4.dp)) {
             Text("SET", style = ColumnHeaderStyle, textAlign = TextAlign.Center, modifier = Modifier.width(SetColumnWidth))
             Text("PREVIOUS", style = ColumnHeaderStyle, modifier = Modifier.weight(1f))
             Text("KG", style = ColumnHeaderStyle, textAlign = TextAlign.Center, modifier = Modifier.width(KgColumnWidth))
             Text("REPS", style = ColumnHeaderStyle, textAlign = TextAlign.Center, modifier = Modifier.width(RepsColumnWidth))
-            Spacer(modifier = Modifier.width(TickColumnWidth))
+            if (onToggleSetDone != null) Spacer(modifier = Modifier.width(TickColumnWidth))
         }
         exercise.sets.forEachIndexed { setIndex, set ->
             SetRow(
@@ -375,7 +413,7 @@ private fun ExerciseCard(
                 previous = exercise.previous(setIndex),
                 onRepsChange = { onRepsChange(setIndex, it) },
                 onWeightChange = { onWeightChange(setIndex, it) },
-                onToggleDone = { onToggleSetDone(setIndex) },
+                onToggleDone = onToggleSetDone?.let { toggle -> { toggle(setIndex) } },
                 onRemove = { onRemoveSet(setIndex) }
             )
         }
@@ -479,7 +517,7 @@ private fun SetRow(
     previous: StrengthSet?,
     onRepsChange: (String) -> Unit,
     onWeightChange: (String) -> Unit,
-    onToggleDone: () -> Unit,
+    onToggleDone: (() -> Unit)?,
     onRemove: () -> Unit
 ) {
     val rowColor by animateColorAsState(if (set.done) WorkoutSoft else Color.Transparent, tween(150), label = "setRow")
@@ -527,21 +565,23 @@ private fun SetRow(
                 onValueChange = { text -> if (text.all { it.isDigit() }) onRepsChange(text) },
                 modifier = Modifier.width(RepsColumnWidth)
             )
-            Box(modifier = Modifier.width(TickColumnWidth), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(width = 44.dp, height = 40.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(tickColor)
-                        .clickable(onClick = onToggleDone),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Filled.Check,
-                        contentDescription = if (set.done) "Set done" else "Mark set done",
-                        tint = if (set.done) MaterialTheme.colorScheme.onPrimary else WarmMutedIcon,
-                        modifier = Modifier.size(22.dp)
-                    )
+            if (onToggleDone != null) {
+                Box(modifier = Modifier.width(TickColumnWidth), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 44.dp, height = 40.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(tickColor)
+                            .clickable(onClick = onToggleDone),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Filled.Check,
+                            contentDescription = if (set.done) "Set done" else "Mark set done",
+                            tint = if (set.done) MaterialTheme.colorScheme.onPrimary else WarmMutedIcon,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             }
         }
@@ -593,6 +633,34 @@ private fun SetField(
             }
         }
     )
+}
+
+/** The workout's notes (#48): shown on its session detail. Also used by session detail's Edit sets. */
+@Composable
+internal fun NotesCard(notes: String, onNotesChange: (String) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(CardShape)
+            .background(CardSurface)
+            .border(1.dp, WarmCardBorder, CardShape)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text("Notes", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = WarmSecondaryText)
+        BasicTextField(
+            value = notes,
+            onValueChange = onNotesChange,
+            textStyle = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, color = WarmBodyText),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            modifier = Modifier.fillMaxWidth(),
+            decorationBox = { field ->
+                if (notes.isEmpty()) Text("How did it go?", fontSize = 14.sp, color = WarmHint)
+                field()
+            }
+        )
+    }
 }
 
 @Composable
@@ -750,17 +818,19 @@ private fun RestSheet(exerciseName: String, selectedSeconds: Int, onSelect: (Int
     }
 }
 
-/** Finish with unticked sets: the user chooses each time (decision 2026-10-11 in the plan). */
+/** Finish with unticked sets: only the ticked ones are logged; the user picks what the template keeps (#48). */
 @Composable
-private fun FinishDialog(onSave: (FinishMode) -> Unit, onDismiss: () -> Unit) {
+private fun FinishDialog(templateName: String, doneSets: Int, totalSets: Int, onSave: (TemplateUpdate) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Finish workout?") },
-        text = { Text("Some sets aren't ticked. Exercises left with no sets aren't saved.") },
+        text = {
+            Text("$doneSets of $totalSets sets ticked - only those are logged. What should happen to the \"$templateName\" template?")
+        },
         confirmButton = {
             Column(horizontalAlignment = Alignment.End) {
-                TextButton(onClick = { onSave(FinishMode.DONE_SETS_ONLY) }) { Text("Save only done sets") }
-                TextButton(onClick = { onSave(FinishMode.ALL_SETS) }) { Text("Save all sets") }
+                TextButton(onClick = { onSave(TemplateUpdate.KEEP_FULL) }) { Text("Keep full template") }
+                TextButton(onClick = { onSave(TemplateUpdate.TRIM_TO_DONE) }) { Text("Trim template to ticked sets") }
                 TextButton(onClick = onDismiss) { Text("Keep going") }
             }
         }

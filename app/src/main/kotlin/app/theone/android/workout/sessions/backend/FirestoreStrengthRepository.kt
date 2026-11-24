@@ -40,6 +40,16 @@ class FirestoreStrengthRepository : StrengthRepository {
         sessionsCollection()?.add(session)?.await()
     }
 
+    override suspend fun updateSession(session: StrengthSession) {
+        if (session.id.isEmpty()) return
+        sessionsCollection()?.document(session.id)?.set(session)?.await()
+    }
+
+    override suspend fun deleteSession(id: String) {
+        if (id.isEmpty()) return
+        sessionsCollection()?.document(id)?.delete()?.await()
+    }
+
     // Writes the session and (optionally) the template's carried-over exercises in one Firestore
     // transaction, so a failure partway through leaves neither write applied - see
     // .claude/rules/architecture.md's atomic multi-write note.

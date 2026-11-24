@@ -33,6 +33,16 @@ class FakeStrengthRepository(initial: List<StrengthSession> = emptyList()) : Str
         store(session)
     }
 
+    override suspend fun updateSession(session: StrengthSession) {
+        throwIfFailing()
+        sessions.value = sessions.value.map { if (it.id == session.id) session else it }
+    }
+
+    override suspend fun deleteSession(id: String) {
+        throwIfFailing()
+        sessions.value = sessions.value.filterNot { it.id == id }
+    }
+
     override suspend fun addSessionAndUpdateTemplate(
         session: StrengthSession,
         templateId: String?,

@@ -13,6 +13,11 @@ interface StrengthRepository {
 
     suspend fun addSession(session: StrengthSession)
 
+    /** Overwrites the session with the same id (session detail's Edit sets, #48). */
+    suspend fun updateSession(session: StrengthSession)
+
+    suspend fun deleteSession(id: String)
+
     /**
      * Saves [session] and, when [templateId] and [templateExercises] are both given, carries the
      * logged exercises back onto that template - atomically, so neither write lands without the other.

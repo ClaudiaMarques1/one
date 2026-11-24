@@ -39,14 +39,20 @@ class WorkoutHomeLabelsTest {
     }
 
     @Test
-    fun `sessionMetaLabel groups the volume and drops it for bodyweight`() {
-        assertEquals("13 sets · 4,560 kg", sessionMetaLabel(13, 4560.0, locale))
-        assertEquals("2 sets · 313 kg", sessionMetaLabel(2, 312.5, locale))
-        assertEquals("3 sets", sessionMetaLabel(3, 0.0, locale))
+    fun `sessionMetaLabel shows the duration, or just the sets when the start wasn't recorded`() {
+        assertEquals("13 sets · 62 min", sessionMetaLabel(13, 62))
+        assertEquals("1 set · 1 min", sessionMetaLabel(1, 1))
+        assertEquals("1 set · <1 min", sessionMetaLabel(1, 0))
+        assertEquals("3 sets", sessionMetaLabel(3, null))
     }
 
     @Test
     fun `shortWeekday is the abbreviated day name`() {
         assertEquals("Thu", shortWeekday(thursday, locale))
+    }
+
+    @Test
+    fun `shortMonth is the abbreviated month in capitals`() {
+        assertEquals("OCT", shortMonth(thursday, locale))
     }
 }
