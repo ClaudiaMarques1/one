@@ -164,16 +164,20 @@ Every allow-rule this work adds, so they can be reviewed in one place. Shared ru
 Still prompts, on purpose: `gh pr merge`, `gh api`, `rm`/`mv`/`cp`, and ad-hoc commands not covered
 above. `git stash`/`git merge` stay denied - the user runs those.
 
+## Close-out (2026-11-24, user chose "close it now")
+
+The work landed in PRs #38, #39 and #45 (merged by 2026-10-20), which said "(#37)" instead of "Closes #37",
+so the issue stayed open and the card sat in In Progress for a month.
+
+- Process rule ticked: in practice since #45 - the PR template's "CI green" item, `test-execution.md`
+  (fakes + `MainDispatcherRule`, CI as source of truth) and the review gate.
+- Docs: `architecture.md` had two stale bullets - the uid lookup "duplicated in four repositories, don't
+  extract" (it's `FirebaseModule.userCollection` now) and "no transaction/batch exists" (there's one of
+  each). Rewritten in place (always-loaded budget unchanged at 219), plus the interface + `Firestore*` +
+  fake pattern. `android-conventions` repository/ViewModel examples and a `pr-review` check updated.
+  `ci-cd-rules.md` already describes the three jobs - nothing stale.
+- JaCoCo coverage moved to its own idea card ("CI: coverage report (JaCoCo) in the run summary").
+
 ## Next step
 
-Phase 4 built on `feature/cmarques/37-change-verification` (uncommitted as of 2026-10-20): issue
-template, `scripts/emulator.sh` + `app-status.sh`, `/verify`, CI `lint`/`build` jobs, docs, permission
-rules. `assembleDebug test lint` pass; `emulator.sh` opens the app on Pixel_7 cleanly.
-
-1. User reviews the "Permission rules added" table, then commit + push + PR to `develop` - the PR
-   follows the review gate (user reviews on GitHub, merges on their go-ahead).
-2. Confirm the three CI jobs show on that PR; then the user can mark `test`/`lint`/`build` as required
-   checks in branch protection.
-3. Then #43 (workout redesign) - its 1c work is the first real run of `/verify`.
-4. Remaining here: JaCoCo coverage (Phase 2), Phase 3 doc items (`architecture.md` stale bullets,
-   `android-conventions` / `pr-review` skills).
+None - #37 closes with the close-out PR.

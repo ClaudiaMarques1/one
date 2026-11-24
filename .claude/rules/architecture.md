@@ -30,12 +30,12 @@ file imports a Firebase class (screens get the signed-in user as `auth/backend/U
 - **Models**: all fields defaulted; the repository applies `.copy(id = doc.id)` after
   `toObject()` (model files themselves stay plain data classes). Reference: `FirestoreStrengthRepository.kt:32`
   — same shape in `FirestoreDiaryRepository.kt`, `FirestoreGoalRepository.kt`, `FirestoreWorkoutTemplateRepository.kt`.
-- **uid lookup**: `FirebaseModule.auth.currentUser?.uid ?: return null`, currently duplicated at
-  line 14 in the four repositories above. Don't add a fifth duplicate — ask before extracting a
-  shared helper (tracked separately as a refactor).
-- **No atomic multi-write pattern exists yet**: `runTransaction`/`WriteBatch` are unused
-  everywhere (0 matches). A change needing atomic multi-write is new ground here, not something
-  to reference from existing code.
+- **Repositories**: an interface + `Firestore*` implementation (`StrengthRepository.kt`); ViewModels take the
+  interface as a default arg (`= FirestoreStrengthRepository()`), tests pass a `Fake*Repository` (#37).
+- **uid lookup**: `FirebaseModule.userCollection(name)` gives `users/{uid}/<name>` (null when signed out) -
+  use it, never re-derive the uid in a repository.
+- **Atomic multi-write**: `runTransaction` in `FirestoreStrengthRepository.kt:62` (session + template),
+  `batch()` in `FirestoreMealsRepository.kt:119`.
 
 ## State Ownership
 
