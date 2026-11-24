@@ -62,6 +62,17 @@ fun OneNavHost(authViewModel: AuthViewModel) {
     val currentDestination = backStackEntry?.destination
     val profile by authViewModel.profile.collectAsState()
 
+    // Switches bottom-nav tab the way the bar does: one entry per tab, each tab's stack saved and restored.
+    val switchTab: (String) -> Unit = { route ->
+        navController.navigate(route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     // The profile drawer covers the whole screen, bottom nav included (handoff 1b), so it wraps the
     // Scaffold. Opened only from Home's avatar; gestures are on while open so a swipe left closes it.
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -100,15 +111,7 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                             val selectedInk = accent ?: WarmOnSurface
                             NavigationBarItem(
                                 selected = selected,
-                                onClick = {
-                                    navController.navigate(destination.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
+                                onClick = { switchTab(destination.route) },
                                 icon = {
                                     Icon(
                                         if (selected) destination.selectedIcon else destination.icon,
@@ -146,8 +149,20 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                 composable(Destination.Calendar.route) {
                     SectionTheme(SectionAccent.Calendar) {
                         CalendarScreen(
-                            onNavigateToWorkout = { navController.navigate(Destination.Workout.route) },
-                            onNavigateToDiary = { navController.navigate(Destination.Diary.route) }
+                            // Tab switches, not pushes: a pushed Workout/Diary sat on the Calendar tab's own stack,
+                            // so tapping Calendar restored that stack and showed Diary again - Calendar looked stuck.
+                            onNavigateToWorkout = { switchTab(Destination.Workout.route) },
+                            onNavigateToDiary = { switchTab(Destination.Diary.route) },
+                            // Session detail's Repeat needs the Workout tab under it, so open it from that tab.
+                            onOpenWorkoutSession = { sessionId ->
+                                switchTab(Destination.Workout.route)
+                                navController.navigate(Destination.WorkoutSession.routeFor(sessionId))
+                            },
+                            // Meals on that date (#69): the tab reads the date from its entry once, then clears it.
+                            onOpenMeals = { dateKey ->
+                                switchTab(Destination.Meals.route)
+                                navController.currentBackStackEntry?.savedStateHandle?.set(Destination.Meals.KEY_OPEN_DATE, dateKey)
+                            }
                         )
                     }
                 }
@@ -173,11 +188,14 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                         )
                     }
                 }
-                composable(Destination.Meals.route) {
+                composable(Destination.Meals.route) { entry ->
+                    val openDate by entry.savedStateHandle.getStateFlow<String?>(Destination.Meals.KEY_OPEN_DATE, null).collectAsState()
                     SectionTheme(SectionAccent.Meals) {
                         MealsScreen(
                             onOpenWeekPlan = { navController.navigate(Destination.MealsWeek.route) },
-                            onOpenShoppingList = { navController.navigate(Destination.MealsShopping.routeFor(it)) }
+                            onOpenShoppingList = { navController.navigate(Destination.MealsShopping.routeFor(it)) },
+                            openDate = openDate,
+                            onOpenDateHandled = { entry.savedStateHandle[Destination.Meals.KEY_OPEN_DATE] = null }
                         )
                     }
                 }

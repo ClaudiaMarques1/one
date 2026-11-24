@@ -38,7 +38,10 @@ sealed class Destination(
 
     data object Workout : Destination("workout", "Workout", Icons.Outlined.FitnessCenter, Icons.Filled.FitnessCenter, SectionAccent.Workout)
 
-    data object Meals : Destination("meals", "Meals", Icons.Outlined.Restaurant, Icons.Filled.Restaurant, SectionAccent.Meals)
+    data object Meals : Destination("meals", "Meals", Icons.Outlined.Restaurant, Icons.Filled.Restaurant, SectionAccent.Meals) {
+        // Calendar puts a date here on the Meals entry to open the Food Diary on that day (#69).
+        const val KEY_OPEN_DATE = "openDate"
+    }
 
     data object Diary : Destination("diary", "Diary", Icons.Outlined.Book, Icons.Filled.Book, SectionAccent.Diary)
 
