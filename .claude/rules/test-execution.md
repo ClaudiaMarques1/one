@@ -47,7 +47,13 @@ Ideas -> Todo -> In Progress -> In Review -> Done.
 2. Branch `feature/<user>/<n>-<kebab>` from `develop`, plan `.claude/plans/<n>-<kebab>.md`, card ->
    **In Progress**.
 3. Build, then `/verify`: Automated items ticked, results commented. Front-facing: the app is opened
-   on the emulator and the user works through the Manual steps.
+   on the emulator, Claude runs the **QA pass** (each Manual step via `scripts/ui.sh`: pass / fail /
+   needs you + a screenshot; a fail is fixed before the hand-over), then the user works through the
+   Manual steps with that report and ticks them.
+
+   **QA pass limits (#72):** it finds things by on-screen text (`uiautomator dump`), so unlabelled icons
+   need `tap-xy`; it can't judge "is this what I meant" or design fidelity - those are "needs you". It
+   creates only the data a step needs and removes it after. It never ticks Manual items.
 4. PR to `develop` with `Closes #<n>`, body filled from `.github/pull_request_template.md`: What
    changed / Why / How it was tested / Notes - the lasting record for the ticket - plus the "Before
    merge" checklist. Claude ticks the "Verified by Claude" items once true; "Your review" items are

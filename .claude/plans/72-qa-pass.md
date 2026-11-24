@@ -32,12 +32,23 @@ Running them first turns the user's pass into "check the screenshots + the needs
 
 ## Checklist
 
-- [ ] Approach agreed with the user
-- [ ] `scripts/ui.sh`
-- [ ] `/verify` SKILL.md QA pass + `test-execution.md`
+- [x] Approach agreed with the user (2026-11-24)
+- [x] `scripts/ui.sh` (smoke-tested twice: launch, wait, tap-last nav, has, swipe, shot, back; usage on bad command)
+- [x] `/verify` SKILL.md QA pass + `commands/verify.md` + `test-execution.md` + `skills.md`
 - [ ] Trial run on #69's Manual steps; report
 - [ ] Checks; user's Manual steps
 
+## Trial run on #69 (2026-11-24)
+
+Steps 1-7 and 10 pass via `scripts/ui.sh` (screenshots in scratch `qa/69/`); 2, 3, 9 are visual checks.
+Lessons, to fold into the SKILL.md before the PR:
+- Same text in two places: `=2` hit the Diary entries tile's "2" before day 2 -> use `tap-last` for grid
+  days (below the tiles). Added exact match (`=text`) to `ui.sh` for this.
+- Steps share state: step 7 selected day 2, so step 8's Week/Day opened on 2 Nov. Re-select the date a step
+  needs (e.g. `tap-last "=23"` before Week) - don't rely on the previous step.
+- Step 5 couldn't check the Meals card (no meals planned today) -> report "needs you / not reachable", don't pass.
+
 ## Next step
 
-Present the approach above; build once agreed.
+Rerun step 8 with the 23rd selected, add the lessons above to the verify SKILL.md QA pass, `./gradlew
+assembleDebug`, then `/verify` #72 (report + Manual steps to the user), commit, PR.
