@@ -48,6 +48,10 @@ data class OneColors(
     val workoutRestProgress: Color,
     val workoutRestSecondary: Color,
     val workoutDashedOutline: Color,
+    // Session detail (3a, #48): comparison "up" text and the PR badge.
+    val progressUp: Color,
+    val prBadge: Color,
+    val onPrBadge: Color,
     // Diary section and goals.
     val diaryInk: Color,
     val diaryDeepInk: Color,
@@ -102,6 +106,9 @@ val LightOneColors = OneColors(
     workoutRestProgress = Color(0xFF64B5F6),
     workoutRestSecondary = Color(0xFFBBDDF9),
     workoutDashedOutline = Color(0xFF9EC3E8),
+    progressUp = Color(0xFF2E7D32),
+    prBadge = Color(0xFFFFE3B3),
+    onPrBadge = Color(0xFF7A4A00),
     diaryInk = Color(0xFF6A1B86),
     diaryDeepInk = Color(0xFF4A1260),
     diaryMenuSurface = Color(0xFFF7F2FA),
@@ -155,6 +162,9 @@ val DarkOneColors = OneColors(
     workoutRestProgress = Color(0xFF67B8F9),
     workoutRestSecondary = Color(0xFF243B4D),
     workoutDashedOutline = Color(0xFF8BAFD3),
+    progressUp = Color(0xFF91E091),
+    prBadge = Color(0xFF392704),
+    onPrBadge = Color(0xFFFDC589),
     diaryInk = Color(0xFFECC7FD),
     diaryDeepInk = Color(0xFFF1D5FF),
     diaryMenuSurface = Color(0xFF171518),
@@ -220,6 +230,16 @@ val DiaryAccent: Color
 private val colors: OneColors
     @Composable @ReadOnlyComposable
     get() = LocalOneColors.current
+
+val ProgressUp: Color
+    @Composable @ReadOnlyComposable
+    get() = colors.progressUp
+val PrBadge: Color
+    @Composable @ReadOnlyComposable
+    get() = colors.prBadge
+val OnPrBadge: Color
+    @Composable @ReadOnlyComposable
+    get() = colors.onPrBadge
 
 val WarmSurface: Color
     @Composable @ReadOnlyComposable

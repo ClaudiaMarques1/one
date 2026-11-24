@@ -80,17 +80,42 @@ class ActiveWorkoutTest {
         assertEquals(listOf(StrengthSet(0, 0.0)), all[1].sets)
     }
 
+    // Bench: set 1 ticked at 10 x 65, set 2 typed (7 x 70) but not ticked. Row: nothing ticked.
+    // Curl: added mid-workout (no previous), ticked.
+    private val finishedExercises = listOf(
+        bench.copy(sets = listOf(ActiveSet("10", "65", done = true), ActiveSet("7", "70")), restSeconds = 120),
+        ActiveExercise(name = "Row", previousSets = listOf(StrengthSet(12, 40.0)), sets = listOf(ActiveSet()), restSeconds = 0),
+        ActiveExercise(name = "DB curl", sets = listOf(ActiveSet("12", "10", done = true)), restSeconds = 60)
+    )
+
     @Test
-    fun `the template keeps every exercise, previous sets where nothing was saved, and rest times`() {
-        val exercises = listOf(
-            bench.copy(sets = listOf(ActiveSet("10", "65", done = true), ActiveSet()), restSeconds = 120),
-            ActiveExercise(name = "Row", previousSets = listOf(StrengthSet(12, 40.0)), sets = listOf(ActiveSet()), restSeconds = 0)
+    fun `keeping the full template updates ticked sets and leaves unticked sets and exercises as they were`() {
+        val template = finishedExercises.toTemplateExercises(TemplateUpdate.KEEP_FULL)
+
+        assertEquals(
+            listOf(
+                TemplateExercise("Bench press", listOf(TemplateSet(10, 65.0), TemplateSet(6, 62.5)), restSeconds = 120),
+                TemplateExercise("Row", listOf(TemplateSet(12, 40.0)), restSeconds = 0),
+                TemplateExercise("DB curl", listOf(TemplateSet(12, 10.0)), restSeconds = 60)
+            ),
+            template
         )
+        // An exercise whose set rows were all removed keeps its previous sets.
+        val emptied = listOf(bench.copy(sets = emptyList())).toTemplateExercises(TemplateUpdate.KEEP_FULL)
+        assertEquals(listOf(TemplateSet(8, 60.0), TemplateSet(6, 62.5)), emptied.single().sets)
+    }
 
-        val template = exercises.toTemplateExercises(FinishMode.DONE_SETS_ONLY)
+    @Test
+    fun `trimming the template keeps only ticked sets and the exercises that have one`() {
+        val template = finishedExercises.toTemplateExercises(TemplateUpdate.TRIM_TO_DONE)
 
-        assertEquals(TemplateExercise("Bench press", listOf(TemplateSet(10, 65.0)), restSeconds = 120), template[0])
-        assertEquals(TemplateExercise("Row", listOf(TemplateSet(12, 40.0)), restSeconds = 0), template[1])
+        assertEquals(
+            listOf(
+                TemplateExercise("Bench press", listOf(TemplateSet(10, 65.0)), restSeconds = 120),
+                TemplateExercise("DB curl", listOf(TemplateSet(12, 10.0)), restSeconds = 60)
+            ),
+            template
+        )
     }
 
     @Test

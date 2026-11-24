@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +50,8 @@ import app.theone.android.ui.theme.SectionTheme
 import app.theone.android.ui.theme.WarmIcon
 import app.theone.android.ui.theme.WarmOnSurface
 import app.theone.android.workout.frontend.WorkoutScreen
+import app.theone.android.workout.frontend.strengthViewModel
+import app.theone.android.workout.sessions.frontend.SessionDetailScreen
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -149,7 +152,26 @@ fun OneNavHost(authViewModel: AuthViewModel) {
                     }
                 }
                 composable(Destination.Workout.route) {
-                    SectionTheme(SectionAccent.Workout) { WorkoutScreen() }
+                    SectionTheme(SectionAccent.Workout) {
+                        WorkoutScreen(onOpenSession = { navController.navigate(Destination.WorkoutSession.routeFor(it.id)) })
+                    }
+                }
+                composable(
+                    Destination.WorkoutSession.route,
+                    arguments = listOf(navArgument(Destination.WorkoutSession.ARG_SESSION_ID) { type = NavType.StringType })
+                ) { entry ->
+                    // Repeat starts the workout in the Workout tab's own StrengthViewModel, so it opens there.
+                    val workoutEntry = remember(entry) { navController.getBackStackEntry(Destination.Workout.route) }
+                    val strengthViewModel = strengthViewModel(owner = workoutEntry)
+                    SectionTheme(SectionAccent.Workout) {
+                        SessionDetailScreen(
+                            onBack = { navController.popBackStack() },
+                            onRepeat = { session, template ->
+                                strengthViewModel.repeatSession(session, template)
+                                navController.popBackStack(Destination.Workout.route, inclusive = false)
+                            }
+                        )
+                    }
                 }
                 composable(Destination.Meals.route) {
                     SectionTheme(SectionAccent.Meals) {

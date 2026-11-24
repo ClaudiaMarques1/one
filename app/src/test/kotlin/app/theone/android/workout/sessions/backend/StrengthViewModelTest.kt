@@ -209,22 +209,23 @@ class StrengthViewModelTest {
     }
 
     @Test
-    fun `finishing with done sets only saves today's done sets and carries them back to the template`() {
+    fun `finishing logs only the ticked sets and keeps the full template by default`() {
         viewModel.startSessionFromTemplate(pushDay)
+        viewModel.updateSetReps(bench().instanceId, 0, "9")
         viewModel.toggleSetDone(bench().instanceId, 0)
         assertTrue(viewModel.hasUnfinishedSets())
 
-        viewModel.finishSession(FinishMode.DONE_SETS_ONLY)
+        viewModel.finishSession()
 
         val saved = repository.stored.single()
         assertEquals(LocalDate.now().toString(), saved.date)
         assertEquals("Push Day", saved.templateName)
-        assertEquals(listOf(StrengthExercise("Bench press", listOf(StrengthSet(8, 60.0)))), saved.exercises)
+        assertEquals(listOf(StrengthExercise("Bench press", listOf(StrengthSet(9, 60.0)))), saved.exercises)
         val (templateId, carried) = repository.templateUpdates.single()
         assertEquals("t1", templateId)
         assertEquals(
             listOf(
-                TemplateExercise("Bench press", listOf(TemplateSet(8, 60.0)), restSeconds = 120),
+                TemplateExercise("Bench press", listOf(TemplateSet(9, 60.0), TemplateSet(6, 62.5)), restSeconds = 120),
                 TemplateExercise("Lateral raise", listOf(TemplateSet(12, 8.0)), restSeconds = 0)
             ),
             carried
@@ -233,13 +234,70 @@ class StrengthViewModelTest {
     }
 
     @Test
-    fun `finishing with all sets keeps unticked ones too`() {
+    fun `finishing saves when the workout started and ended, and its notes`() {
+        val start = now
+        viewModel.startSessionFromTemplate(pushDay)
+        viewModel.toggleSetDone(bench().instanceId, 0)
+        viewModel.updateNotes("  Felt strong  ")
+        now += 62 * 60_000L
+
+        viewModel.finishSession()
+
+        val saved = repository.stored.single()
+        assertEquals(start, saved.startedAt)
+        assertEquals(now, saved.createdAt)
+        assertEquals(62L, saved.durationMinutes())
+        assertEquals("Felt strong", saved.notes)
+        assertEquals("", viewModel.notes.value)
+    }
+
+    @Test
+    fun `repeating a session starts it with those sets as Previous and the template's rest and id`() {
+        val logged = StrengthSession(
+            id = "s1",
+            templateName = "Push Day",
+            exercises = listOf(StrengthExercise("Bench press", listOf(StrengthSet(6, 80.0), StrengthSet(5, 80.0))))
+        )
+        viewModel.updateNotes("left over")
+        viewModel.repeatSession(logged, pushDay)
+
+        assertEquals("Push Day", viewModel.activeTemplateName.value)
+        assertEquals(now, viewModel.sessionStartTimeMillis.value)
+        assertEquals("", viewModel.notes.value)
+        val bench = bench()
+        assertEquals(listOf(ActiveSet(), ActiveSet()), bench.sets)
+        assertEquals(StrengthSet(6, 80.0), bench.previous(0))
+        assertEquals(120, bench.restSeconds)
+
+        // Finishing carries back to the template it came from.
+        viewModel.toggleSetDone(bench.instanceId, 0)
+        viewModel.finishSession()
+        assertEquals("t1", repository.templateUpdates.single().first)
+    }
+
+    @Test
+    fun `repeating a session without its template uses the default rest and updates no template`() {
+        val logged = StrengthSession(templateName = "Old", exercises = listOf(StrengthExercise("Squat", listOf(StrengthSet(5, 100.0)))))
+        viewModel.repeatSession(logged, template = null)
+
+        assertEquals(90, viewModel.currentExercises.value.single().restSeconds)
+        viewModel.toggleSetDone(viewModel.currentExercises.value.single().instanceId, 0)
+        viewModel.finishSession()
+        assertTrue(repository.templateUpdates.isEmpty())
+    }
+
+    @Test
+    fun `trimming the template leaves it with only what was ticked, and the log is the same`() {
         viewModel.startSessionFromTemplate(pushDay)
         viewModel.toggleSetDone(bench().instanceId, 0)
 
-        viewModel.finishSession(FinishMode.ALL_SETS)
+        viewModel.finishSession(TemplateUpdate.TRIM_TO_DONE)
 
-        assertEquals(listOf(2, 1), repository.stored.single().exercises.map { it.sets.size })
+        assertEquals(listOf(StrengthExercise("Bench press", listOf(StrengthSet(8, 60.0)))), repository.stored.single().exercises)
+        assertEquals(
+            listOf(TemplateExercise("Bench press", listOf(TemplateSet(8, 60.0)), restSeconds = 120)),
+            repository.templateUpdates.single().second
+        )
     }
 
     @Test
@@ -252,7 +310,7 @@ class StrengthViewModelTest {
         viewModel.toggleSetDone(id, 0)
         assertFalse(viewModel.hasUnfinishedSets())
 
-        viewModel.finishSession(FinishMode.DONE_SETS_ONLY)
+        viewModel.finishSession()
 
         assertEquals(StrengthSet(5, 100.0), repository.stored.single().exercises.single().sets.single())
         assertTrue(repository.templateUpdates.isEmpty())
@@ -262,7 +320,7 @@ class StrengthViewModelTest {
     fun `finishing does nothing when no set would be saved`() {
         viewModel.startSessionFromTemplate(pushDay)
 
-        viewModel.finishSession(FinishMode.DONE_SETS_ONLY)
+        viewModel.finishSession()
 
         assertTrue(repository.stored.isEmpty())
         assertEquals("Push Day", viewModel.activeTemplateName.value)
@@ -274,7 +332,7 @@ class StrengthViewModelTest {
         viewModel.startSessionFromTemplate(pushDay)
         viewModel.toggleSetDone(bench().instanceId, 0)
 
-        viewModel.finishSession(FinishMode.DONE_SETS_ONLY)
+        viewModel.finishSession()
 
         assertEquals("offline", viewModel.workoutError.value)
         assertTrue(repository.stored.isEmpty())

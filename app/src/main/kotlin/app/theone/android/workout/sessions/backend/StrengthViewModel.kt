@@ -33,7 +33,8 @@ class StrengthViewModel(
     val currentExercises: StateFlow<List<ActiveExercise>> =
         savedStateHandle.getStateFlow(KEY_CURRENT_EXERCISES, emptyList())
 
-    private val activeTemplateId: StateFlow<String> =
+    /** The template Finish writes back to; "" for a workout without one. */
+    val activeTemplateId: StateFlow<String> =
         savedStateHandle.getStateFlow(KEY_ACTIVE_TEMPLATE_ID, "")
     val activeTemplateName: StateFlow<String> =
         savedStateHandle.getStateFlow(KEY_ACTIVE_TEMPLATE_NAME, "")
@@ -44,12 +45,32 @@ class StrengthViewModel(
     /** The running rest timer, or null. Wall-clock based, so it keeps counting across rotation. */
     val restState: StateFlow<RestState?> = savedStateHandle.getStateFlow(KEY_REST, null)
 
+    /** The workout's notes (#48), saved with the session on Finish. */
+    val notes: StateFlow<String> = savedStateHandle.getStateFlow(KEY_NOTES, "")
+
     fun startSessionFromTemplate(template: WorkoutTemplate) {
-        savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = template.id
-        savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = template.name
+        startSession(template.id, template.name, template.toActiveExercises())
+    }
+
+    /**
+     * Session detail's Repeat (#48): the same exercises, with this session's sets as Previous. With the
+     * [template] it was logged from (same name), Finish updates that template and its rest times carry over.
+     */
+    fun repeatSession(session: StrengthSession, template: WorkoutTemplate?) {
+        startSession(template?.id.orEmpty(), session.templateName, session.toActiveExercises(template))
+    }
+
+    private fun startSession(templateId: String, templateName: String, exercises: List<ActiveExercise>) {
+        savedStateHandle[KEY_ACTIVE_TEMPLATE_ID] = templateId
+        savedStateHandle[KEY_ACTIVE_TEMPLATE_NAME] = templateName.ifBlank { "Workout" }
         savedStateHandle[KEY_SESSION_START_TIME] = clock()
-        savedStateHandle[KEY_CURRENT_EXERCISES] = template.toActiveExercises()
+        savedStateHandle[KEY_CURRENT_EXERCISES] = exercises
         savedStateHandle[KEY_REST] = null
+        savedStateHandle[KEY_NOTES] = ""
+    }
+
+    fun updateNotes(text: String) {
+        savedStateHandle[KEY_NOTES] = text
     }
 
     fun discardSession() {
@@ -143,18 +164,26 @@ class StrengthViewModel(
     /** Finish needs a choice from the user when some sets aren't ticked. */
     fun hasUnfinishedSets(): Boolean = currentExercises.value.hasUnfinishedSets()
 
-    fun finishSession(mode: FinishMode) {
+    /** Logs only the ticked sets; [templateUpdate] decides what goes back to the template (#48). */
+    fun finishSession(templateUpdate: TemplateUpdate = TemplateUpdate.KEEP_FULL) {
         val exercises = currentExercises.value
-        val sessionExercises = exercises.toSessionExercises(mode)
+        val sessionExercises = exercises.toSessionExercises(FinishMode.DONE_SETS_ONLY)
         if (sessionExercises.isEmpty()) return
         val templateId = activeTemplateId.value
-        val templateName = activeTemplateName.value
+        val session = StrengthSession(
+            date = LocalDate.now().toString(),
+            templateName = activeTemplateName.value,
+            exercises = sessionExercises,
+            createdAt = clock(),
+            startedAt = sessionStartTimeMillis.value,
+            notes = notes.value.trim()
+        )
         viewModelScope.launch {
             runCatching {
                 repository.addSessionAndUpdateTemplate(
-                    session = StrengthSession(date = LocalDate.now().toString(), templateName = templateName, exercises = sessionExercises),
+                    session = session,
                     templateId = templateId.ifEmpty { null },
-                    templateExercises = exercises.toTemplateExercises(mode).takeIf { templateId.isNotEmpty() }
+                    templateExercises = exercises.toTemplateExercises(templateUpdate).takeIf { templateId.isNotEmpty() }
                 )
             }.onFailure { _workoutError.value = it.message }
                 .onSuccess { clearSession() }
@@ -167,6 +196,7 @@ class StrengthViewModel(
         savedStateHandle[KEY_SESSION_START_TIME] = null
         savedStateHandle[KEY_CURRENT_EXERCISES] = emptyList<ActiveExercise>()
         savedStateHandle[KEY_REST] = null
+        savedStateHandle[KEY_NOTES] = ""
     }
 
     private fun updateSet(instanceId: String, setIndex: Int, change: (ActiveSet) -> ActiveSet) {
@@ -191,5 +221,6 @@ class StrengthViewModel(
         const val KEY_ACTIVE_TEMPLATE_NAME = "activeTemplateName"
         const val KEY_SESSION_START_TIME = "sessionStartTimeMillis"
         const val KEY_REST = "restState"
+        const val KEY_NOTES = "notes"
     }
 }

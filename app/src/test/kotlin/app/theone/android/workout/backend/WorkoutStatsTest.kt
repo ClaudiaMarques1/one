@@ -60,7 +60,7 @@ class WorkoutStatsTest {
     }
 
     @Test
-    fun `set count and volume`() {
+    fun `set count`() {
         val session = StrengthSession(
             exercises = listOf(
                 StrengthExercise("Bench", listOf(StrengthSet(8, 60.0), StrengthSet(6, 62.5))),
@@ -69,7 +69,6 @@ class WorkoutStatsTest {
         )
 
         assertEquals(3, session.setCount())
-        assertEquals(8 * 60.0 + 6 * 62.5, session.volumeKg(), 0.0)
         assertEquals(2, WorkoutTemplate(exercises = listOf(TemplateExercise("Bench", listOf(TemplateSet(), TemplateSet())))).setCount())
     }
 }

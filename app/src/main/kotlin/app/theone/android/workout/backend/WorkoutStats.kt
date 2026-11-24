@@ -1,20 +1,13 @@
 package app.theone.android.workout.backend
 
 import app.theone.android.workout.sessions.backend.StrengthSession
+import app.theone.android.workout.sessions.backend.localDate
 import app.theone.android.workout.templates.backend.WorkoutTemplate
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.format.DateTimeParseException
 import java.time.temporal.TemporalAdjusters
 
 // Numbers the Workout home screen derives from templates and session history - no schema change.
-
-private fun StrengthSession.localDate(): LocalDate? =
-    try {
-        LocalDate.parse(date)
-    } catch (e: DateTimeParseException) {
-        null
-    }
 
 /** Sessions dated from the start of [today]'s week (on [firstDay], Settings -> Week starts on) up to and including [today]. */
 fun sessionsThisWeek(sessions: List<StrengthSession>, today: LocalDate, firstDay: DayOfWeek = DayOfWeek.MONDAY): Int {
@@ -33,8 +26,5 @@ fun recentSessions(sessions: List<StrengthSession>, count: Int = 3): List<Streng
     sessions.sortedWith(compareByDescending<StrengthSession> { it.date }.thenByDescending { it.createdAt }).take(count)
 
 fun StrengthSession.setCount(): Int = exercises.sumOf { it.sets.size }
-
-/** Total volume: sum of reps x weightKg over every set. 0 for bodyweight-only sessions. */
-fun StrengthSession.volumeKg(): Double = exercises.sumOf { exercise -> exercise.sets.sumOf { it.reps * it.weightKg } }
 
 fun WorkoutTemplate.setCount(): Int = exercises.sumOf { it.sets.size }

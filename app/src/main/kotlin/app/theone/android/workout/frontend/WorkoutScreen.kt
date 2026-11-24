@@ -12,7 +12,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -23,6 +25,7 @@ import app.theone.android.settings.backend.SettingsViewModel
 import app.theone.android.settings.frontend.settingsViewModel
 import app.theone.android.ui.ErrorBanner
 import app.theone.android.workout.backend.lastDoneByTemplate
+import app.theone.android.workout.sessions.backend.StrengthSession
 import app.theone.android.workout.sessions.backend.StrengthViewModel
 import app.theone.android.workout.sessions.frontend.ActiveWorkoutContent
 import app.theone.android.workout.templates.backend.WorkoutTemplate
@@ -32,14 +35,24 @@ import app.theone.android.workout.templates.frontend.TemplateBuilderContent
 // Split across WorkoutHomeContent.kt / templates/frontend/TemplateBuilderContent.kt /
 // sessions/frontend/ActiveWorkoutContent.kt
 // (see .claude/rules/architecture.md) - this file is just the entry point + mode dispatch.
+
+/**
+ * The Workout tab's [StrengthViewModel] (the active workout lives in its SavedStateHandle). Session
+ * detail passes the Workout back-stack entry as [owner] so Repeat starts the workout in this same one.
+ */
+@Composable
+fun strengthViewModel(owner: ViewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current)): StrengthViewModel = viewModel(
+    viewModelStoreOwner = owner,
+    factory = viewModelFactory {
+        initializer { StrengthViewModel(savedStateHandle = createSavedStateHandle()) }
+    }
+)
+
 @Composable
 fun WorkoutScreen(
+    onOpenSession: (StrengthSession) -> Unit = {},
     templateViewModel: WorkoutTemplateViewModel = viewModel(),
-    strengthViewModel: StrengthViewModel = viewModel(
-        factory = viewModelFactory {
-            initializer { StrengthViewModel(savedStateHandle = createSavedStateHandle()) }
-        }
-    ),
+    strengthViewModel: StrengthViewModel = strengthViewModel(),
     settingsViewModel: SettingsViewModel = settingsViewModel()
 ) {
     val templates by templateViewModel.templates.collectAsState()
@@ -49,9 +62,11 @@ fun WorkoutScreen(
     val draftExercises by templateViewModel.draftExercises.collectAsState()
     val editingTemplate by templateViewModel.editingTemplate.collectAsState()
     val activeTemplateName by strengthViewModel.activeTemplateName.collectAsState()
+    val activeTemplateId by strengthViewModel.activeTemplateId.collectAsState()
     val sessionStartTimeMillis by strengthViewModel.sessionStartTimeMillis.collectAsState()
     val currentExercises by strengthViewModel.currentExercises.collectAsState()
     val restState by strengthViewModel.restState.collectAsState()
+    val notes by strengthViewModel.notes.collectAsState()
     val vibrateOnRestEnd by settingsViewModel.vibrateOnRestEnd.collectAsState()
     val dndDuringWorkout by settingsViewModel.dndDuringWorkout.collectAsState()
     val workoutError by strengthViewModel.workoutError.collectAsState()
@@ -97,7 +112,10 @@ fun WorkoutScreen(
                     onEndRest = strengthViewModel::endRest,
                     onAddExerciseClick = { showActiveWorkoutPicker = true },
                     onFinish = strengthViewModel::finishSession,
-                    onDiscard = strengthViewModel::discardSession
+                    onDiscard = strengthViewModel::discardSession,
+                    notes = notes,
+                    onNotesChange = strengthViewModel::updateNotes,
+                    hasTemplate = activeTemplateId.isNotEmpty()
                 )
             }
             isBuildingTemplate -> {
@@ -131,7 +149,8 @@ fun WorkoutScreen(
                         templateViewModel.startEditingTemplate(it)
                         isBuildingTemplate = true
                     },
-                    onDeleteTemplate = { templateViewModel.deleteTemplate(it) }
+                    onDeleteTemplate = { templateViewModel.deleteTemplate(it) },
+                    onOpenSession = onOpenSession
                 )
             }
         }

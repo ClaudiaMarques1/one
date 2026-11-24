@@ -19,5 +19,10 @@ data class StrengthSession(
     val date: String = "",
     val templateName: String = "",
     val exercises: List<StrengthExercise> = emptyList(),
-    val createdAt: Long = System.currentTimeMillis()
+    /** When the workout ended (saved on Finish). */
+    val createdAt: Long = System.currentTimeMillis(),
+    /** When the workout started; null for sessions saved before it was recorded (#48). */
+    val startedAt: Long? = null,
+    /** The workout's notes, written during it or in Edit sets (#48). */
+    val notes: String = ""
 )
