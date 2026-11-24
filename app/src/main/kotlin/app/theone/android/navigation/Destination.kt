@@ -54,6 +54,18 @@ sealed class Destination(
         fun routeFor(sectionKey: String) = "settings/$sectionKey"
     }
 
+    // A finished workout (session detail 3a, #48), opened from Recent on Workout home; outside the bottom nav.
+    data object WorkoutSession : Destination(
+        "workout/session/{sessionId}",
+        "Workout",
+        Icons.Filled.FitnessCenter,
+        accent = SectionAccent.Workout
+    ) {
+        const val ARG_SESSION_ID = "sessionId"
+
+        fun routeFor(sessionId: String) = "workout/session/$sessionId"
+    }
+
     // Meals' Week plan (1d), opened from the weekly view's header; outside the bottom nav.
     data object MealsWeek : Destination("meals/week", "Week plan", Icons.Filled.CalendarViewWeek, accent = SectionAccent.Meals)
 
