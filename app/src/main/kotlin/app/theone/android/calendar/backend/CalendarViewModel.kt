@@ -6,14 +6,22 @@ import androidx.lifecycle.viewModelScope
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.backend.DiaryRepository
 import app.theone.android.diary.journal.backend.FirestoreDiaryRepository
+import app.theone.android.meals.backend.FirestoreMealsRepository
+import app.theone.android.meals.backend.MealSlot
+import app.theone.android.meals.backend.MealsRepository
+import app.theone.android.meals.backend.PlannedMeal
 import app.theone.android.workout.sessions.backend.FirestoreStrengthRepository
 import app.theone.android.workout.sessions.backend.StrengthRepository
 import app.theone.android.workout.sessions.backend.StrengthSession
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 enum class ActivityType { WORKOUT, MEAL, DIARY }
@@ -23,15 +31,27 @@ enum class CalendarView { MONTH, WEEK, DAY }
 data class DayActivity(
     val sessions: List<StrengthSession> = emptyList(),
     val diary: DiaryEntry? = null,
-    val mealCount: Int = 0
+    /** The day's planned meals in slot order (#69). */
+    val meals: List<PlannedMeal> = emptyList()
 ) {
+    /** Active days (month totals, best streak) are workout or diary days - meals don't count, as in the handoff. */
     val isActive: Boolean get() = sessions.isNotEmpty() || diary != null
+    val hasAnything: Boolean get() = isActive || meals.isNotEmpty()
+    val mealsEaten: Int get() = meals.count { it.eaten }
+    val mealsKcal: Int get() = meals.sumOf { it.kcal }
 }
 
+/** Meals in the Meals checklist order: by slot (an unknown slot counts as Snacks, as there), then when added. */
+internal fun List<PlannedMeal>.inSlotOrder(): List<PlannedMeal> =
+    sortedWith(compareBy({ (MealSlot.fromStored(it.slot) ?: MealSlot.SNACKS).ordinal }, { it.createdAt }))
+
+@OptIn(ExperimentalCoroutinesApi::class)
 class CalendarViewModel(
     private val strengthRepository: StrengthRepository = FirestoreStrengthRepository(),
     private val diaryRepository: DiaryRepository = FirestoreDiaryRepository(),
-    private val savedStateHandle: SavedStateHandle = SavedStateHandle()
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
+    // Calendar is the screen that brings the sections together, so it reads their repositories (#69).
+    private val mealsRepository: MealsRepository = FirestoreMealsRepository()
 ) : ViewModel() {
     private val _calendarError = MutableStateFlow<String?>(null)
     val calendarError: StateFlow<String?> = _calendarError
@@ -39,21 +59,26 @@ class CalendarViewModel(
     val view: StateFlow<CalendarView> = savedStateHandle.getStateFlow(KEY_VIEW, CalendarView.MONTH)
     val selectedDate: StateFlow<String> = savedStateHandle.getStateFlow(KEY_SELECTED_DATE, CalendarDateKeys.todayKey())
 
-    // Meals has no repository yet (meals/MealsScreen.kt is a placeholder) - this stays false, and
-    // mealCount below stays 0, until that lands. Left as a real field so wiring a future meals
-    // source only needs to flip this, not touch the screen.
-    val showMeals: Boolean = false
+    // Meals are queried by date range (sessions and diary load whole); the range only changes with the month.
+    private val meals = selectedDate
+        .map { CalendarDateKeys.mealsRange(it) }
+        .distinctUntilChanged()
+        .flatMapLatest { (from, to) -> mealsRepository.observeMealsBetween(from, to) }
 
     val dayByDate: StateFlow<Map<String, DayActivity>> = combine(
         strengthRepository.observeSessions(),
-        diaryRepository.observeEntries()
-    ) { sessions, diaryEntries ->
+        diaryRepository.observeEntries(),
+        meals
+    ) { sessions, diaryEntries, plannedMeals ->
         val result = mutableMapOf<String, DayActivity>()
         sessions.groupBy { it.date }.forEach { (date, sessionsForDate) ->
             result[date] = (result[date] ?: DayActivity()).copy(sessions = sessionsForDate)
         }
         diaryEntries.groupBy { it.date }.forEach { (date, entriesForDate) ->
             result[date] = (result[date] ?: DayActivity()).copy(diary = entriesForDate.maxByOrNull { it.createdAt })
+        }
+        plannedMeals.groupBy { it.date }.forEach { (date, mealsForDate) ->
+            result[date] = (result[date] ?: DayActivity()).copy(meals = mealsForDate.inSlotOrder())
         }
         result
     }.catch { e -> _calendarError.value = e.message }

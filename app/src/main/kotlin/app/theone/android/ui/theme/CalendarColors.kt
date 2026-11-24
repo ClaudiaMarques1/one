@@ -44,7 +44,10 @@ data class CalendarPalette(
     val diaryInk: Color,
     val mealDot: Color,
     val mealTint: Color,
-    val mealInk: Color
+    val mealInk: Color,
+    // 5a (training planner handoff): the Meals stat tile.
+    val mealSoft: Color,
+    val mealNumber: Color
 )
 
 val LightCalendarPalette = CalendarPalette(
@@ -84,12 +87,16 @@ val LightCalendarPalette = CalendarPalette(
     diaryInk = Color(0xFF6A1B86),
     mealDot = Color(0xFF43A047),
     mealTint = Color(0xFFD9ECDA),
-    mealInk = Color(0xFF2E7D32)
+    mealInk = Color(0xFF2E7D32),
+    mealSoft = Color(0xFFEEF6EE),
+    mealNumber = Color(0xFF1B5E20)
 )
 
 // From the design file's own light -> dark conversion (2a dark). Two deviations, per the dark-mode
 // handoff README: hint uses #8B8783 (the converted #6F6B67 is below 4.5:1), and text on the solid
 // accent is #1E1E1E (rule 2) rather than the converted near-white, which is unreadable on #F1994C.
+// #69: the workout / meal / diary tints are deeper than the handoff (#19222A / #1A221A / #3D3041), which
+// were too close to tell apart in the month cells (blue vs green dE 11.6, now 37; all pairs >= 20).
 val DarkCalendarPalette = CalendarPalette(
     surface = Color(0xFF121012),
     card = Color(0xFF1E1E1E),
@@ -118,16 +125,18 @@ val DarkCalendarPalette = CalendarPalette(
     accentSolid = Color(0xFFF1994C),
     onAccentSolid = Color(0xFF1E1E1E),
     workoutDot = Color(0xFF8DC4FF),
-    workoutTint = Color(0xFF19222A),
+    workoutTint = Color(0xFF1C3350),
     workoutSoft = Color(0xFF14161A),
     workoutInk = Color(0xFFB1D3FB),
     diaryDot = Color(0xFFECB6FE),
-    diaryTint = Color(0xFF3D3041),
+    diaryTint = Color(0xFF4A2A4C),
     diarySoft = Color(0xFF1A171B),
     diaryInk = Color(0xFFECC7FD),
     mealDot = Color(0xFF82D583),
-    mealTint = Color(0xFF1A221A),
-    mealInk = Color(0xFF91E091)
+    mealTint = Color(0xFF1F3F27),
+    mealInk = Color(0xFF91E091),
+    mealSoft = Color(0xFF141814),
+    mealNumber = Color(0xFFA5E9A4)
 )
 
 /** `CalendarColors.Surface` etc., resolving light or dark from the current theme. */
@@ -283,4 +292,12 @@ object CalendarColors {
     val MealInk: Color
         @Composable @ReadOnlyComposable
         get() = p.mealInk
+
+    val MealSoft: Color
+        @Composable @ReadOnlyComposable
+        get() = p.mealSoft
+
+    val MealNumber: Color
+        @Composable @ReadOnlyComposable
+        get() = p.mealNumber
 }

@@ -81,29 +81,9 @@ class CalendarDateKeysTest {
     }
 
     @Test
-    fun `monthKeysUpToToday stops at today and never includes future days`() {
-        val keys = CalendarDateKeys.monthKeysUpToToday(year = 2024, month = 1, todayKey = "2024-02-15")
-        assertEquals(15, keys.size)
-        assertEquals("2024-02-01", keys.first())
-        assertEquals("2024-02-15", keys.last())
-    }
-
-    @Test
-    fun `longestActiveStreak finds the longest run of consecutive active days`() {
-        val keys = listOf("d1", "d2", "d3", "d4", "d5")
-        val active = setOf("d1", "d2", "d4", "d5")
-        assertEquals(2, CalendarDateKeys.longestActiveStreak(keys) { it in active })
-    }
-
-    @Test
-    fun `longestActiveStreak is the full length when every day is active`() {
-        val keys = listOf("d1", "d2", "d3")
-        assertEquals(3, CalendarDateKeys.longestActiveStreak(keys) { true })
-    }
-
-    @Test
-    fun `longestActiveStreak is zero when nothing is active`() {
-        val keys = listOf("d1", "d2", "d3")
-        assertEquals(0, CalendarDateKeys.longestActiveStreak(keys) { false })
+    fun `mealsRange is the whole month padded by 7 days each side`() {
+        assertEquals("2026-09-24" to "2026-11-07", CalendarDateKeys.mealsRange("2026-10-10"))
+        assertEquals("2026-09-24" to "2026-11-07", CalendarDateKeys.mealsRange("2026-10-31"))
+        assertEquals("2024-01-25" to "2024-03-07", CalendarDateKeys.mealsRange("2024-02-29"))
     }
 }

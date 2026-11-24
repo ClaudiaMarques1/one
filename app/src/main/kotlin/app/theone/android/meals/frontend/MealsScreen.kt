@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,7 +43,10 @@ fun MealsScreen(
     onOpenWeekPlan: () -> Unit = {},
     onOpenShoppingList: (dayInWeek: String) -> Unit = {},
     viewModel: MealsViewModel = mealsViewModel(),
-    recipesViewModel: RecipesViewModel = viewModel()
+    recipesViewModel: RecipesViewModel = viewModel(),
+    // Opened from Calendar on a day (#69): show that date in the Food Diary once, then hand it back.
+    openDate: String? = null,
+    onOpenDateHandled: () -> Unit = {}
 ) {
     val day by viewModel.day.collectAsState()
     val favourites by viewModel.favourites.collectAsState()
@@ -57,6 +61,13 @@ fun MealsScreen(
     // A recipe opens read-only first (its menu has Edit / Delete); the editor sits on top of it.
     var viewing by rememberSaveable { mutableStateOf<String?>(null) }
     var editing by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(openDate) {
+        if (openDate != null) {
+            viewModel.selectDate(openDate)
+            tab = 0
+            onOpenDateHandled()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {

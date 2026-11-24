@@ -11,12 +11,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Restaurant
@@ -35,16 +39,20 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,21 +64,30 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.theone.android.calendar.backend.ActivityType
 import app.theone.android.calendar.backend.CalendarDateKeys
 import app.theone.android.calendar.backend.CalendarView
 import app.theone.android.calendar.backend.CalendarViewModel
 import app.theone.android.calendar.backend.DayActivity
+import app.theone.android.calendar.backend.MonthStats
+import app.theone.android.calendar.backend.cellSections
+import app.theone.android.calendar.backend.monthStats
 import app.theone.android.diary.journal.backend.DiaryEntry
 import app.theone.android.diary.journal.frontend.bodyPartLabels
+import app.theone.android.meals.backend.PlannedMeal
 import app.theone.android.ui.ErrorBanner
 import app.theone.android.ui.LocalWeekStart
 import app.theone.android.ui.theme.CalendarColors
@@ -89,7 +106,9 @@ private val C = CalendarColors
 fun CalendarScreen(
     viewModel: CalendarViewModel = viewModel(),
     onNavigateToWorkout: () -> Unit = {},
-    onNavigateToDiary: () -> Unit = {}
+    onNavigateToDiary: () -> Unit = {},
+    onOpenWorkoutSession: (sessionId: String) -> Unit = {},
+    onOpenMeals: (dateKey: String) -> Unit = {}
 ) {
     val view by viewModel.view.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
@@ -100,7 +119,6 @@ fun CalendarScreen(
         view = view,
         selectedDate = selectedDate,
         dayByDate = dayByDate,
-        showMeals = viewModel.showMeals,
         errorMessage = calendarError,
         onDismissError = viewModel::clearCalendarError,
         onViewChange = viewModel::setView,
@@ -114,8 +132,8 @@ fun CalendarScreen(
         onToday = viewModel::goToToday,
         onLogWorkout = onNavigateToWorkout,
         onAddDiaryEntry = onNavigateToDiary,
-        // That route doesn't exist yet - see the handoff README's Workout card note.
-        onOpenWorkoutSession = {}
+        onOpenWorkoutSession = onOpenWorkoutSession,
+        onOpenMeals = onOpenMeals
     )
 }
 
@@ -125,7 +143,6 @@ private fun CalendarScreenContent(
     view: CalendarView,
     selectedDate: String,
     dayByDate: Map<String, DayActivity>,
-    showMeals: Boolean,
     errorMessage: String? = null,
     onDismissError: () -> Unit = {},
     onViewChange: (CalendarView) -> Unit = {},
@@ -136,11 +153,14 @@ private fun CalendarScreenContent(
     onToday: () -> Unit = {},
     onLogWorkout: () -> Unit = {},
     onAddDiaryEntry: () -> Unit = {},
-    onOpenWorkoutSession: (String) -> Unit = {}
+    onOpenWorkoutSession: (String) -> Unit = {},
+    onOpenMeals: (String) -> Unit = {}
 ) {
     val todayKey = CalendarDateKeys.todayKey()
     val firstDayOfWeek = LocalWeekStart.current.toCalendarDay()
     val weekKeys = CalendarDateKeys.weekDateKeys(selectedDate, firstDayOfWeek)
+    // 5a: tapping a day in Month opens its day sheet (Week and Day keep their inline details).
+    var sheetDate by rememberSaveable { mutableStateOf<String?>(null) }
 
     Scaffold(containerColor = C.Surface) { padding ->
         Column(
@@ -167,44 +187,75 @@ private fun CalendarScreenContent(
                     todayKey = todayKey,
                     firstDayOfWeek = firstDayOfWeek,
                     dayByDate = dayByDate,
-                    onSelectDate = onSelectDate
+                    onSelectDate = { dateKey ->
+                        onSelectDate(dateKey)
+                        sheetDate = dateKey
+                    }
                 )
                 CalendarView.WEEK, CalendarView.DAY -> WeekStrip(
                     weekKeys = weekKeys,
                     selectedDate = selectedDate,
                     todayKey = todayKey,
                     dayByDate = dayByDate,
-                    showMeals = showMeals,
                     onSelectDate = onSelectDate
                 )
             }
 
-            SectionDivider()
-
             when (view) {
-                CalendarView.WEEK -> WeekAgendaSection(
-                    weekKeys = weekKeys,
-                    selectedDate = selectedDate,
-                    todayKey = todayKey,
-                    dayByDate = dayByDate,
-                    showMeals = showMeals,
-                    onSelectRow = { dateKey -> onOpenDay(dateKey) }
-                )
-                CalendarView.MONTH, CalendarView.DAY -> DayDetailsSection(
-                    view = view,
-                    selectedDate = selectedDate,
-                    todayKey = todayKey,
-                    activity = dayByDate[selectedDate] ?: DayActivity(),
-                    showMeals = showMeals,
-                    onOpenDay = onOpenDay,
-                    onOpenWorkoutSession = onOpenWorkoutSession,
-                    onLogWorkout = onLogWorkout,
-                    onAddDiaryEntry = onAddDiaryEntry
-                )
+                CalendarView.MONTH -> Unit
+                CalendarView.WEEK -> {
+                    SectionDivider()
+                    WeekAgendaSection(
+                        weekKeys = weekKeys,
+                        selectedDate = selectedDate,
+                        todayKey = todayKey,
+                        dayByDate = dayByDate,
+                        onSelectRow = { dateKey -> onOpenDay(dateKey) }
+                    )
+                }
+                CalendarView.DAY -> {
+                    SectionDivider()
+                    DayDetailsSection(
+                        selectedDate = selectedDate,
+                        todayKey = todayKey,
+                        activity = dayByDate[selectedDate] ?: DayActivity(),
+                        onOpenWorkoutSession = onOpenWorkoutSession,
+                        onOpenMeals = onOpenMeals,
+                        onLogWorkout = onLogWorkout,
+                        onAddDiaryEntry = onAddDiaryEntry
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    val openSheet = sheetDate
+    if (view == CalendarView.MONTH && openSheet != null) {
+        DaySheet(
+            dateKey = openSheet,
+            todayKey = todayKey,
+            activity = dayByDate[openSheet] ?: DayActivity(),
+            onDismiss = { sheetDate = null },
+            // Leaving from the sheet closes it - otherwise it reopened on coming back, over the bottom nav.
+            onOpenWorkoutSession = {
+                sheetDate = null
+                onOpenWorkoutSession(it)
+            },
+            onOpenMeals = {
+                sheetDate = null
+                onOpenMeals(it)
+            },
+            onLogWorkout = {
+                sheetDate = null
+                onLogWorkout()
+            },
+            onAddDiaryEntry = {
+                sheetDate = null
+                onAddDiaryEntry()
+            }
+        )
     }
 }
 
@@ -224,15 +275,8 @@ private fun HeaderRow(
         CalendarView.DAY -> CalendarDateLabels.dayTitle(selectedDate)
     }
     val subtitle = when (view) {
-        CalendarView.MONTH -> {
-            val year = CalendarDateKeys.yearOf(selectedDate)
-            val activeDays = CalendarDateKeys.monthKeysUpToToday(
-                CalendarDateKeys.yearOf(selectedDate),
-                CalendarDateKeys.monthOf(selectedDate),
-                todayKey
-            )
-            "$year · ${activeDays.size} ${if (activeDays.size == 1) "active day" else "active days"}"
-        }
+        // 5a: just the year under the month.
+        CalendarView.MONTH -> CalendarDateKeys.yearOf(selectedDate).toString()
         CalendarView.WEEK -> CalendarDateLabels.weekRangeLabel(
             CalendarDateKeys.weekDateKeys(selectedDate, LocalWeekStart.current.toCalendarDay())
         )
@@ -261,7 +305,9 @@ private fun HeaderRow(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (selectedDate != todayKey) {
+            // 5a: in Month, Today only shows off the current month (picking another day this month keeps it hidden).
+            val showToday = if (view == CalendarView.MONTH) selectedDate.take(7) != todayKey.take(7) else selectedDate != todayKey
+            if (showToday) {
                 OutlinedButton(
                     onClick = onToday,
                     modifier = Modifier.height(32.dp),
@@ -350,7 +396,7 @@ private fun MonthGridSection(
     val year = CalendarDateKeys.yearOf(selectedDate)
     val month = CalendarDateKeys.monthOf(selectedDate)
 
-    MonthTotalsRow(year = year, month = month, todayKey = todayKey, dayByDate = dayByDate)
+    MonthTotalsRow(stats = monthStats(year, month, dayByDate))
 
     Row(
         modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 6.dp),
@@ -384,7 +430,7 @@ private fun MonthGridSection(
                                 isSelected = dateKey == selectedDate,
                                 isToday = dateKey == todayKey,
                                 isFuture = dateKey > todayKey,
-                                activity = dayByDate[dateKey],
+                                sections = dayByDate[dateKey]?.cellSections(dateKey, todayKey).orEmpty(),
                                 onClick = { onSelectDate(dateKey) }
                             )
                         }
@@ -398,53 +444,56 @@ private fun MonthGridSection(
     LegendRow()
 }
 
+/** 5a stat tiles: Workouts, Diary entries, Meals eaten / planned (the Best streak tile went with 5a). */
 @Composable
-private fun MonthTotalsRow(year: Int, month: Int, todayKey: String, dayByDate: Map<String, DayActivity>) {
-    val keysUpToToday = CalendarDateKeys.monthKeysUpToToday(year, month, todayKey)
-    val workoutDays = keysUpToToday.count { dayByDate[it]?.sessions?.isNotEmpty() == true }
-    val diaryDays = keysUpToToday.count { dayByDate[it]?.diary != null }
-    val bestStreak = CalendarDateKeys.longestActiveStreak(keysUpToToday) { dayByDate[it]?.isActive == true }
-
+private fun MonthTotalsRow(stats: MonthStats) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(top = 4.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         MonthTotalCard(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
             background = C.WorkoutSoft,
-            numberColor = C.WorkoutInk,
-            number = workoutDays.toString(),
             label = "Workouts"
-        )
+        ) {
+            Text(stats.workouts.toString(), style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.SemiBold, color = C.WorkoutInk))
+        }
         MonthTotalCard(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
             background = C.DiarySoft,
-            numberColor = C.DiaryInk,
-            number = diaryDays.toString(),
             label = "Diary entries"
-        )
+        ) {
+            Text(stats.diaryEntries.toString(), style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.SemiBold, color = C.DiaryInk))
+        }
         MonthTotalCard(
-            modifier = Modifier.weight(1f),
-            background = C.AccentSoft,
-            numberColor = C.AccentOnContainer,
-            number = if (bestStreak == 1) "1 day" else "$bestStreak days",
-            label = "Best streak"
-        )
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+            background = C.MealSoft,
+            label = "Meals eaten / planned"
+        ) {
+            Text(
+                buildAnnotatedString {
+                    withStyle(SpanStyle(fontSize = 26.sp, fontWeight = FontWeight.SemiBold, color = C.MealNumber)) {
+                        append(stats.mealsEaten.toString())
+                    }
+                    withStyle(SpanStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium, color = C.MealInk)) {
+                        append(" / ${stats.mealsPlanned}")
+                    }
+                }
+            )
+        }
     }
 }
 
 @Composable
-private fun MonthTotalCard(modifier: Modifier, background: Color, numberColor: Color, number: String, label: String) {
-    Box(
+private fun MonthTotalCard(modifier: Modifier, background: Color, label: String, number: @Composable () -> Unit) {
+    Column(
         modifier = modifier
             .background(background, shape = RoundedCornerShape(16.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
-        Column {
-            Text(text = number, style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.SemiBold, color = numberColor))
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(text = label, style = TextStyle(fontSize = 12.sp, color = C.BodySecondary))
-        }
+        number()
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(text = label, style = TextStyle(fontSize = 12.sp, color = C.BodySecondary))
     }
 }
 
@@ -454,11 +503,9 @@ private fun MonthDayCell(
     isSelected: Boolean,
     isToday: Boolean,
     isFuture: Boolean,
-    activity: DayActivity?,
+    sections: List<ActivityType>,
     onClick: () -> Unit
 ) {
-    val hasWorkout = activity?.sessions?.isNotEmpty() == true
-    val hasDiary = activity?.diary != null
     val day = dateKey.substringAfterLast("-").toInt()
 
     val borderWidth = when {
@@ -475,8 +522,11 @@ private fun MonthDayCell(
     }
     val borderColor by animateColorAsState(targetValue = targetBorderColor, animationSpec = tween(150), label = "dayCellBorder")
 
+    // Future numbers stay greyer than past ones but readable (#69): the handoff's muted grey was 2.6:1 on the page
+    // and 1.6:1 on a tinted cell. Secondary text on the page (5.3+), body-secondary on a tint (5.9+).
     val textColor = when {
-        isFuture -> C.Muted
+        isFuture && sections.isNotEmpty() -> C.BodySecondary
+        isFuture -> C.SecondaryText
         isToday -> C.AccentOnContainer
         else -> C.OnSurface
     }
@@ -490,11 +540,18 @@ private fun MonthDayCell(
         .clickable(onClick = onClick)
         .then(if (borderWidth > 0.dp) Modifier.border(borderWidth, borderColor, shape) else Modifier)
 
+    // 5a: one diagonal band per section with activity; nothing -> grey in the past, clear from today on.
+    val tints = sections.map { section ->
+        when (section) {
+            ActivityType.WORKOUT -> C.WorkoutTint
+            ActivityType.MEAL -> C.MealTint
+            ActivityType.DIARY -> C.DiaryTint
+        }
+    }
     val background = when {
+        tints.size > 1 -> Modifier.diagonalBandsBackground(tints, 12.dp)
+        tints.size == 1 -> Modifier.background(tints.single(), shape)
         isFuture -> Modifier
-        hasWorkout && hasDiary -> Modifier.diagonalSplitBackground(C.WorkoutTint, C.DiaryTint, 12.dp)
-        hasWorkout -> Modifier.background(C.WorkoutTint, shape)
-        hasDiary -> Modifier.background(C.DiaryTint, shape)
         else -> Modifier.background(C.EmptyCell, shape)
     }
 
@@ -511,18 +568,22 @@ private fun LegendRow() {
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        // 5a legend, bottom-nav order. Planned / Missed join with the training planner.
         LegendItem(swatch = { Box(Modifier.size(12.dp).background(C.WorkoutTint, RoundedCornerShape(4.dp))) }, label = "Workout")
+        LegendItem(swatch = { Box(Modifier.size(12.dp).background(C.MealTint, RoundedCornerShape(4.dp))) }, label = "Meals")
         LegendItem(swatch = { Box(Modifier.size(12.dp).background(C.DiaryTint, RoundedCornerShape(4.dp))) }, label = "Diary")
-        // No "Both" swatch: Meals (green) joins the grid, so combinations aren't listed one by one.
         LegendItem(
             swatch = { Box(Modifier.size(12.dp).border(2.dp, C.AccentSolid, RoundedCornerShape(4.dp))) },
             label = "Today"
         )
-        LegendItem(
-            swatch = { Box(Modifier.size(12.dp).border(2.dp, C.OnSurface, RoundedCornerShape(4.dp))) },
-            label = "Selected"
-        )
     }
+    Text(
+        // Until planning lands there's nothing to change - the hint's "or change what is planned" comes with it.
+        text = "Tap a day to see what you logged",
+        modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
+        textAlign = TextAlign.Center,
+        style = TextStyle(fontSize = 13.sp, color = C.Hint)
+    )
 }
 
 @Composable
@@ -543,7 +604,6 @@ private fun WeekStrip(
     selectedDate: String,
     todayKey: String,
     dayByDate: Map<String, DayActivity>,
-    showMeals: Boolean,
     onSelectDate: (String) -> Unit
 ) {
     Row(
@@ -558,7 +618,6 @@ private fun WeekStrip(
                 isToday = dateKey == todayKey,
                 isFuture = dateKey > todayKey,
                 activity = dayByDate[dateKey],
-                showMeals = showMeals,
                 onClick = { onSelectDate(dateKey) }
             )
         }
@@ -573,7 +632,6 @@ private fun WeekStripColumn(
     isToday: Boolean,
     isFuture: Boolean,
     activity: DayActivity?,
-    showMeals: Boolean,
     onClick: () -> Unit
 ) {
     val day = dateKey.substringAfterLast("-").toInt()
@@ -582,7 +640,7 @@ private fun WeekStripColumn(
     val numberColor = when {
         isSelected -> C.OnAccentSolid
         isToday -> C.AccentOnContainer
-        isFuture -> C.Muted
+        isFuture -> C.SecondaryText
         else -> C.OnSurface
     }
     val numberWeight = if (isSelected || isToday) FontWeight.SemiBold else FontWeight.Normal
@@ -608,7 +666,7 @@ private fun WeekStripColumn(
         Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             if (activity?.sessions?.isNotEmpty() == true) ActivityDot(C.WorkoutDot)
             if (activity?.diary != null) ActivityDot(C.DiaryDot)
-            if (showMeals && (activity?.mealCount ?: 0) > 0) ActivityDot(C.MealDot)
+            if (activity?.meals?.isNotEmpty() == true) ActivityDot(C.MealDot)
         }
     }
 }
@@ -633,11 +691,11 @@ private fun WeekAgendaSection(
     selectedDate: String,
     todayKey: String,
     dayByDate: Map<String, DayActivity>,
-    showMeals: Boolean,
     onSelectRow: (String) -> Unit
 ) {
     val workoutCount = weekKeys.sumOf { dayByDate[it]?.sessions?.size ?: 0 }
     val diaryCount = weekKeys.count { dayByDate[it]?.diary != null }
+    val mealDays = weekKeys.count { dayByDate[it]?.meals?.isNotEmpty() == true }
 
     Row(
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 24.dp, end = 24.dp, bottom = 8.dp),
@@ -645,7 +703,7 @@ private fun WeekAgendaSection(
         verticalAlignment = Alignment.Bottom
     ) {
         Text("This week", style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = C.BodySecondary))
-        Text("$workoutCount workouts · $diaryCount diary", style = TextStyle(fontSize = 13.sp, color = C.SecondaryText))
+        Text(weekSummaryLabel(workoutCount, diaryCount, mealDays), style = TextStyle(fontSize = 13.sp, color = C.SecondaryText))
     }
 
     Column(
@@ -659,7 +717,6 @@ private fun WeekAgendaSection(
                 isToday = dateKey == todayKey,
                 isFuture = dateKey > todayKey,
                 activity = dayByDate[dateKey],
-                showMeals = showMeals,
                 onClick = { onSelectRow(dateKey) }
             )
         }
@@ -673,13 +730,12 @@ private fun AgendaRow(
     isToday: Boolean,
     isFuture: Boolean,
     activity: DayActivity?,
-    showMeals: Boolean,
     onClick: () -> Unit
 ) {
     val day = dateKey.substringAfterLast("-").toInt()
     val dayNumberColor = when {
         isToday -> C.AccentOnContainer
-        isFuture -> C.Muted
+        isFuture -> C.SecondaryText
         else -> C.OnSurface
     }
     val background = if (isSelected) C.AccentContainer else Color.Transparent
@@ -705,8 +761,8 @@ private fun AgendaRow(
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             val sessions = activity?.sessions.orEmpty()
             val diary = activity?.diary
-            val mealCount = activity?.mealCount ?: 0
-            val hasItems = sessions.isNotEmpty() || diary != null || (showMeals && mealCount > 0)
+            val meals = activity?.meals.orEmpty()
+            val hasItems = activity?.hasAnything == true
 
             sessions.forEach { session ->
                 AgendaItem(
@@ -726,13 +782,13 @@ private fun AgendaRow(
                     subtitle = "Energy ${diary.energyLevel}/10 · Sleep ${diary.sleepHours} h"
                 )
             }
-            if (showMeals && mealCount > 0) {
+            if (meals.isNotEmpty()) {
                 AgendaItem(
                     background = C.MealTint,
                     icon = Icons.Filled.Restaurant,
                     iconTint = C.MealInk,
-                    title = "$mealCount meal(s)",
-                    subtitle = "Meals"
+                    title = mealCountLabel(meals.size),
+                    subtitle = kcalLabel(meals.sumOf { it.kcal })
                 )
             }
             if (!hasItems) {
@@ -770,17 +826,15 @@ private fun AgendaItem(background: Color, icon: ImageVector, iconTint: Color, ti
 
 // endregion
 
-// region Day details (Month + Day views)
+// region Day details (Day view) and day sheet (Month, 5a)
 
 @Composable
 private fun DayDetailsSection(
-    view: CalendarView,
     selectedDate: String,
     todayKey: String,
     activity: DayActivity,
-    showMeals: Boolean,
-    onOpenDay: (String) -> Unit,
     onOpenWorkoutSession: (String) -> Unit,
+    onOpenMeals: (String) -> Unit,
     onLogWorkout: () -> Unit,
     onAddDiaryEntry: () -> Unit
 ) {
@@ -788,36 +842,107 @@ private fun DayDetailsSection(
         modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        if (view == CalendarView.MONTH) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "${CalendarDateLabels.dayOfWeekFullLabel(selectedDate)}, ${CalendarDateLabels.dayTitle(selectedDate)}",
-                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = C.OnSurface)
-                )
-                TextButton(onClick = { onOpenDay(selectedDate) }) {
-                    Text("Open day", style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = C.AccentOnContainer))
-                    Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = C.AccentOnContainer, modifier = Modifier.size(18.dp))
+        DayCards(
+            dateKey = selectedDate,
+            todayKey = todayKey,
+            activity = activity,
+            onOpenWorkoutSession = onOpenWorkoutSession,
+            onOpenMeals = onOpenMeals,
+            onLogWorkout = onLogWorkout,
+            onAddDiaryEntry = onAddDiaryEntry
+        )
+    }
+}
+
+/** The day's cards, top to bottom as in 5a: workouts done, meals, diary - or the empty state. */
+@Composable
+private fun DayCards(
+    dateKey: String,
+    todayKey: String,
+    activity: DayActivity,
+    onOpenWorkoutSession: (String) -> Unit,
+    onOpenMeals: (String) -> Unit,
+    onLogWorkout: () -> Unit,
+    onAddDiaryEntry: () -> Unit
+) {
+    activity.sessions.forEach { session ->
+        WorkoutCard(session = session, onClick = { onOpenWorkoutSession(session.id) })
+    }
+    if (activity.meals.isNotEmpty()) {
+        MealsCard(
+            title = mealsCardTitle(activity.meals.size, activity.mealsEaten, isPast = dateKey < todayKey),
+            onClick = { onOpenMeals(dateKey) }
+        )
+    }
+    activity.diary?.let { diary -> DiaryCard(diary) }
+    if (!activity.hasAnything) {
+        EmptyDayState(isFuture = dateKey > todayKey, onLogWorkout = onLogWorkout, onAddDiaryEntry = onAddDiaryEntry)
+    }
+}
+
+/** 5a day sheet: tapping a day in Month. Scrolls inside the sheet; closes on the scrim or the close button. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DaySheet(
+    dateKey: String,
+    todayKey: String,
+    activity: DayActivity,
+    onDismiss: () -> Unit,
+    onOpenWorkoutSession: (String) -> Unit,
+    onOpenMeals: (String) -> Unit,
+    onLogWorkout: () -> Unit,
+    onAddDiaryEntry: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = C.Surface
+    ) {
+        // 5a: at most 86% of the screen, scrolling inside.
+        val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.86f).dp
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = maxHeight)
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "${CalendarDateLabels.dayOfWeekFullLabel(dateKey)}, ${CalendarDateLabels.dayTitle(dateKey)}",
+                        style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = C.OnSurface),
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (dateKey == todayKey) {
+                        Text(
+                            "Today",
+                            style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = C.AccentOnContainer),
+                            modifier = Modifier
+                                .background(C.AccentContainer, RoundedCornerShape(50))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+                IconButton(onClick = onDismiss, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Filled.Close, contentDescription = "Close", tint = C.IconTint)
                 }
             }
-        }
-
-        val isFuture = selectedDate > todayKey
-        val mealCount = activity.mealCount
-        val hasAnything = activity.sessions.isNotEmpty() || activity.diary != null || (showMeals && mealCount > 0)
-
-        activity.sessions.forEach { session ->
-            WorkoutCard(session = session, onClick = { onOpenWorkoutSession(session.id) })
-        }
-        activity.diary?.let { diary -> DiaryCard(diary) }
-        if (showMeals && mealCount > 0) {
-            MealsRow(mealCount)
-        }
-        if (!hasAnything) {
-            EmptyDayState(isFuture = isFuture, onLogWorkout = onLogWorkout, onAddDiaryEntry = onAddDiaryEntry)
+            DayCards(
+                dateKey = dateKey,
+                todayKey = todayKey,
+                activity = activity,
+                onOpenWorkoutSession = onOpenWorkoutSession,
+                onOpenMeals = onOpenMeals,
+                onLogWorkout = onLogWorkout,
+                onAddDiaryEntry = onAddDiaryEntry
+            )
         }
     }
 }
@@ -984,14 +1109,16 @@ private fun StatTile(modifier: Modifier, label: String, content: @Composable () 
     }
 }
 
+/** 5a Meals card: "1 of 4 meals eaten" / "3 meals logged"; opens Meals on that date. */
 @Composable
-private fun MealsRow(mealCount: Int) {
+private fun MealsCard(title: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(CalendarColors.Card, RoundedCornerShape(16.dp))
             .border(1.dp, C.CardBorder, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -999,7 +1126,12 @@ private fun MealsRow(mealCount: Int) {
         Box(modifier = Modifier.size(40.dp).background(C.MealTint, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.Restaurant, contentDescription = null, tint = C.MealInk, modifier = Modifier.size(22.dp))
         }
-        Text("$mealCount meal(s) logged", style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = C.OnSurface))
+        Text(
+            title,
+            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = C.OnSurface),
+            modifier = Modifier.weight(1f)
+        )
+        Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = C.ChevronStrong, modifier = Modifier.size(20.dp))
     }
 }
 
@@ -1044,10 +1176,14 @@ private fun EmptyStateButton(icon: ImageVector, label: String, onClick: () -> Un
 
 // region Drawing helpers
 
-private fun Modifier.diagonalSplitBackground(topLeft: Color, bottomRight: Color, cornerRadius: Dp): Modifier =
+/** Equal diagonal bands from top-left to bottom-right with hard stops, one per colour (5a month cells). */
+private fun Modifier.diagonalBandsBackground(colors: List<Color>, cornerRadius: Dp): Modifier =
     this.drawWithCache {
+        val stops = colors.flatMapIndexed { index, color ->
+            listOf(index.toFloat() / colors.size to color, (index + 1).toFloat() / colors.size to color)
+        }
         val brush = Brush.linearGradient(
-            colorStops = arrayOf(0f to topLeft, 0.5f to topLeft, 0.5f to bottomRight, 1f to bottomRight),
+            colorStops = stops.toTypedArray(),
             start = Offset.Zero,
             end = Offset(size.width, size.height)
         )
@@ -1091,10 +1227,13 @@ private fun CalendarScreenMonthPreview() {
                             exercises = listOf(StrengthExercise("Bench Press", listOf(StrengthSet(8, 60.0))))
                         )
                     ),
-                    diary = DiaryEntry(mood = "💪", energyLevel = 8, sleepHours = 7, reflection = "Good session.")
+                    diary = DiaryEntry(mood = "💪", energyLevel = 8, sleepHours = 7, reflection = "Good session."),
+                    meals = listOf(
+                        PlannedMeal(name = "Oats", slot = "BREAKFAST", kcal = 450, eaten = true),
+                        PlannedMeal(name = "Chicken rice", slot = "LUNCH", kcal = 700)
+                    )
                 )
-            ),
-            showMeals = false
+            )
         )
     }
 }
@@ -1106,8 +1245,7 @@ private fun CalendarScreenWeekPreview() {
         CalendarScreenContent(
             view = CalendarView.WEEK,
             selectedDate = CalendarDateKeys.todayKey(),
-            dayByDate = emptyMap(),
-            showMeals = false
+            dayByDate = emptyMap()
         )
     }
 }
@@ -1119,8 +1257,7 @@ private fun CalendarScreenDayEmptyPreview() {
         CalendarScreenContent(
             view = CalendarView.DAY,
             selectedDate = CalendarDateKeys.todayKey(),
-            dayByDate = emptyMap(),
-            showMeals = false
+            dayByDate = emptyMap()
         )
     }
 }

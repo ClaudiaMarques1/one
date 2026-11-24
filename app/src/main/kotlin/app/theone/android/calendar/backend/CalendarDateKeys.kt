@@ -26,6 +26,16 @@ internal object CalendarDateKeys {
     fun addDays(dateKey: String, delta: Int): String =
         formatDateKey(parseDateKey(dateKey).plusDays(delta.toLong()))
 
+    /**
+     * The dates meals are loaded for (#69): the selected date's month, padded by 7 days each side so the
+     * week strip and agenda at a month edge have their meals too. Whole months, so stepping days or weeks
+     * inside a month keeps the same range (and the same Firestore query).
+     */
+    fun mealsRange(dateKey: String): Pair<String, String> {
+        val month = YearMonth.from(parseDateKey(dateKey))
+        return formatDateKey(month.atDay(1).minusDays(7)) to formatDateKey(month.atEndOfMonth().plusDays(7))
+    }
+
     fun step(dateKey: String, view: CalendarView, delta: Int): String = when (view) {
         CalendarView.MONTH -> addMonths(dateKey, delta)
         CalendarView.WEEK -> addDays(dateKey, delta * 7)
@@ -52,24 +62,6 @@ internal object CalendarDateKeys {
 
     /** 0-based (January = 0), matching `java.util.Calendar.MONTH`. */
     fun monthOf(dateKey: String): Int = parseDateKey(dateKey).monthValue - 1
-
-    /** Date keys of every day in [year]/[month] up to and including [todayKey] (string-ordered). */
-    fun monthKeysUpToToday(year: Int, month: Int, todayKey: String): List<String> {
-        val yearMonth = YearMonth.of(year, month + 1)
-        return (1..yearMonth.lengthOfMonth())
-            .map { day -> formatDateKey(yearMonth.atDay(day)) }
-            .filter { it <= todayKey }
-    }
-
-    fun longestActiveStreak(orderedDateKeys: List<String>, isActive: (String) -> Boolean): Int {
-        var longest = 0
-        var current = 0
-        orderedDateKeys.forEach { key ->
-            current = if (isActive(key)) current + 1 else 0
-            longest = maxOf(longest, current)
-        }
-        return longest
-    }
 
     // DayOfWeek is MONDAY = 1 .. SUNDAY = 7; Calendar is SUNDAY = 1 .. SATURDAY = 7.
     private fun DayOfWeek.toCalendarDay(): Int = value % 7 + 1
