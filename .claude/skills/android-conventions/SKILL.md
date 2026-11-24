@@ -10,14 +10,23 @@ short version; this is the "how exactly" version with runnable-shaped examples.
 
 ## New Repository
 
-```kotlin
-class FooRepository {
-    private fun uid() = FirebaseModule.auth.currentUser?.uid
+An interface (what ViewModels and tests see) plus a `Firestore*` implementation (the only class that
+touches `FirebaseModule`). Reference: `workout/sessions/backend/StrengthRepository.kt` +
+`FirestoreStrengthRepository.kt`.
 
-    fun observeFoos(): Flow<List<Foo>> = callbackFlow {
-        val uid = uid() ?: run { close(); return@callbackFlow }
-        val reg = FirebaseModule.firestore
-            .collection("users/$uid/foos")
+```kotlin
+interface FooRepository {
+    fun observeFoos(): Flow<List<Foo>>
+    suspend fun addFoo(foo: Foo)
+}
+
+class FirestoreFooRepository : FooRepository {
+    // users/{uid}/foos; null when signed out.
+    private fun foos(): CollectionReference? = FirebaseModule.userCollection("foos")
+
+    override fun observeFoos(): Flow<List<Foo>> = callbackFlow {
+        val collection = foos() ?: run { trySend(emptyList()); close(); return@callbackFlow }
+        val reg = collection
             .addSnapshotListener { snap, err ->
                 if (err != null) { close(err); return@addSnapshotListener }
                 trySend(snap?.documents.orEmpty().mapNotNull {
@@ -27,18 +36,24 @@ class FooRepository {
         awaitClose { reg.remove() }
     }
 
-    suspend fun addFoo(foo: Foo) {
-        val uid = uid() ?: return
-        FirebaseModule.firestore.collection("users/$uid/foos").add(foo).await()
+    override suspend fun addFoo(foo: Foo) {
+        foos()?.add(foo)?.await()
     }
 }
 ```
 
+Several writes that must land together go in one `runTransaction` (`FirestoreStrengthRepository.kt:62`)
+or `batch()` (`FirestoreMealsRepository.kt:119`), not sequential `.await()` calls.
+
 ## New ViewModel
+
+Takes the interface, defaulting to the Firestore implementation - no DI framework. Tests pass an
+in-memory `FakeFooRepository` (test source set, next to the test) plus `testing/MainDispatcherRule`;
+reference: `workout/sessions/backend/StrengthViewModelTest.kt` + `FakeStrengthRepository.kt`.
 
 ```kotlin
 class FooViewModel(
-    private val repository: FooRepository = FooRepository()
+    private val repository: FooRepository = FirestoreFooRepository()
 ) : ViewModel() {
     val foos: StateFlow<List<Foo>> = repository.observeFoos()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

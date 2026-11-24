@@ -10,6 +10,8 @@ description: Reviews the diff between this branch and develop for correctness an
    - Dependency versions come only from `gradle/libs.versions.toml`, never a literal in `app/build.gradle.kts`.
    - Every `callbackFlow` closes with `awaitClose`.
    - Firestore model fields are all-defaulted; `.copy(id = doc.id)` applied in the repository, not the model.
+   - A new repository is an interface + `Firestore*` implementation using `FirebaseModule.userCollection`;
+     its ViewModel takes the interface (default arg) and has tests with a `Fake*Repository`.
    - No blocking work on the main thread (Firestore calls, large parses, network wrapped in `suspend`/`withContext(Dispatchers.IO)`).
    - ViewModels expose `StateFlow` publicly, never a mutable `MutableStateFlow`.
    - No Firestore/`FirebaseModule` calls from composables.
