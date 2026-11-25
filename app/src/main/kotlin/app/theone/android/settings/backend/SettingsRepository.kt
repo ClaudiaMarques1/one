@@ -29,4 +29,9 @@ interface SettingsRepository {
     fun observeMealSettings(): Flow<MealSettings>
 
     suspend fun setMealSettings(settings: MealSettings)
+
+    /** Whether Calendar's "Training this week" card is expanded (#76). Defaults to false (collapsed). */
+    fun observeTrainingWeekExpanded(): Flow<Boolean>
+
+    suspend fun setTrainingWeekExpanded(expanded: Boolean)
 }

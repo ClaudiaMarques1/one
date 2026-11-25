@@ -51,8 +51,8 @@ Ticket 2 (own card, In Progress column): reminders, nudge, Google Calendar.
 - [x] Schedule builder + day states + move targets (`TrainingSchedule.kt`)
 - [x] Tests: `TrainingScheduleTest` (16) + `FakeTrainingPlanRepository`
 - [x] `test lint assembleDebug` pass locally (2026-11-25)
-- [ ] Issue body: storage path -> routine versions; `/verify`, commit, PR
+- [x] Issue body: storage path -> routine versions; `/verify`, commit, PR (#75, merged 2026-11-25 `8f47510`)
 
 ## Next step
 
-Update #74's body (storage), `/verify` #74, commit, push, PR (draft) - confirm as one batch.
+Done. Phase 2 (#76) continues in `76-training-planner-phase-2.md`.

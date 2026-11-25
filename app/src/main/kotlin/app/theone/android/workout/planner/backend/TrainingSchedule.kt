@@ -31,13 +31,16 @@ object TrainingSchedule {
     /**
      * Sessions dated [from]..[to] (inclusive), sorted by date and time.
      * [defaultTemplateId] is used for a workout added on a rest day without a chosen template.
+     * When [templateIds] is given, a session whose template is not in it (deleted since) is dropped - that day
+     * is a rest day until the user plans a workout there (#76).
      */
     fun build(
         routines: List<TrainingRoutine>,
         overrides: List<DayOverride>,
         from: LocalDate,
         to: LocalDate,
-        defaultTemplateId: String = ""
+        defaultTemplateId: String = "",
+        templateIds: Set<String>? = null
     ): List<PlannedSession> {
         if (to < from) return emptyList()
         val versions = routines.mapNotNull { r -> r.effectiveFrom.toDateOrNull()?.let { it to r } }.sortedBy { it.first }
@@ -68,7 +71,9 @@ object TrainingSchedule {
             if (session != null) sessions += session
             day = day.plusDays(1)
         }
-        return sessions.filter { it.date in from..to }.sortedWith(compareBy({ it.date }, { it.time }))
+        return sessions
+            .filter { it.date in from..to && (templateIds == null || it.templateId in templateIds) }
+            .sortedWith(compareBy({ it.date }, { it.time }))
     }
 
     /**

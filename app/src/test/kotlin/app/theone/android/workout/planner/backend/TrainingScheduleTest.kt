@@ -135,6 +135,19 @@ class TrainingScheduleTest {
     }
 
     @Test
+    fun `a session whose template was deleted is not planned, so that day is a rest day`() {
+        val sessions = TrainingSchedule.build(
+            listOf(split),
+            listOf(DayOverride(sourceDate = "2026-10-12", templateId = "leg")),
+            d(5),
+            d(13),
+            templateIds = setOf("push", "leg")
+        )
+        // "pull" was deleted: Tue 6 is gone; Mon 12 was changed to leg for that day, so it stays.
+        assertEquals(listOf(5, 8, 9, 12, 13), sessions.map { it.date.dayOfMonth })
+    }
+
+    @Test
     fun `unreadable stored values fall back instead of failing`() {
         val routine = TrainingRoutine(
             effectiveFrom = "2026-10-05",
