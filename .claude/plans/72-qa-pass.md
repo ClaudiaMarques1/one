@@ -36,7 +36,7 @@ Running them first turns the user's pass into "check the screenshots + the needs
 - [x] `scripts/ui.sh` (smoke-tested twice: launch, wait, tap-last nav, has, swipe, shot, back; usage on bad command)
 - [x] `/verify` SKILL.md QA pass + `commands/verify.md` + `test-execution.md` + `skills.md`
 - [x] Trial run on #69's Manual steps; report (step 8 rerun 2026-11-25 with the 23rd selected: pass)
-- [ ] Checks; user's Manual steps
+- [x] Checks; user's Manual steps (2026-11-25)
 
 ## Trial run on #69 (2026-11-24)
 
@@ -52,4 +52,4 @@ Lessons, to fold into the SKILL.md before the PR:
 
 ## Next step
 
-`/verify` #72 (report + Manual steps to the user), commit, PR.
+PR #73 ready for review (CI green, every #72 check ticked, card In Review). Merge only on the user's "merge".
