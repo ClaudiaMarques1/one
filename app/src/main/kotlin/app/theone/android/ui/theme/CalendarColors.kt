@@ -52,7 +52,9 @@ data class CalendarPalette(
     val plannedPip: Color,
     val emptyPip: Color,
     val primaryButton: Color,
-    val onPrimaryButton: Color
+    val onPrimaryButton: Color,
+    // #78: the open row in 4a Upcoming.
+    val expandedRow: Color
 )
 
 val LightCalendarPalette = CalendarPalette(
@@ -98,7 +100,8 @@ val LightCalendarPalette = CalendarPalette(
     plannedPip = Color(0xFF9CC9F2),
     emptyPip = Color(0xFFEADBC8),
     primaryButton = Color(0xFF8A4B00),
-    onPrimaryButton = Color(0xFFFFFFFF)
+    onPrimaryButton = Color(0xFFFFFFFF),
+    expandedRow = Color(0xFFFFF8F1)
 )
 
 // From the design file's own light -> dark conversion (2a dark). Two deviations, per the dark-mode
@@ -146,10 +149,12 @@ val DarkCalendarPalette = CalendarPalette(
     mealInk = Color(0xFF91E091),
     mealSoft = Color(0xFF141814),
     mealNumber = Color(0xFFA5E9A4),
-    plannedPip = Color(0xFF84B0D8),
+    // #78: deeper than the handoff #84B0D8, which was hard to tell from the done pip #8DC4FF.
+    plannedPip = Color(0xFF4F7499),
     emptyPip = Color(0xFF2B241B),
     primaryButton = Color(0xFFFBC192),
-    onPrimaryButton = Color(0xFF1E1E1E)
+    onPrimaryButton = Color(0xFF1E1E1E),
+    expandedRow = Color(0xFF151210)
 )
 
 /** `CalendarColors.Surface` etc., resolving light or dark from the current theme. */
@@ -329,4 +334,8 @@ object CalendarColors {
     val OnPrimaryButton: Color
         @Composable @ReadOnlyComposable
         get() = p.onPrimaryButton
+
+    val ExpandedRow: Color
+        @Composable @ReadOnlyComposable
+        get() = p.expandedRow
 }

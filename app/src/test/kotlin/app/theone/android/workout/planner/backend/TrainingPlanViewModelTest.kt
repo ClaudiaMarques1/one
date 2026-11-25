@@ -225,6 +225,117 @@ class TrainingPlanViewModelTest {
         assertNull(viewModel.planError.value)
     }
 
+    private fun CoroutineScope.collectDays() {
+        launch(mainDispatcherRule.testDispatcher) { viewModel.monthStates.collect {} }
+        launch(mainDispatcherRule.testDispatcher) { viewModel.dayEditor.collect {} }
+    }
+
+    private fun thu15() = viewModel.dayEditor.value!!.session!!
+
+    @Test
+    fun `the month shows planned, missed and skipped days`() = runTest {
+        plan = FakeTrainingPlanRepository(
+            routines = listOf(weekdayRoutine),
+            overrides = listOf(DayOverride("2026-10-22", skipped = true))
+        )
+        sessions = FakeStrengthRepository(listOf(StrengthSession(id = "s1", date = "2026-10-05")))
+        backgroundScope.collectAll()
+        backgroundScope.collectDays()
+
+        val states = viewModel.monthStates.value
+        // Mon 5 was done (not listed), Thu 8 and Mon 12 missed, Thu 15 on planned, Thu 22 skipped.
+        assertNull(states["2026-10-05"])
+        assertEquals(DayState.MISSED, states["2026-10-08"])
+        assertEquals(DayState.MISSED, states["2026-10-12"])
+        assertEquals(DayState.PLANNED, states["2026-10-15"])
+        assertEquals(DayState.SKIPPED, states["2026-10-22"])
+        assertNull(states["2026-10-14"])
+    }
+
+    @Test
+    fun `changing a day's workout and time saves one override, and Reset removes it`() = runTest {
+        plan = FakeTrainingPlanRepository(routines = listOf(weekdayRoutine))
+        backgroundScope.collectAll()
+        backgroundScope.collectDays()
+        viewModel.openDay(LocalDate.of(2026, 10, 15))
+
+        viewModel.setDayTemplate(thu15(), "pull")
+        viewModel.stepDayTime(thu15(), 30)
+        assertEquals(listOf(DayOverride("2026-10-15", templateId = "pull", time = "08:00")), plan.storedOverrides)
+        assertEquals("Changed for this day only", viewModel.dayEditor.value?.status)
+
+        viewModel.resetDay(thu15())
+        assertTrue(plan.storedOverrides.isEmpty())
+        assertEquals("From your routine", viewModel.dayEditor.value?.status)
+    }
+
+    @Test
+    fun `moving a day follows the session, and moving it back clears the change`() = runTest {
+        plan = FakeTrainingPlanRepository(routines = listOf(weekdayRoutine))
+        backgroundScope.collectAll()
+        backgroundScope.collectDays()
+        viewModel.openDay(LocalDate.of(2026, 10, 15))
+
+        viewModel.moveDay(thu15(), LocalDate.of(2026, 10, 17))
+        assertEquals(LocalDate.of(2026, 10, 17), viewModel.dayEditor.value?.date)
+        assertEquals("Moved from Thu 15 Oct", viewModel.dayEditor.value?.status)
+        assertEquals("2026-10-17", plan.storedOverrides.single().moveTo)
+
+        viewModel.moveDay(viewModel.dayEditor.value!!.session!!, LocalDate.of(2026, 10, 15))
+        assertTrue(plan.storedOverrides.isEmpty())
+        assertEquals("From your routine", viewModel.dayEditor.value?.status)
+    }
+
+    @Test
+    fun `skip and undo leave no override behind`() = runTest {
+        plan = FakeTrainingPlanRepository(routines = listOf(weekdayRoutine))
+        backgroundScope.collectAll()
+        backgroundScope.collectDays()
+        viewModel.openDay(LocalDate.of(2026, 10, 15))
+
+        viewModel.skipDay(thu15())
+        assertEquals(EditorKind.SKIPPED, viewModel.dayEditor.value?.kind)
+        viewModel.undoSkip(thu15())
+        assertTrue(plan.storedOverrides.isEmpty())
+        assertEquals(EditorKind.PLANNED, viewModel.dayEditor.value?.kind)
+    }
+
+    @Test
+    fun `plan a workout on a rest day, then remove it`() = runTest {
+        plan = FakeTrainingPlanRepository(routines = listOf(weekdayRoutine))
+        backgroundScope.collectAll()
+        backgroundScope.collectDays()
+        val wed = LocalDate.of(2026, 10, 14)
+        viewModel.openDay(wed)
+        assertEquals(EditorKind.REST, viewModel.dayEditor.value?.kind)
+
+        viewModel.planWorkout(wed)
+        val added = viewModel.dayEditor.value!!
+        assertEquals("Added for this day only", added.status)
+        assertEquals("leg", added.session?.templateId) // first template by name
+        assertEquals("Remove", added.resetLabel)
+
+        viewModel.resetDay(added.session!!)
+        assertEquals(EditorKind.REST, viewModel.dayEditor.value?.kind)
+    }
+
+    @Test
+    fun `the Upcoming tab lists the next two weeks and a row toggles the editor`() = runTest {
+        plan = FakeTrainingPlanRepository(routines = listOf(weekdayRoutine))
+        backgroundScope.collectAll()
+        backgroundScope.collectDays()
+        viewModel.openSheet()
+        viewModel.setTab(PlanTab.UPCOMING)
+
+        val sheet = viewModel.sheet.value!!
+        assertEquals(PlanTab.UPCOMING, sheet.tab)
+        assertEquals(listOf(15, 19, 22, 26), sheet.upcoming.map { it.day })
+        viewModel.toggleUpcomingDay(LocalDate.of(2026, 10, 19))
+        assertEquals(LocalDate.of(2026, 10, 19), viewModel.dayEditor.value?.date)
+        viewModel.toggleUpcomingDay(LocalDate.of(2026, 10, 19))
+        assertNull(viewModel.dayEditor.value)
+    }
+
     @Test
     fun `the weekday rows follow the week start setting`() = runTest {
         settings = FakeSettingsRepository(weekStart = WeekStart.SUNDAY)

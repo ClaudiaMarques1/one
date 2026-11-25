@@ -39,7 +39,7 @@ Reason: 5a can't show anything until a routine can be saved, and only 4a saves o
       state in DataStore (`trainingWeekExpanded`)
 - [x] `test lint assembleDebug` pass (2026-11-25); first emulator look: card, 4a weekday + split, close
       without saving
-- [ ] `/verify` + QA pass, commit, PR
+- [x] `/verify` + QA pass (7 pass, 2 needs you), commit, PR #77 (merged 2026-11-25 `6dd961c`)
 
 ## Implementation notes
 
@@ -53,4 +53,4 @@ Reason: 5a can't show anything until a routine can be saved, and only 4a saves o
 
 ## Next step
 
-QA pass needs a saved routine (no delete in the app yet) - ask the user, then `/verify` #76, commit, PR.
+Done. Phase 3 (#78) continues in `78-training-planner-phase-3.md` (incl. the dark planned pip from QA step 8).
