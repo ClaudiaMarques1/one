@@ -8,5 +8,6 @@ Follow the `verify` skill (`.claude/skills/verify/SKILL.md`):
 2. Classify the diff against `develop` (backend / front-facing / data / platform / build).
 3. Run the matching `./gradlew` tasks; fix and re-run on failure.
 4. Tick only the passed **Automated** items on the issue and comment the results.
-5. Front-facing: run `scripts/emulator.sh` and hand the user the **Manual** steps.
+5. Front-facing: run `scripts/emulator.sh`, run each **Manual** step yourself with `scripts/ui.sh` (QA pass:
+   pass / fail / needs you + a screenshot each; fix fails first), then hand the user the report and the steps.
 6. When everything is ticked: PR ready, card to In Review, tell the user - **never merge**.

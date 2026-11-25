@@ -47,6 +47,13 @@
       "Bash(which:*)",
       "Bash(pwd:*)",
       "Bash(sed -n:*)",
+      "Bash(adb devices)",
+      "Bash(adb exec-out screencap *)",
+      "Bash(adb exec-out cat *)",
+      "Bash(adb shell cat *)",
+      "Bash(adb shell dumpsys *)",
+      "Bash(adb shell sleep *)",
+      "Bash(cygpath *)",
       "WebSearch",
       "WebFetch(domain:*)"
     ],
