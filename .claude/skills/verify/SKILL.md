@@ -42,6 +42,12 @@ only through `scripts/ui.sh` (`dump`, `has`, `tap`, `tap-last` for bottom-nav la
 2. Per step: act it out, check the "expect" part on screen (`has` / `dump`, or look at the `shot`), and
    save `shot <scratchpad>/qa/<n>/step-<k>.png`. Look at every screenshot - text being present isn't
    the same as it looking right.
+   - Same text in two places (a tile count "2" and day 2): use exact match `=text`, and `tap-last` for
+     whatever sits lower on screen (calendar grid days, bottom-nav labels). `has` checks text the
+     target alone shows ("meals logged", not "Meals" - the bottom bar always has that).
+   - Steps share state: re-create what a step needs (re-select its date, reopen its screen) instead of
+     relying on where the previous step left the app.
+   - Can't check the "expect" part (no such data today, nothing to see) - that's **needs you**, not pass.
 3. Result per step:
    - **pass** - the expected text/state is there and the screenshot looks right.
    - **fail** - it isn't, or something else is wrong (crash: `scripts/app-status.sh`). Stop the hand-over:

@@ -35,7 +35,7 @@ Running them first turns the user's pass into "check the screenshots + the needs
 - [x] Approach agreed with the user (2026-11-24)
 - [x] `scripts/ui.sh` (smoke-tested twice: launch, wait, tap-last nav, has, swipe, shot, back; usage on bad command)
 - [x] `/verify` SKILL.md QA pass + `commands/verify.md` + `test-execution.md` + `skills.md`
-- [ ] Trial run on #69's Manual steps; report
+- [x] Trial run on #69's Manual steps; report (step 8 rerun 2026-11-25 with the 23rd selected: pass)
 - [ ] Checks; user's Manual steps
 
 ## Trial run on #69 (2026-11-24)
@@ -47,8 +47,9 @@ Lessons, to fold into the SKILL.md before the PR:
 - Steps share state: step 7 selected day 2, so step 8's Week/Day opened on 2 Nov. Re-select the date a step
   needs (e.g. `tap-last "=23"` before Week) - don't rely on the previous step.
 - Step 5 couldn't check the Meals card (no meals planned today) -> report "needs you / not reachable", don't pass.
+- (2026-11-25) `has Meals` matched the bottom-nav label -> check text only the target shows ("meals logged").
+- All four folded into the verify SKILL.md QA pass, step 2.
 
 ## Next step
 
-Rerun step 8 with the 23rd selected, add the lessons above to the verify SKILL.md QA pass, `./gradlew
-assembleDebug`, then `/verify` #72 (report + Manual steps to the user), commit, PR.
+`/verify` #72 (report + Manual steps to the user), commit, PR.
