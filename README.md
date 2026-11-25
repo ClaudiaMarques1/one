@@ -20,6 +20,7 @@ The same checks run locally:
 ./gradlew lint                   # static analysis (Android Lint + ktlint)
 ./gradlew connectedAndroidTest   # instrumented tests (needs a device/emulator)
 scripts/emulator.sh              # boot the Pixel_7 AVD if needed, install + open the app
+scripts/ui.sh dump               # drive the app on the emulator (tap / type / swipe / shot) - the /verify QA pass
 ```
 
 Each change is tracked as an issue with a checklist of automated and manual checks; see
@@ -33,17 +34,18 @@ Each change is tracked as an issue with a checklist of automated and manual chec
 .
 ├── app/                                          # the only Gradle module
 │   ├── src/main/kotlin/app/theone/android/
-│   │   ├── auth/                                 # backend/ AuthViewModel, GoogleAuthClient; frontend/ sign-in screen
-│   │   ├── calendar/                             # backend/ ViewModel + date keys; frontend/ screen + labels
-│   │   ├── dashboard/                            # frontend/ Home/overview screen
+│   │   ├── auth/                                 # backend/ AuthViewModel, GoogleAuthClient; frontend/ sign-in + Account details
+│   │   ├── calendar/                             # backend/ ViewModel + date keys; frontend/ Month / Week / Day screen + day sheet
+│   │   ├── dashboard/                            # frontend/ Home/overview screen + profile drawer
 │   │   ├── data/                                 # FirebaseModule - the app's only shared singleton
 │   │   ├── diary/                                # frontend/ overview; journal/ + goals/, each backend/ (logic) + frontend/ (UI)
 │   │   ├── exercise/                             # backend/ catalog model + loader; frontend/ picker dialog
-│   │   ├── meals/                                # frontend/ Meals screen (placeholder)
+│   │   ├── meals/                                # backend/ meals, recipes, shopping list; frontend/ Food Diary + Recipes
 │   │   ├── navigation/                           # Bottom nav destinations (per-section accents) + NavHost
 │   │   ├── notifications/                        # Habit reminder channel, WorkManager worker + scheduler
+│   │   ├── settings/                             # backend/ DataStore settings (local, no network); frontend/ Settings screen
 │   │   ├── ui/                                   # Shared UI (ErrorBanner) and Compose theme (ui/theme/)
-│   │   ├── workout/                              # frontend/ overview; templates/ + sessions/, each backend/ + frontend/
+│   │   ├── workout/                              # frontend/ overview; templates/, sessions/, planner/ - each backend/ + frontend/
 │   │   └── MainActivity.kt
 │   ├── src/main/assets/exercises.json            # Bundled exercise catalog (~1,300 entries)
 │   ├── src/main/res/                             # strings.xml, themes, launcher icons
@@ -95,6 +97,8 @@ belongs in `ui/`; features must not import each other's repositories. See
 | Coroutines interop   | kotlinx-coroutines-play-services        | 1.9.0            |
 | Image / GIF loading  | Coil 3                                  | 3.0.4            |
 | Background work      | WorkManager                             | 2.10.0           |
+| Local settings       | DataStore Preferences                   | 1.1.1            |
+| Drag to reorder      | sh.calvin.reorderable                   | 2.4.3            |
 | Google Services      | com.google.gms.google-services plugin   | 4.4.2            |
 
 ### Testing
@@ -229,10 +233,25 @@ Runtime permissions declared in `app/src/main/AndroidManifest.xml`:
   onto the template in a single Firestore **transaction**
   (`FirestoreStrengthRepository.addSessionAndUpdateTemplate`), so a partial failure applies neither write
 
+### Workout - Training Planner
+
+- **Training plan sheet** (Calendar -> Training this week -> Edit routine): repeat **by weekday** (a
+  template and time per day) or as a **rotating split** (training days, an A-F order of templates, one
+  start time), plus a weekly target. Save plan stores a new routine version from today, so past days
+  keep the plan they had
+- **Training this week** card in Calendar: `N of T done · M more planned`, progress bars and the routine
+- **Day editor** (a day in Calendar, or a row in the sheet's Upcoming tab): change the workout or time
+  for that day only, move it to a free day this week, skip it (a split's order carries on), reset, or
+  plan a workout on a rest day. Changes are one-off overrides on the session's original date
+- A routine day whose template was deleted counts as a rest day
+- Reminders and Google Calendar sync are planned next
+
 ### Calendar
 
-- Full monthly grid with month navigation; days with a logged workout show a blue dot, days with a
-  diary entry show a purple dot
+- **Month** - stat tiles (workouts, diary entries, meals eaten / planned), each day tinted with
+  diagonal bands for what it holds (workout, meals, diary), dashed outlines on **planned** and
+  **missed** training days, and a day sheet with the training plan, workouts, meals and the diary entry
+- **Week** and **Day** views with an agenda; a Today button returns to the current period
 
 ### Diary
 
@@ -251,7 +270,12 @@ Runtime permissions declared in `app/src/main/AndroidManifest.xml`:
 
 ### Meals
 
-- Placeholder screen, coming soon
+- **Food Diary** - a weekly timeline with a Rest day switch, a Week plan (copy days or the whole week,
+  clear a day), Add meal (favourites, your recipes or a new meal), eaten ticks, water, and a shopping
+  list built from planned recipes
+- **Recipes** - the recipes you write (Search Recipe is still to come)
+- Training / rest-day targets, slots and slot times live in Settings -> Meals. A training day is a day
+  with a logged workout for now; reading it from the training plan is the planner's next phase
 
 ### Theming
 
@@ -283,6 +307,13 @@ All app data is per-user and lives under `users/{uid}/`:
 | `users/{uid}/goals`                 | `diary/goals/backend/FirestoreGoalRepository.kt` | `Goal` (+ habits)        |
 | `users/{uid}/strengthSessions`      | `workout/sessions/backend/FirestoreStrengthRepository.kt` | `StrengthSession`        |
 | `users/{uid}/workoutTemplates`      | `workout/templates/backend/FirestoreWorkoutTemplateRepository.kt` | `WorkoutTemplate`     |
+| `users/{uid}/trainingRoutines`      | `workout/planner/backend/FirestoreTrainingPlanRepository.kt` | `TrainingRoutine` (one version per start date) |
+| `users/{uid}/trainingOverrides`     | `workout/planner/backend/FirestoreTrainingPlanRepository.kt` | `DayOverride` (keyed by the original date) |
+| `users/{uid}/meals`, `favourites`, `water`, `mealDays` | `meals/backend/FirestoreMealsRepository.kt` | planned / eaten meals, favourites, water, rest-day choice |
+| `users/{uid}/recipes`, `shopping`   | `meals/backend/FirestoreRecipesRepository.kt` | recipes, shopping list |
+
+Settings (theme, week start, rest-timer vibration, Do Not Disturb, meal slots and targets) are stored
+on the device with DataStore, not in Firestore.
 
 ### Access Rules
 
@@ -463,6 +494,10 @@ built from planned recipes. Recipes holds the recipes you write (Search Recipe i
 Training / rest-day targets and slot times are in Settings -> Meals. The whole app has a
 dark mode: Settings -> Appearance -> Theme (Light / Dark / System, default System).
 Settings -> General -> Week starts on sets the first day of every week (Calendar, Meals, Diary, Workout).
+The **training planner** is being built in phases: the routine data and schedule (#74), the Training plan
+sheet with the Training this week card (#76), and planned / missed days with the day editor (#78) are
+done or in progress; Meals reading training days from the plan, then reminders and Google Calendar,
+come next.
 
 Workout is planned to split into four independent session types - Warmup/Stretch, Strength Training,
 Cardio, and Warmdown - each logged separately, since not every day covers all four. Strength Training

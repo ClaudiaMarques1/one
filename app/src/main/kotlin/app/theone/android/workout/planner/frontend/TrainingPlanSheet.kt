@@ -29,7 +29,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.RadioButtonChecked
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.Remove
@@ -51,6 +54,7 @@ import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,6 +71,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,6 +80,7 @@ import app.theone.android.ui.theme.CalendarColors
 import app.theone.android.workout.planner.backend.DEFAULT_TRAINING_TIME
 import app.theone.android.workout.planner.backend.PlanMode
 import app.theone.android.workout.planner.backend.PlanSheetUi
+import app.theone.android.workout.planner.backend.PlanTab
 import app.theone.android.workout.planner.backend.TrainingPlanText
 import app.theone.android.workout.planner.backend.TrainingPlanViewModel
 import app.theone.android.workout.templates.backend.WorkoutTemplate
@@ -109,28 +115,19 @@ fun TrainingPlanSheet(sheet: PlanSheetUi, viewModel: TrainingPlanViewModel, erro
                 Spacer(Modifier.height(2.dp))
                 Text(sheet.nextUp, style = TextStyle(fontSize = 14.sp, color = C.SecondaryText))
             }
+            PlanTabs(tab = sheet.tab, onTabChange = viewModel::setTab)
             ErrorBanner(message = errorMessage, onDismiss = viewModel::clearPlanError)
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ModeCards(mode = sheet.draft.mode, onModeChange = viewModel::setMode)
-                if (sheet.templates.isEmpty()) {
-                    Text(
-                        "Create a workout template in Workout first - the plan picks from your templates.",
-                        style = TextStyle(fontSize = 13.sp, color = C.SecondaryText),
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    )
+            if (sheet.tab == PlanTab.UPCOMING) {
+                Column(
+                    modifier = Modifier.weight(
+                        1f
+                    ).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp)
+                ) {
+                    UpcomingList(sheet = sheet, viewModel = viewModel)
                 }
-                when (sheet.draft.mode) {
-                    PlanMode.WEEKDAY -> WeekdayCard(sheet, viewModel)
-                    PlanMode.SPLIT -> SplitCards(sheet, viewModel)
-                }
-                TargetCard(sheet, onChange = viewModel::changeTarget)
+            } else {
+                RoutineTab(sheet = sheet, viewModel = viewModel, modifier = Modifier.weight(1f))
             }
 
             HorizontalDivider(color = C.InnerDivider)
@@ -144,6 +141,134 @@ fun TrainingPlanSheet(sheet: PlanSheetUi, viewModel: TrainingPlanViewModel, erro
                 Text("Save plan", style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
             }
         }
+    }
+}
+
+/** 4a tabs: an M3-style two-segment button, Routine | Upcoming. */
+@Composable
+private fun PlanTabs(tab: PlanTab, onTabChange: (PlanTab) -> Unit) {
+    val shape = RoundedCornerShape(20.dp)
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .height(40.dp)
+            .clip(shape)
+            .border(1.dp, C.OutlineSegmented, shape)
+    ) {
+        listOf(PlanTab.ROUTINE to "Routine", PlanTab.UPCOMING to "Upcoming").forEachIndexed { i, (value, label) ->
+            val selected = value == tab
+            if (i > 0) Box(Modifier.width(1.dp).fillMaxHeight().background(C.OutlineSegmented))
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(if (selected) C.AccentContainer else Color.Transparent)
+                    .selectable(selected = selected, role = Role.Tab, onClick = { onTabChange(value) }),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (selected) {
+                    Icon(Icons.Outlined.Check, contentDescription = null, tint = C.AccentOnContainer, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                }
+                Text(
+                    label,
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (selected) C.AccentOnContainer else C.OnSurface
+                    )
+                )
+            }
+        }
+    }
+}
+
+/** 4a Upcoming: the next two weeks' sessions; a row expands into the day editor (changes save straight away). */
+@Composable
+private fun UpcomingList(sheet: PlanSheetUi, viewModel: TrainingPlanViewModel) {
+    val editor by viewModel.dayEditor.collectAsState()
+    val templates by viewModel.templates.collectAsState()
+    Text(
+        "Next two weeks. Changes apply to that day only.",
+        style = TextStyle(fontSize = 13.sp, color = C.SecondaryText),
+        modifier = Modifier.padding(start = 8.dp, bottom = 12.dp)
+    )
+    if (sheet.upcoming.isEmpty()) {
+        Text(
+            "Nothing planned in the next two weeks.",
+            style = TextStyle(fontSize = 14.sp, color = C.SecondaryText),
+            modifier = Modifier.padding(start = 8.dp)
+        )
+        return
+    }
+    PlanCard {
+        sheet.upcoming.forEachIndexed { i, row ->
+            if (i > 0) HorizontalDivider(color = C.InnerDivider)
+            val open = editor?.date == row.date
+            Column(modifier = Modifier.background(if (open) C.ExpandedRow else Color.Transparent)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            role = Role.Button,
+                            onClickLabel = if (open) "Collapse" else "Expand"
+                        ) { viewModel.toggleUpcomingDay(row.date) }
+                        .padding(start = 16.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.width(40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(row.weekday, style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, color = C.SecondaryText))
+                        Text(row.day.toString(), style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = C.OnSurface))
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            row.title,
+                            style = TextStyle(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (row.skipped) C.Hint else C.OnSurface,
+                                textDecoration = if (row.skipped) TextDecoration.LineThrough else TextDecoration.None
+                            )
+                        )
+                        Text(row.subtitle, style = TextStyle(fontSize = 13.sp, color = C.SecondaryText))
+                    }
+                    Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null, tint = C.IconTint)
+                }
+                val shown = editor
+                if (open && shown != null) {
+                    Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 16.dp)) {
+                        DayPlanEditor(editor = shown, templates = templates, viewModel = viewModel, onDateChange = {})
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RoutineTab(sheet: PlanSheetUi, viewModel: TrainingPlanViewModel, modifier: Modifier) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        ModeCards(mode = sheet.draft.mode, onModeChange = viewModel::setMode)
+        if (sheet.templates.isEmpty()) {
+            Text(
+                "Create a workout template in Workout first - the plan picks from your templates.",
+                style = TextStyle(fontSize = 13.sp, color = C.SecondaryText),
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+        }
+        when (sheet.draft.mode) {
+            PlanMode.WEEKDAY -> WeekdayCard(sheet, viewModel)
+            PlanMode.SPLIT -> SplitCards(sheet, viewModel)
+        }
+        TargetCard(sheet, onChange = viewModel::changeTarget)
     }
 }
 
@@ -183,7 +308,7 @@ private fun ModeCards(mode: PlanMode, onModeChange: (PlanMode) -> Unit) {
 }
 
 @Composable
-private fun PlanCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+internal fun PlanCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -374,7 +499,7 @@ private fun TargetCard(sheet: PlanSheetUi, onChange: (Int) -> Unit) {
 }
 
 @Composable
-private fun RoundButton(icon: ImageVector, description: String, enabled: Boolean, onClick: () -> Unit) {
+internal fun RoundButton(icon: ImageVector, description: String, enabled: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(36.dp)
@@ -418,7 +543,7 @@ private fun TimeChip(time: String, label: String, onChange: (LocalTime) -> Unit)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TimeDialog(title: String, time: LocalTime, onConfirm: (LocalTime) -> Unit, onDismiss: () -> Unit) {
+internal fun TimeDialog(title: String, time: LocalTime, onConfirm: (LocalTime) -> Unit, onDismiss: () -> Unit) {
     val state =
         rememberTimePickerState(
             initialHour = time.hour,

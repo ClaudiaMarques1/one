@@ -8,17 +8,21 @@ import app.theone.android.workout.sessions.backend.StrengthRepository
 import app.theone.android.workout.templates.backend.FirestoreWorkoutTemplateRepository
 import app.theone.android.workout.templates.backend.WorkoutTemplate
 import app.theone.android.workout.templates.backend.WorkoutTemplateRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.YearMonth
 import java.time.temporal.TemporalAdjusters
 
 /** Calendar's "Training this week" card (5a section 3). */
@@ -40,7 +44,9 @@ data class PlanSheetUi(
     val targetNote: String,
     /** The routine has fewer days than the target - the note shows in the accent colour. */
     val targetShort: Boolean,
-    val saving: Boolean = false
+    val saving: Boolean = false,
+    val tab: PlanTab = PlanTab.ROUTINE,
+    val upcoming: List<UpcomingRow> = emptyList()
 ) {
     val canAddSplit: Boolean get() = draft.splitOrder.size < MAX_SPLIT && templates.isNotEmpty()
 }
@@ -60,12 +66,17 @@ private data class PlanData(
 
     fun sessions(from: LocalDate, to: LocalDate): List<PlannedSession> =
         TrainingSchedule.build(routines, overrides, from, to, templates.firstOrNull()?.id.orEmpty(), names.keys)
+
+    fun routineOn(date: LocalDate): TrainingRoutine? = routines.lastOrNull { it.effectiveFrom <= date.toString() }
 }
+
+enum class PlanTab { ROUTINE, UPCOMING }
 
 /**
  * The training plan for Calendar's week card and the 4a Training plan sheet (#76). Built through
  * `trainingPlanViewModel()` in workout/planner/frontend, which passes the DataStore settings.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class TrainingPlanViewModel(
     private val settingsRepository: SettingsRepository,
     private val repository: TrainingPlanRepository = FirestoreTrainingPlanRepository(),
@@ -77,10 +88,16 @@ class TrainingPlanViewModel(
     private val _planError = MutableStateFlow<String?>(null)
     val planError: StateFlow<String?> = _planError
 
+    // The month Calendar shows (#78): its past days need their overrides too (skipped vs missed).
+    private val visibleMonth = MutableStateFlow(YearMonth.from(today))
+
     private val plan = combine(
         repository.observeRoutines(),
-        // Moves stay within a week, so overrides from a week back can still land on today or later.
-        repository.observeOverrides(today.minusDays(7).toString()),
+        // Moves stay within a week, so overrides from a week before the range can still land in it.
+        visibleMonth
+            .map { minOf(it.atDay(1), today).minusDays(7).toString() }
+            .distinctUntilChanged()
+            .flatMapLatest { repository.observeOverrides(it) },
         templateRepository.observeTemplates(),
         strengthRepository.observeSessions().map {
                 list ->
@@ -123,15 +140,52 @@ class TrainingPlanViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TrainingWeekUi())
 
+    /** Planned / missed / skipped days of the visible month, keyed `yyyy-MM-dd` like Calendar's cells (5a grid). */
+    val monthStates: StateFlow<Map<String, DayState>> = combine(plan, visibleMonth) { data, month ->
+        if (data == null || data.routines.isEmpty()) return@combine emptyMap()
+        val sessions = data.sessions(month.atDay(1), month.atEndOfMonth())
+        (1..month.lengthOfMonth()).map { month.atDay(it) }.mapNotNull { date ->
+            val state = TrainingSchedule.dayState(date, today, sessions.filter { it.date == date }, date in data.loggedDates)
+            if (state == DayState.PLANNED || state == DayState.MISSED || state == DayState.SKIPPED) date.toString() to state else null
+        }.toMap()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    // The day open in the editor - the 5a day sheet's date, or the expanded 4a Upcoming row.
+    private val editorDate = MutableStateFlow<LocalDate?>(null)
+
+    val dayEditor: StateFlow<DayEditorUi?> = combine(editorDate, plan) { date, data ->
+        if (date == null || data == null) return@combine null
+        // The week (moves) plus two weeks after (skip note's next-up).
+        val from = date.minusDays(7)
+        DayEditor.build(
+            date = date,
+            today = today,
+            sessions = data.sessions(from, date.plusDays(UPCOMING_DAYS + 7)),
+            overrides = data.overrides,
+            names = data.names,
+            loggedDates = data.loggedDates,
+            firstDayOfWeek = data.firstDayOfWeek,
+            isSplit = data.routineOn(date)?.mode == PlanMode.SPLIT
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    /** Templates for the editor's workout chips, by name. */
+    val templates: StateFlow<List<WorkoutTemplate>> = plan.map { it?.templates.orEmpty() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private val draft = MutableStateFlow<TrainingRoutine?>(null)
     private val saving = MutableStateFlow(false)
+    private val tab = MutableStateFlow(PlanTab.ROUTINE)
 
-    val sheet: StateFlow<PlanSheetUi?> = combine(draft, plan, saving) { routine, data, isSaving ->
+    val sheet: StateFlow<PlanSheetUi?> = combine(draft, plan, saving, tab) { routine, data, isSaving, openTab ->
         if (routine == null || data == null) return@combine null
         val ids = data.names.keys
         val days = TrainingPlanText.trainingDays(routine, ids)
-        val next = data.sessions(today, today.plusDays(UPCOMING_DAYS)).firstOrNull { !it.skipped && it.date !in data.loggedDates }
+        val coming = data.sessions(today, today.plusDays(UPCOMING_DAYS))
+        val next = coming.firstOrNull { !it.skipped && it.date !in data.loggedDates }
         PlanSheetUi(
+            tab = openTab,
+            upcoming = DayEditor.upcoming(coming, data.names, today, UPCOMING_DAYS + 1),
             draft = routine,
             templates = data.templates,
             weekDays = TrainingPlanText.weekDays(data.firstDayOfWeek),
@@ -151,13 +205,83 @@ class TrainingPlanViewModel(
 
     /** Opens 4a on the current routine, or a new weekday routine with nothing planned yet. */
     fun openSheet() {
+        tab.value = PlanTab.ROUTINE
+        editorDate.value = null
         draft.value = plan.value?.routine ?: TrainingRoutine()
     }
 
-    /** Closes 4a without saving (scrim tap, back). */
+    /** Closes 4a without saving (scrim tap, back). Day changes made in Upcoming are already saved. */
     fun closeSheet() {
         draft.value = null
+        editorDate.value = null
     }
+
+    fun setTab(newTab: PlanTab) {
+        tab.value = newTab
+        editorDate.value = null
+    }
+
+    // region Day editor (#78) - one-off changes, saved straight away as overrides on the session's original date.
+
+    /** Calendar tells the planner which month it shows, so that month's day states and overrides load. */
+    fun showMonth(month: YearMonth) {
+        visibleMonth.value = month
+    }
+
+    /** Opens [date] in the editor (5a day sheet), or toggles it in 4a Upcoming. */
+    fun openDay(date: LocalDate) {
+        editorDate.value = date
+    }
+
+    fun toggleUpcomingDay(date: LocalDate) {
+        editorDate.value = if (editorDate.value == date) null else date
+    }
+
+    fun closeDay() {
+        editorDate.value = null
+    }
+
+    fun setDayTemplate(session: PlannedSession, templateId: String) = changeDay(session.sourceDate) { it.copy(templateId = templateId) }
+
+    fun stepDayTime(session: PlannedSession, minutes: Int) = setDayTime(session, DayEditor.stepTime(session.time, minutes))
+
+    fun setDayTime(session: PlannedSession, time: LocalTime) =
+        changeDay(session.sourceDate) { it.copy(time = DayEditor.stepTime(time, 0).toString()) }
+
+    /** Moves the session to [to] in the same week; moving it back to its own day clears the move. The editor follows. */
+    fun moveDay(session: PlannedSession, to: LocalDate) {
+        changeDay(session.sourceDate) { it.copy(moveTo = to.takeIf { day -> day != session.sourceDate }?.toString()) }
+        editorDate.value = to
+    }
+
+    fun skipDay(session: PlannedSession) = changeDay(session.sourceDate) { it.copy(skipped = true) }
+
+    fun undoSkip(session: PlannedSession) = changeDay(session.sourceDate) { it.copy(skipped = false) }
+
+    /** Reset (or Remove for an added workout): drops the day's change; the editor goes back to the original day. */
+    fun resetDay(session: PlannedSession) {
+        editorDate.value = session.sourceDate
+        viewModelScope.launch {
+            runCatching { repository.deleteOverride(session.sourceDate.toString()) }.onFailure { _planError.value = it.message }
+        }
+    }
+
+    /** "Plan a workout" on a rest day: the first template at 18:00 until changed. */
+    fun planWorkout(date: LocalDate) = changeDay(date) { it.copy(added = true) }
+
+    private fun changeDay(sourceDate: LocalDate, change: (DayOverride) -> DayOverride) {
+        val key = sourceDate.toString()
+        val existing = plan.value?.overrides?.firstOrNull { it.sourceDate == key } ?: DayOverride(sourceDate = key)
+        val updated = change(existing)
+        val nothingLeft = updated.templateId == null && updated.time == null && updated.moveTo == null && !updated.skipped && !updated.added
+        viewModelScope.launch {
+            runCatching {
+                if (nothingLeft) repository.deleteOverride(key) else repository.saveOverride(updated)
+            }.onFailure { _planError.value = it.message }
+        }
+    }
+
+    // endregion
 
     fun setMode(mode: PlanMode) = edit { r ->
         if (mode == PlanMode.SPLIT && r.splitOrder.isEmpty()) {

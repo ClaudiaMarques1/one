@@ -29,12 +29,12 @@ dashboard/       frontend/ Home/overview screen + profile drawer (Home and its s
 data/            FirebaseModule — the app's only Firebase singleton
 diary/           frontend/ overview (tabs); journal/ + goals/, each backend/ (VMs, repos) + frontend/ (UI)
 exercise/        backend/ catalog model + asset loader; frontend/ category picker dialog
-meals/           frontend/ Meals screen (placeholder)
+meals/           backend/ meals, recipes, shopping repos + VMs; frontend/ Food Diary + Recipes tabs
 navigation/      Bottom nav destinations (per-section accent colors) and NavHost - flat, app plumbing
 notifications/   Reminder channel, worker + scheduler - flat: WorkManager stores the worker class name
 settings/        backend/ local DataStore settings repo + ViewModel (no network); frontend/ Settings screen
 ui/              Compose theme (ui/theme/) and shared UI
-workout/         frontend/ overview + home list; templates/ + sessions/, each backend/ + frontend/
+workout/         frontend/ overview + home list; templates/, sessions/, planner/ - each backend/ + frontend/
 ```
 
 Cross-feature reuse belongs in `ui/` — features must not import each other's repositories.

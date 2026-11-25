@@ -23,7 +23,10 @@ data class TrainingWeek(val done: Int = 0, val planned: Int = 0, val target: Int
 
 /** The planner's copy (handover 4a / 5a section 3), kept pure so it can be unit-tested. */
 object TrainingPlanText {
-    private val shortDate = DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH)
+    private val shortDateFormat = DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH)
+
+    /** `Fri 16 Oct`. */
+    fun shortDate(date: LocalDate): String = date.format(shortDateFormat)
 
     /** The days of a week in display order, starting on [firstDayOfWeek]. */
     fun weekDays(firstDayOfWeek: DayOfWeek): List<DayOfWeek> = (0L..6L).map { firstDayOfWeek.plus(it) }
@@ -81,7 +84,7 @@ object TrainingPlanText {
         if (next == null) {
             "Nothing planned yet"
         } else {
-            "Next: ${names[next.templateId] ?: "Workout"} · ${next.date.format(shortDate)} at ${next.time}"
+            "Next: ${names[next.templateId] ?: "Workout"} · ${shortDate(next.date)} at ${next.time}"
         }
 
     /** Training days a week the routine plans (a weekday day with a deleted template doesn't count). */

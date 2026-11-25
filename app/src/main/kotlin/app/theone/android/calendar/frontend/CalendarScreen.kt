@@ -48,6 +48,8 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -93,7 +95,11 @@ import app.theone.android.ui.LocalWeekStart
 import app.theone.android.ui.theme.CalendarColors
 import app.theone.android.ui.theme.DiaryInk
 import app.theone.android.ui.theme.OneTheme
+import app.theone.android.workout.planner.backend.DayState
+import app.theone.android.workout.planner.backend.EditorKind
 import app.theone.android.workout.planner.backend.TrainingPlanViewModel
+import app.theone.android.workout.planner.frontend.MissedCard
+import app.theone.android.workout.planner.frontend.TrainingPlanDayCard
 import app.theone.android.workout.planner.frontend.TrainingPlanSheet
 import app.theone.android.workout.planner.frontend.TrainingWeekCard
 import app.theone.android.workout.planner.frontend.trainingPlanViewModel
@@ -101,8 +107,11 @@ import app.theone.android.workout.sessions.backend.StrengthExercise
 import app.theone.android.workout.sessions.backend.StrengthSession
 import app.theone.android.workout.sessions.backend.StrengthSet
 import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.YearMonth
 import java.util.Locale
 import kotlin.math.roundToLong
+import app.theone.android.ui.dashedBorder as dashedOutline
 
 private val C = CalendarColors
 
@@ -123,11 +132,32 @@ fun CalendarScreen(
     val trainingWeek by trainingPlan.week.collectAsState()
     val planSheet by trainingPlan.sheet.collectAsState()
     val planError by trainingPlan.planError.collectAsState()
+    val planStates by trainingPlan.monthStates.collectAsState()
+    val dayEditor by trainingPlan.dayEditor.collectAsState()
+    val planTemplates by trainingPlan.templates.collectAsState()
+
+    // #78: the planner loads the shown month's day states and overrides.
+    val shownMonth = selectedDate.take(7)
+    LaunchedEffect(shownMonth) { trainingPlan.showMonth(YearMonth.parse(shownMonth)) }
 
     CalendarScreenContent(
         view = view,
         selectedDate = selectedDate,
         dayByDate = dayByDate,
+        planStates = planStates,
+        dayPlan = { dateKey, follow ->
+            // The editor follows the open day sheet; a move or reset re-points the sheet through [follow].
+            DisposableEffect(dateKey) {
+                trainingPlan.openDay(LocalDate.parse(dateKey))
+                onDispose { trainingPlan.closeDay() }
+            }
+            val editor = dayEditor?.takeIf { it.date.toString() == dateKey }
+            when {
+                editor == null -> Unit
+                editor.kind == EditorKind.PAST -> editor.missedLine?.let { MissedCard(it) }
+                else -> TrainingPlanDayCard(editor, planTemplates, trainingPlan) { follow(it.toString()) }
+            }
+        },
         // A planner error shows in its sheet while that's open, otherwise here.
         errorMessage = calendarError ?: planError.takeIf { planSheet == null },
         onDismissError = {
@@ -164,6 +194,8 @@ private fun CalendarScreenContent(
     errorMessage: String? = null,
     onDismissError: () -> Unit = {},
     weekCard: @Composable () -> Unit = {},
+    planStates: Map<String, DayState> = emptyMap(),
+    dayPlan: @Composable (dateKey: String, follow: (String) -> Unit) -> Unit = { _, _ -> },
     onViewChange: (CalendarView) -> Unit = {},
     onSelectDate: (String) -> Unit = {},
     onOpenDay: (String) -> Unit = {},
@@ -206,6 +238,7 @@ private fun CalendarScreenContent(
                     todayKey = todayKey,
                     firstDayOfWeek = firstDayOfWeek,
                     dayByDate = dayByDate,
+                    planStates = planStates,
                     weekCard = weekCard,
                     onSelectDate = { dateKey ->
                         onSelectDate(dateKey)
@@ -257,6 +290,13 @@ private fun CalendarScreenContent(
             dateKey = openSheet,
             todayKey = todayKey,
             activity = dayByDate[openSheet] ?: DayActivity(),
+            planCard = {
+                dayPlan(openSheet) { newDate ->
+                    // A moved session takes the sheet with it (5a: "keeps the sheet on it").
+                    onSelectDate(newDate)
+                    sheetDate = newDate
+                }
+            },
             onDismiss = { sheetDate = null },
             // Leaving from the sheet closes it - otherwise it reopened on coming back, over the bottom nav.
             onOpenWorkoutSession = {
@@ -411,6 +451,7 @@ private fun MonthGridSection(
     todayKey: String,
     firstDayOfWeek: Int,
     dayByDate: Map<String, DayActivity>,
+    planStates: Map<String, DayState>,
     weekCard: @Composable () -> Unit,
     onSelectDate: (String) -> Unit
 ) {
@@ -453,7 +494,11 @@ private fun MonthGridSection(
                                 isSelected = dateKey == selectedDate,
                                 isToday = dateKey == todayKey,
                                 isFuture = dateKey > todayKey,
-                                sections = dayByDate[dateKey]?.cellSections(dateKey, todayKey).orEmpty(),
+                                sections = cellSectionsWithPlan(
+                                    dayByDate[dateKey]?.cellSections(dateKey, todayKey).orEmpty(),
+                                    planStates[dateKey]
+                                ),
+                                plan = planStates[dateKey],
                                 onClick = { onSelectDate(dateKey) }
                             )
                         }
@@ -527,13 +572,21 @@ private fun MonthDayCell(
     isToday: Boolean,
     isFuture: Boolean,
     sections: List<ActivityType>,
+    plan: DayState?,
     onClick: () -> Unit
 ) {
     val day = dateKey.substringAfterLast("-").toInt()
+    // 5a outline (#78): dashed blue on a planned day, dashed grey on a missed one; the ring sits inside it.
+    val outline = when (plan) {
+        DayState.PLANNED -> C.WorkoutDot
+        DayState.MISSED -> C.ChevronWeak
+        else -> null
+    }
 
     val borderWidth = when {
         isSelected -> 2.dp
         isToday -> 2.dp
+        outline != null -> 0.dp
         isFuture -> 1.dp
         else -> 0.dp
     }
@@ -556,12 +609,14 @@ private fun MonthDayCell(
     val fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal
 
     val shape = RoundedCornerShape(12.dp)
+    // With a dashed outline the today / selected ring is drawn inside it (handover: ring inset 2dp).
+    val ringInside = outline != null && borderWidth > 0.dp
     val base = Modifier
         .height(46.dp)
         .fillMaxWidth()
         .clip(shape)
         .clickable(onClick = onClick)
-        .then(if (borderWidth > 0.dp) Modifier.border(borderWidth, borderColor, shape) else Modifier)
+        .then(if (borderWidth > 0.dp && !ringInside) Modifier.border(borderWidth, borderColor, shape) else Modifier)
 
     // 5a: one diagonal band per section with activity; nothing -> grey in the past, clear from today on.
     val tints = sections.map { section ->
@@ -579,9 +634,20 @@ private fun MonthDayCell(
     }
 
     Box(modifier = base.then(background), contentAlignment = Alignment.Center) {
+        if (outline != null) {
+            // Over the tint, so the bands don't paint over it. The edge clips half the stroke: 3dp shows as 1.5dp.
+            Box(Modifier.matchParentSize().dashedOutline(outline, 12.dp, width = 3.dp, dash = 4.dp, gap = 3.dp))
+        }
+        if (ringInside) {
+            Box(Modifier.matchParentSize().padding(3.dp).border(borderWidth, borderColor, RoundedCornerShape(9.dp)))
+        }
         Text(text = day.toString(), style = TextStyle(fontSize = 15.sp, fontWeight = fontWeight, color = textColor))
     }
 }
+
+/** A planned day (today or later) shows the workout band even before anything is logged (5a fill rule). */
+private fun cellSectionsWithPlan(sections: List<ActivityType>, plan: DayState?): List<ActivityType> =
+    if (plan == DayState.PLANNED && ActivityType.WORKOUT !in sections) listOf(ActivityType.WORKOUT) + sections else sections
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -591,22 +657,29 @@ private fun LegendRow() {
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // 5a legend, bottom-nav order. Planned / Missed join with the training planner.
+        // 5a legend, bottom-nav order, then the training plan's outlines (#78).
         LegendItem(swatch = { Box(Modifier.size(12.dp).background(C.WorkoutTint, RoundedCornerShape(4.dp))) }, label = "Workout")
         LegendItem(swatch = { Box(Modifier.size(12.dp).background(C.MealTint, RoundedCornerShape(4.dp))) }, label = "Meals")
         LegendItem(swatch = { Box(Modifier.size(12.dp).background(C.DiaryTint, RoundedCornerShape(4.dp))) }, label = "Diary")
+        LegendItem(swatch = { DashedSwatch(C.WorkoutDot) }, label = "Planned")
+        LegendItem(swatch = { DashedSwatch(C.ChevronWeak) }, label = "Missed")
         LegendItem(
             swatch = { Box(Modifier.size(12.dp).border(2.dp, C.AccentSolid, RoundedCornerShape(4.dp))) },
             label = "Today"
         )
     }
     Text(
-        // Until planning lands there's nothing to change - the hint's "or change what is planned" comes with it.
-        text = "Tap a day to see what you logged",
+        text = "Tap a day to see what you logged or change what is planned",
         modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
         textAlign = TextAlign.Center,
         style = TextStyle(fontSize = 13.sp, color = C.Hint)
     )
+}
+
+/** A 12dp legend swatch with a short-dash outline (the edge clips half the 3dp stroke: 1.5dp shows). */
+@Composable
+private fun DashedSwatch(color: Color) {
+    Box(Modifier.size(12.dp).dashedOutline(color, 4.dp, width = 3.dp, dash = 3.dp, gap = 2.dp))
 }
 
 @Composable
@@ -886,7 +959,8 @@ private fun DayCards(
     onOpenWorkoutSession: (String) -> Unit,
     onOpenMeals: (String) -> Unit,
     onLogWorkout: () -> Unit,
-    onAddDiaryEntry: () -> Unit
+    onAddDiaryEntry: () -> Unit,
+    showFutureEmpty: Boolean = true
 ) {
     activity.sessions.forEach { session ->
         WorkoutCard(session = session, onClick = { onOpenWorkoutSession(session.id) })
@@ -898,7 +972,7 @@ private fun DayCards(
         )
     }
     activity.diary?.let { diary -> DiaryCard(diary) }
-    if (!activity.hasAnything) {
+    if (!activity.hasAnything && (showFutureEmpty || dateKey <= todayKey)) {
         EmptyDayState(isFuture = dateKey > todayKey, onLogWorkout = onLogWorkout, onAddDiaryEntry = onAddDiaryEntry)
     }
 }
@@ -910,6 +984,7 @@ private fun DaySheet(
     dateKey: String,
     todayKey: String,
     activity: DayActivity,
+    planCard: @Composable () -> Unit,
     onDismiss: () -> Unit,
     onOpenWorkoutSession: (String) -> Unit,
     onOpenMeals: (String) -> Unit,
@@ -957,10 +1032,14 @@ private fun DaySheet(
                     Icon(Icons.Filled.Close, contentDescription = "Close", tint = C.IconTint)
                 }
             }
+            // 5a card order: Training plan (or Missed) first, then what was logged.
+            planCard()
             DayCards(
                 dateKey = dateKey,
                 todayKey = todayKey,
                 activity = activity,
+                // The Training plan card covers a future day (rest day -> Plan a workout).
+                showFutureEmpty = false,
                 onOpenWorkoutSession = onOpenWorkoutSession,
                 onOpenMeals = onOpenMeals,
                 onLogWorkout = onLogWorkout,
