@@ -70,6 +70,17 @@ class FakeSettingsRepository(
         meals.value = settings
     }
 
+    private val trainingWeekExpanded = MutableStateFlow(false)
+
+    val storedTrainingWeekExpanded: Boolean get() = trainingWeekExpanded.value
+
+    override fun observeTrainingWeekExpanded(): Flow<Boolean> = trainingWeekExpanded
+
+    override suspend fun setTrainingWeekExpanded(expanded: Boolean) {
+        throwIfFailing()
+        trainingWeekExpanded.value = expanded
+    }
+
     private fun throwIfFailing() {
         failNext?.let {
             failNext = null

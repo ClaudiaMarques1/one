@@ -53,6 +53,13 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         dataStore.edit { it[KEY_WEEK_START] = weekStart.name }
     }
 
+    override fun observeTrainingWeekExpanded(): Flow<Boolean> =
+        dataStore.data.map { it[KEY_TRAINING_WEEK_EXPANDED] ?: false }
+
+    override suspend fun setTrainingWeekExpanded(expanded: Boolean) {
+        dataStore.edit { it[KEY_TRAINING_WEEK_EXPANDED] = expanded }
+    }
+
     override fun observeMealSettings(): Flow<MealSettings> = dataStore.data.map { prefs ->
         val defaults = MealSettings()
         MealSettings(
@@ -97,6 +104,7 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         val KEY_MEAL_SLOTS = stringSetPreferencesKey("mealSlots")
         val KEY_WATER_GLASSES = intPreferencesKey("waterGlasses")
         val KEY_WEEK_START = stringPreferencesKey("weekStart")
+        val KEY_TRAINING_WEEK_EXPANDED = booleanPreferencesKey("trainingWeekExpanded")
         const val TRAINING = "trainingTarget"
         const val REST = "restTarget"
     }

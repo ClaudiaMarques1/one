@@ -93,6 +93,10 @@ import app.theone.android.ui.LocalWeekStart
 import app.theone.android.ui.theme.CalendarColors
 import app.theone.android.ui.theme.DiaryInk
 import app.theone.android.ui.theme.OneTheme
+import app.theone.android.workout.planner.backend.TrainingPlanViewModel
+import app.theone.android.workout.planner.frontend.TrainingPlanSheet
+import app.theone.android.workout.planner.frontend.TrainingWeekCard
+import app.theone.android.workout.planner.frontend.trainingPlanViewModel
 import app.theone.android.workout.sessions.backend.StrengthExercise
 import app.theone.android.workout.sessions.backend.StrengthSession
 import app.theone.android.workout.sessions.backend.StrengthSet
@@ -108,19 +112,31 @@ fun CalendarScreen(
     onNavigateToWorkout: () -> Unit = {},
     onNavigateToDiary: () -> Unit = {},
     onOpenWorkoutSession: (sessionId: String) -> Unit = {},
-    onOpenMeals: (dateKey: String) -> Unit = {}
+    onOpenMeals: (dateKey: String) -> Unit = {},
+    // Training planner (#76): the "Training this week" card and the 4a sheet it opens.
+    trainingPlan: TrainingPlanViewModel = trainingPlanViewModel()
 ) {
     val view by viewModel.view.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dayByDate by viewModel.dayByDate.collectAsState()
     val calendarError by viewModel.calendarError.collectAsState()
+    val trainingWeek by trainingPlan.week.collectAsState()
+    val planSheet by trainingPlan.sheet.collectAsState()
+    val planError by trainingPlan.planError.collectAsState()
 
     CalendarScreenContent(
         view = view,
         selectedDate = selectedDate,
         dayByDate = dayByDate,
-        errorMessage = calendarError,
-        onDismissError = viewModel::clearCalendarError,
+        // A planner error shows in its sheet while that's open, otherwise here.
+        errorMessage = calendarError ?: planError.takeIf { planSheet == null },
+        onDismissError = {
+            viewModel.clearCalendarError()
+            trainingPlan.clearPlanError()
+        },
+        weekCard = {
+            TrainingWeekCard(week = trainingWeek, onToggle = trainingPlan::toggleWeekExpanded, onEditRoutine = trainingPlan::openSheet)
+        },
         onViewChange = viewModel::setView,
         onSelectDate = viewModel::selectDate,
         onOpenDay = { dateKey ->
@@ -135,6 +151,8 @@ fun CalendarScreen(
         onOpenWorkoutSession = onOpenWorkoutSession,
         onOpenMeals = onOpenMeals
     )
+
+    planSheet?.let { sheet -> TrainingPlanSheet(sheet = sheet, viewModel = trainingPlan, errorMessage = planError) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -145,6 +163,7 @@ private fun CalendarScreenContent(
     dayByDate: Map<String, DayActivity>,
     errorMessage: String? = null,
     onDismissError: () -> Unit = {},
+    weekCard: @Composable () -> Unit = {},
     onViewChange: (CalendarView) -> Unit = {},
     onSelectDate: (String) -> Unit = {},
     onOpenDay: (String) -> Unit = {},
@@ -187,6 +206,7 @@ private fun CalendarScreenContent(
                     todayKey = todayKey,
                     firstDayOfWeek = firstDayOfWeek,
                     dayByDate = dayByDate,
+                    weekCard = weekCard,
                     onSelectDate = { dateKey ->
                         onSelectDate(dateKey)
                         sheetDate = dateKey
@@ -391,12 +411,15 @@ private fun MonthGridSection(
     todayKey: String,
     firstDayOfWeek: Int,
     dayByDate: Map<String, DayActivity>,
+    weekCard: @Composable () -> Unit,
     onSelectDate: (String) -> Unit
 ) {
     val year = CalendarDateKeys.yearOf(selectedDate)
     val month = CalendarDateKeys.monthOf(selectedDate)
 
     MonthTotalsRow(stats = monthStats(year, month, dayByDate))
+    // 5a section 3, between the stat tiles and the grid.
+    weekCard()
 
     Row(
         modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 6.dp),

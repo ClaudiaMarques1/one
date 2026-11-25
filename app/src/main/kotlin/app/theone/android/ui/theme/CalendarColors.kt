@@ -47,7 +47,12 @@ data class CalendarPalette(
     val mealInk: Color,
     // 5a (training planner handoff): the Meals stat tile.
     val mealSoft: Color,
-    val mealNumber: Color
+    val mealNumber: Color,
+    // Training planner (#76, training planner handoff): week pips and the 4a primary button / split day toggles.
+    val plannedPip: Color,
+    val emptyPip: Color,
+    val primaryButton: Color,
+    val onPrimaryButton: Color
 )
 
 val LightCalendarPalette = CalendarPalette(
@@ -89,7 +94,11 @@ val LightCalendarPalette = CalendarPalette(
     mealTint = Color(0xFFD9ECDA),
     mealInk = Color(0xFF2E7D32),
     mealSoft = Color(0xFFEEF6EE),
-    mealNumber = Color(0xFF1B5E20)
+    mealNumber = Color(0xFF1B5E20),
+    plannedPip = Color(0xFF9CC9F2),
+    emptyPip = Color(0xFFEADBC8),
+    primaryButton = Color(0xFF8A4B00),
+    onPrimaryButton = Color(0xFFFFFFFF)
 )
 
 // From the design file's own light -> dark conversion (2a dark). Two deviations, per the dark-mode
@@ -136,7 +145,11 @@ val DarkCalendarPalette = CalendarPalette(
     mealTint = Color(0xFF1F3F27),
     mealInk = Color(0xFF91E091),
     mealSoft = Color(0xFF141814),
-    mealNumber = Color(0xFFA5E9A4)
+    mealNumber = Color(0xFFA5E9A4),
+    plannedPip = Color(0xFF84B0D8),
+    emptyPip = Color(0xFF2B241B),
+    primaryButton = Color(0xFFFBC192),
+    onPrimaryButton = Color(0xFF1E1E1E)
 )
 
 /** `CalendarColors.Surface` etc., resolving light or dark from the current theme. */
@@ -300,4 +313,20 @@ object CalendarColors {
     val MealNumber: Color
         @Composable @ReadOnlyComposable
         get() = p.mealNumber
+
+    val PlannedPip: Color
+        @Composable @ReadOnlyComposable
+        get() = p.plannedPip
+
+    val EmptyPip: Color
+        @Composable @ReadOnlyComposable
+        get() = p.emptyPip
+
+    val PrimaryButton: Color
+        @Composable @ReadOnlyComposable
+        get() = p.primaryButton
+
+    val OnPrimaryButton: Color
+        @Composable @ReadOnlyComposable
+        get() = p.onPrimaryButton
 }
